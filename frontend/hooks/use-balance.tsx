@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import services from '@/lib/services';
 import type { Balance, TransactionQueryParams, Transaction, PaginationResponse } from '@/lib/services';
 
@@ -133,46 +133,60 @@ export function useTransactions(
   const [error, setError] = useState<Error | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   
-  // 用于标记是否是首次加载
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const isInitialLoad = useRef(true);
+
+  // 使用 useMemo 来稳定 params 对象的引用
+  const stableParams = useMemo(() => ({
+    type: params.type,
+    status: params.status,
+    startTime: params.startTime,
+    endTime: params.endTime,
+    page_size: params.page_size
+  }), [
+    params.type,
+    params.status,
+    params.startTime,
+    params.endTime,
+    params.page_size
+  ]);
 
   const fetchTransactions = useCallback(async (page: number = 1, append: boolean = false) => {
     try {
       if (append) {
         setLoadingMore(true);
       } else {
-        // 只在首次加载或手动刷新时显示 loading
-        if (isInitialLoad) {
+        if (isInitialLoad.current) {
           setLoading(true);
         }
       }
       setError(null);
-
+      
       const result = await services.balance.getTransactions({
-        ...params,
+        ...stableParams,
         page,
       });
-
-      if (append && data) {
-        // 追加数据
-        setData({
-          ...result,
-          items: [...data.items, ...result.items],
+      
+      if (append) {
+        setData((prevData) => {
+          if (!prevData) return result;
+          return {
+            ...result,
+            items: [...prevData.items, ...result.items],
+          };
         });
       } else {
-        // 替换数据
         setData(result);
       }
-
+      
       setCurrentPage(page);
-      setIsInitialLoad(false);
+      isInitialLoad.current = false;
     } catch (err) {
       setError(err instanceof Error ? err : new Error('获取交易记录失败'));
     } finally {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [params, data, isInitialLoad]);
+  }, [stableParams]);
 
   const loadMore = async () => {
     if (data && currentPage < data.total_pages && !loadingMore) {
@@ -182,17 +196,18 @@ export function useTransactions(
 
   useEffect(() => {
     if (enabled) {
+      isInitialLoad.current = true;
       setCurrentPage(1);
       fetchTransactions(1, false);
     }
-  }, [enabled, params.type, params.status, params.startTime, params.endTime, params.page_size, fetchTransactions]);
+  }, [enabled, fetchTransactions]);
 
   return {
     data,
     loading,
     error,
     refetch: () => {
-      setIsInitialLoad(true);
+      isInitialLoad.current = true;
       return fetchTransactions(1, false);
     },
     loadMore,
