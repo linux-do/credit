@@ -33,7 +33,7 @@ function FeatureCard({
 
 export function Receive() {
   return (
-    <div className="pt-2 space-y-6">
+    <div className="space-y-6">
       <div className="bg-gray-100 dark:bg-gray-800 rounded-lg px-16 py-20">
         <div className="max-w-3xl">
           <h2 className="text-5xl font-bold mb-6 text-foreground">开始收款</h2>
@@ -69,4 +69,3 @@ export function Receive() {
     </div>
   )
 }
-

@@ -32,6 +32,8 @@ export interface Order {
   type: OrderType;
   /** 备注 */
   remark: string;
+  /** 客户端ID */
+  client_id: string;
   /** 交易时间 */
   trade_time: string;
   /** 创建时间 */

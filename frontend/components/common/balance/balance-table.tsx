@@ -2,12 +2,13 @@
 
 import * as React from "react"
 import { useState, useEffect } from "react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Layers, ListRestart } from "lucide-react"
 import type { Order, OrderType, OrderStatus } from "@/lib/services"
 import { Button } from "@/components/ui/button"
 import { ErrorInline } from "@/components/common/status/error"
 import { EmptyStateWithBorder } from "@/components/common/status/empty"
+import { Spinner } from "@/components/ui/spinner"
 import {
   Table,
   TableBody,
@@ -35,51 +36,45 @@ const TAB_TRIGGER_STYLES = "data-[state=active]:bg-transparent data-[state=activ
 export function BalanceTable() {
   const [activeTab, setActiveTab] = useState<OrderType | 'all'>('all')
 
+  // 计算最近7天的时间范围
+  const getLast7DaysRange = () => {
+    const now = new Date()
+    const endTime = now.toISOString()
+    const startTime = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
+    return { startTime, endTime }
+  }
+
+  const { startTime, endTime } = getLast7DaysRange()
+
   return (
     <div>
       <div className="font-semibold py-4">近期活动</div>
 
-      <TransactionProvider defaultParams={{ page_size: 20 }}>
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as OrderType | 'all')} className="w-full">
-          <TabsList className="flex p-0 gap-4 rounded-none w-full bg-transparent justify-start border-b border-border">
-            <TabsTrigger value="receive" className={TAB_TRIGGER_STYLES}>
-              收款
-            </TabsTrigger>
-            <TabsTrigger value="payment" className={TAB_TRIGGER_STYLES}>
-              付款
-            </TabsTrigger>
-            <TabsTrigger value="transfer" className={TAB_TRIGGER_STYLES}>
-              转账
-            </TabsTrigger>
-            <TabsTrigger value="community" className={TAB_TRIGGER_STYLES}>
-              社区划转
-            </TabsTrigger>
-            <TabsTrigger value="all" className={TAB_TRIGGER_STYLES}>
-              所有活动
-            </TabsTrigger>
-          </TabsList>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as OrderType | 'all')} className="w-full">
+        <TabsList className="flex p-0 gap-4 rounded-none w-full bg-transparent justify-start border-b border-border">
+          <TabsTrigger value="receive" className={TAB_TRIGGER_STYLES}>
+            收款
+          </TabsTrigger>
+          <TabsTrigger value="payment" className={TAB_TRIGGER_STYLES}>
+            付款
+          </TabsTrigger>
+          <TabsTrigger value="transfer" className={TAB_TRIGGER_STYLES}>
+            转账
+          </TabsTrigger>
+          <TabsTrigger value="community" className={TAB_TRIGGER_STYLES}>
+            社区划转
+          </TabsTrigger>
+          <TabsTrigger value="all" className={TAB_TRIGGER_STYLES}>
+            所有活动
+          </TabsTrigger>
+        </TabsList>
 
-          <TabsContent value="receive" className="mt-2">
-            <TransactionList type="receive" />
-          </TabsContent>
-
-          <TabsContent value="payment" className="mt-2">
-            <TransactionList type="payment" />
-          </TabsContent>
-
-          <TabsContent value="transfer" className="mt-2">
-            <TransactionList type="transfer" />
-          </TabsContent>
-
-          <TabsContent value="community" className="mt-2">
-            <TransactionList type="community" />
-          </TabsContent>
-
-          <TabsContent value="all" className="mt-2">
-            <TransactionList />
-          </TabsContent>
-        </Tabs>
-      </TransactionProvider>
+        <div className="mt-2">
+          <TransactionProvider defaultParams={{ page_size: 20, startTime, endTime }}>
+            <TransactionList type={activeTab === 'all' ? undefined : activeTab} />
+          </TransactionProvider>
+        </div>
+      </Tabs>
     </div>
   )
 }
@@ -95,20 +90,28 @@ function TransactionList({ type }: { type?: OrderType }) {
     totalPages,
     loading,
     error,
+    lastParams,
     fetchTransactions,
     loadMore,
   } = useTransaction()
 
-  // 当类型变化时重新加载数据
+  // 重新加载数据
   useEffect(() => {
-    fetchTransactions({ page: 1, type })
-  }, [type, fetchTransactions])
+    fetchTransactions({ 
+      page: 1, 
+      type,
+      // 保留时间范围参数
+      startTime: lastParams.startTime,
+      endTime: lastParams.endTime,
+    })
+  }, [type, fetchTransactions, lastParams.startTime, lastParams.endTime])
 
   // 加载更多
   const handleLoadMore = () => {
     loadMore()
   }
 
+  // 如果loading且没有数据，显示加载状态
   if (loading && transactions.length === 0) {
     return (
       <EmptyStateWithBorder
@@ -153,7 +156,8 @@ function TransactionList({ type }: { type?: OrderType }) {
                 <TableHead className="whitespace-nowrap text-center w-[140px]">交易双方</TableHead>
                 <TableHead className="whitespace-nowrap text-center w-[160px]">订单号</TableHead>
                 <TableHead className="whitespace-nowrap text-center w-[160px]">商户订单号</TableHead>
-                <TableHead className="whitespace-nowrap text-center w-[120px]">时间</TableHead>
+                <TableHead className="whitespace-nowrap text-center w-[120px]">交易时间</TableHead>
+                <TableHead className="whitespace-nowrap text-center w-[120px]">创建时间</TableHead>
                 <TableHead className="whitespace-nowrap text-center w-[80px]">状态</TableHead>
                 <TableHead className="sticky right-0 whitespace-nowrap text-center bg-muted shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] w-[150px]">操作</TableHead>
               </TableRow>
@@ -169,18 +173,25 @@ function TransactionList({ type }: { type?: OrderType }) {
 
       {currentPage < totalPages && (
         <Button
-          variant="outline"
+          variant="secondary"
           onClick={handleLoadMore}
           disabled={loading}
-          className="w-full"
+          className="w-full text-sm"
         >
-          {loading ? '加载中...' : `加载更多 (${transactions.length}/${total})`}
+          {loading ? (
+            <>
+              <Spinner className="size-4" />
+              正在加载
+            </>
+          ) : (
+            `加载更多 (${transactions.length}/${total})`
+          )}
         </Button>
       )}
 
       {currentPage >= totalPages && total > 0 && (
         <div className="pt-2 text-center text-xs text-muted-foreground">
-          已加载全部 {total} 条记录
+          已加载近期（7天）的 {total} 条记录
         </div>
       )}
     </div>
@@ -290,6 +301,9 @@ function TransactionTableRow({ order }: { order: Order }) {
       </TableCell>
       <TableCell className="text-xs text-center py-1">
         {formatTime(order.trade_time)}
+      </TableCell>
+      <TableCell className="text-xs text-center py-1">
+        {formatTime(order.created_at)}
       </TableCell>
       <TableCell className="whitespace-nowrap text-center py-1">
         <Badge
