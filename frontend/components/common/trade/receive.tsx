@@ -15,15 +15,15 @@ function FeatureCard({
   linkText: string
 }) {
   return (
-    <Card className="bg-background border border-border shadow-none hover:shadow-sm transition-shadow">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg font-semibold">{title}</CardTitle>
+    <Card className="bg-background border border-border shadow-none transition-shadow">
+      <CardHeader>
+        <CardTitle className="text-lg font-semibold -mb-4">{title}</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4 pb-6">
-        <CardDescription className="text-sm text-muted-foreground leading-relaxed">
+      <CardContent>
+        <CardDescription className="text-xs text-muted-foreground leading-relaxed">
           {description}
         </CardDescription>
-        <Button variant="link" className="px-0 h-auto text-sm text-blue-600 font-normal hover:text-blue-700">
+        <Button variant="link" className="px-0 h-auto text-xs text-blue-600 font-normal hover:text-blue-700">
           {linkText}
         </Button>
       </CardContent>
@@ -33,16 +33,15 @@ function FeatureCard({
 
 export function Receive() {
   return (
-    <div className="space-y-6">
-      <div className="bg-gray-100 dark:bg-gray-800 rounded-lg px-16 py-20">
-        <div className="max-w-3xl">
-          <h2 className="text-5xl font-bold mb-6 text-foreground">开始收款</h2>
-          <p className="text-base text-muted-foreground mb-8 leading-relaxed">
+    <div className="space-y-4 mt-2 mb-6">
+      <div className="bg-gray-100 dark:bg-gray-800 rounded-lg px-6 py-8">
+        <div className="max-w-2xl">
+          <h2 className="text-3xl font-bold mb-4 text-foreground">开始收款</h2>
+          <p className="text-muted-foreground mb-6 leading-relaxed">
             通过无代码选项快速开始使用或探索与我们的 API 集成的可自定义账户界面。
           </p>
-          <Button 
-            size="lg" 
-            className="bg-[#6366f1] hover:bg-[#5558e3] text-white font-medium px-6 h-11 rounded-md shadow-sm"
+          <Button
+            className="bg-[#6366f1] hover:bg-[#5558e3] text-white font-medium px-6 rounded-md shadow-sm"
           >
             开始使用
           </Button>

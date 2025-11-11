@@ -246,7 +246,8 @@ function TransactionList({ initialType }: { initialType?: OrderType }) {
   const hasActiveFilters = selectedTypes.length > 0 || selectedStatuses.length > 0
 
   return (
-    <div className="flex flex-col space-y-4 mt-2">
+    <div className="flex flex-col space-y-2 mt-2">
+      <div className="font-semibold pb-2">交易记录</div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div className="flex items-center gap-2 flex-wrap">
           {initialType === undefined && (

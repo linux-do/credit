@@ -4,17 +4,17 @@ import * as React from "react"
 
 export function Community() {
   return (
-    <div className="space-y-6">
-      <div className="bg-gray-100 dark:bg-gray-800 rounded-lg px-16 py-20">
+    <div className="space-y-4 mt-2 mb-6">
+      <div className="bg-gray-100 dark:bg-gray-800 rounded-lg px-6 py-4">
         <div className="max-w-2xl">
-          <h2 className="text-2xl font-semibold mb-4">LINUX DO 社区积分划转规则</h2>
-          <p className="text-muted-foreground">
-            社区积分划转规则：
-            <br />
-            1. 社区积分源于用户在社区内的活动，如发布文章、评论、点赞等。
-            <br />
-            2. 社区积分无法在划转、赠予给其他用户，无法在社区内进行交易。
-          </p>
+          <h2 className="font-semibold mb-3">LINUX DO 社区积分划转规则</h2>
+          <div className="text-muted-foreground space-y-2">
+            <ul className="list-disc list-inside space-y-1 text-sm">
+              <li>社区积分源于用户在社区内的活动，如发布文章、评论、点赞等。</li>
+              <li>社区积分无法在每日划转前进行交易、赠予给其他社区用户。</li>
+              <li>每日划转时间为每日凌晨00:00:00，目前划转无需手续费。</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
