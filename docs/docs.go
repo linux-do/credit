@@ -115,6 +115,37 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/v1/order/transactions": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "order"
+                ],
+                "parameters": [
+                    {
+                        "description": "request body",
+                        "name": "request",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/order.TransactionListRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ResponseAny"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -126,6 +157,45 @@ const docTemplate = `{
                 },
                 "state": {
                     "type": "string"
+                }
+            }
+        },
+        "order.TransactionListRequest": {
+            "type": "object",
+            "properties": {
+                "endTime": {
+                    "type": "string"
+                },
+                "page": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "page_size": {
+                    "type": "integer",
+                    "maximum": 100,
+                    "minimum": 1
+                },
+                "startTime": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "success",
+                        "pending",
+                        "failed",
+                        "disputing",
+                        "refunded"
+                    ]
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "receive",
+                        "payment",
+                        "transfer",
+                        "community"
+                    ]
                 }
             }
         },

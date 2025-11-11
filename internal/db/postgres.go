@@ -35,6 +35,7 @@ import (
 	"github.com/linux-do/pay/internal/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	"gorm.io/plugin/opentelemetry/tracing"
 )
 
@@ -97,7 +98,21 @@ func init() {
 
 	pgConfig.PreferSimpleProtocol = dbConfig.PreferSimpleProtocol
 
-	db, err = gorm.Open(postgres.New(pgConfig), &gorm.Config{DisableForeignKeyConstraintWhenMigrating: true})
+	// 配置 GORM Logger
+	gormLogger := logger.New(
+		log.New(log.Writer(), "\r\n", log.LstdFlags),
+		logger.Config{
+			SlowThreshold:             200 * time.Millisecond,
+			LogLevel:                  logger.Warn,
+			IgnoreRecordNotFoundError: config.Config.App.Env == "production",
+			Colorful:                  config.Config.App.Env == "development",
+		},
+	)
+
+	db, err = gorm.Open(postgres.New(pgConfig), &gorm.Config{
+		DisableForeignKeyConstraintWhenMigrating: true,
+		Logger:                                   gormLogger,
+	})
 	if err != nil {
 		log.Fatalf("[PostgreSQL] init connection failed: %v\n", err)
 	}

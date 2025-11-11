@@ -6,6 +6,35 @@ definitions:
       state:
         type: string
     type: object
+  order.TransactionListRequest:
+    properties:
+      endTime:
+        type: string
+      page:
+        minimum: 1
+        type: integer
+      page_size:
+        maximum: 100
+        minimum: 1
+        type: integer
+      startTime:
+        type: string
+      status:
+        enum:
+        - success
+        - pending
+        - failed
+        - disputing
+        - refunded
+        type: string
+      type:
+        enum:
+        - receive
+        - payment
+        - transfer
+        - community
+        type: string
+    type: object
   utils.ResponseAny:
     properties:
       data: {}
@@ -80,4 +109,23 @@ paths:
             $ref: '#/definitions/utils.ResponseAny'
       tags:
       - oauth
+  /api/v1/order/transactions:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: request body
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/order.TransactionListRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.ResponseAny'
+      tags:
+      - order
 swagger: "2.0"

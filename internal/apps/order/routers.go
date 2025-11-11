@@ -36,112 +36,70 @@ import (
 )
 
 type TransactionListRequest struct {
-	Page      int    `json:"page" form:"page" binding:"omitempty,min=1"`
-	PageSize  int    `json:"page_size" form:"page_size" binding:"omitempty,min=1,max=100"`
-	Type      string `json:"type" form:"type" binding:"omitempty,oneof=receive payment transfer community"`
-	Status    string `json:"status" form:"status" binding:"omitempty,oneof=success pending failed disputing refunded"`
-	StartTime string `json:"startTime" form:"startTime" binding:"omitempty"`
-	EndTime   string `json:"endTime" form:"endTime" binding:"omitempty"`
+	Page      int        `json:"page" form:"page" binding:"min=1"`
+	PageSize  int        `json:"page_size" form:"page_size" binding:"min=1,max=100"`
+	Type      string     `json:"type" form:"type" binding:"omitempty,oneof=receive payment transfer community"`
+	Status    string     `json:"status" form:"status" binding:"omitempty,oneof=success pending failed disputing refund refunded"`
+	StartTime *time.Time `json:"startTime" form:"startTime" binding:"omitempty"`
+	EndTime   *time.Time `json:"endTime" form:"endTime" binding:"omitempty,gtfield=StartTime"`
 }
 
 type TransactionListResponse struct {
-	Total int64         `json:"total"`
-	Page  int           `json:"page"`
-	Size  int           `json:"size"`
-	Data  []model.Order `json:"data"`
+	Total    int64         `json:"total"`
+	Page     int           `json:"page"`
+	PageSize int           `json:"page_size"`
+	Orders   []model.Order `json:"orders"`
 }
 
-// Transactions godoc
+// TransactionList
 // @Tags order
 // @Accept json
 // @Produce json
 // @Param request body TransactionListRequest false "request body"
 // @Success 200 {object} utils.ResponseAny
-// @Router /api/v1/transactions [post]
-func Transactions(c *gin.Context) {
+// @Router /api/v1/order/transactions [post]
+func TransactionList(c *gin.Context) {
 	var req TransactionListRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, utils.Err(err.Error()))
 		return
 	}
 
-	// 默认值
-	if req.Page <= 0 {
-		req.Page = 1
-	}
-	if req.PageSize <= 0 {
-		req.PageSize = 20
-	}
-	if req.PageSize > 100 {
-		req.PageSize = 100
-	}
+	user, _ := oauth.GetUserFromContext(c)
 
-	// 获取当前用户
-	user, ok := oauth.GetUserFromContext(c)
-	if !ok {
-		c.JSON(http.StatusUnauthorized, utils.Err("未登录"))
-		return
-	}
+	baseQuery := db.DB(c.Request.Context()).Model(&model.Order{}).
+		Where("payee_username = ? OR payer_username = ?", user.Username, user.Username)
 
-	ctx := c.Request.Context()
-	query := db.DB(ctx).Model(&model.Order{})
-
-	// 筛选：当前用户作为付款方或收款方
-	query = query.Where("payer_username = ? OR payee_username = ?", user.Username, user.Username)
-
-	// 筛选：交易类型
-	if req.Type != "" {
-		query = query.Where("type = ?", model.OrderType(req.Type))
-	}
-
-	// 筛选：交易状态
 	if req.Status != "" {
-		// 处理 refunded 状态（对应数据库中的 refund）
-		status := req.Status
-		if status == "refunded" {
-			status = "refund"
-		}
-		query = query.Where("status = ?", model.OrderStatus(status))
+		baseQuery = baseQuery.Where("status = ?", model.OrderStatus(req.Status))
+	}
+	if req.Type != "" {
+		baseQuery = baseQuery.Where("type = ?", model.OrderType(req.Type))
+	}
+	if req.StartTime != nil {
+		baseQuery = baseQuery.Where("created_at >= ?", req.StartTime)
+	}
+	if req.EndTime != nil {
+		baseQuery = baseQuery.Where("created_at <= ?", req.EndTime)
 	}
 
-	// 筛选：时间范围
-	if req.StartTime != "" {
-		startTime, err := time.Parse("2006-01-02 15:04:05", req.StartTime)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, utils.Err("开始时间格式错误，格式应为：YYYY-MM-DD HH:mm:ss"))
-			return
-		}
-		query = query.Where("trade_time >= ?", startTime)
-	}
-
-	if req.EndTime != "" {
-		endTime, err := time.Parse("2006-01-02 15:04:05", req.EndTime)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, utils.Err("结束时间格式错误，格式应为：YYYY-MM-DD HH:mm:ss"))
-			return
-		}
-		query = query.Where("trade_time <= ?", endTime)
-	}
-
-	// 统计总数
 	var total int64
-	if err := query.Count(&total).Error; err != nil {
+	if err := baseQuery.Count(&total).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, utils.Err(err.Error()))
 		return
 	}
 
-	// 分页查询
 	var orders []model.Order
 	offset := (req.Page - 1) * req.PageSize
-	if err := query.Order("trade_time DESC").Offset(offset).Limit(req.PageSize).Find(&orders).Error; err != nil {
+	if err := baseQuery.Order("created_at DESC").Offset(offset).Limit(req.PageSize).Find(&orders).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, utils.Err(err.Error()))
 		return
 	}
 
 	c.JSON(http.StatusOK, utils.OK(TransactionListResponse{
-		Total: total,
-		Page:  req.Page,
-		Size:  req.PageSize,
-		Data:  orders,
+		Total:    total,
+		Page:     req.Page,
+		PageSize: req.PageSize,
+		Orders:   orders,
 	}))
 }

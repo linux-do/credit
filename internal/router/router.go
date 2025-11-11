@@ -106,7 +106,7 @@ func Serve() {
 			orderRouter := apiV1Router.Group("/order")
 			orderRouter.Use(oauth.LoginRequired())
 			{
-				orderRouter.POST("/transactions", order.Transactions)
+				orderRouter.POST("/transactions", order.TransactionList)
 			}
 		}
 	}
