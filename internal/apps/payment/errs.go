@@ -36,4 +36,5 @@ const (
 	CannotPayOwnOrder           = "不能支付自己的订单"
 	DailyLimitExceeded          = "超过当日支付限额"
 	PayConfigNotFound           = "支付配置不存在"
+	PayKeyIncorrect             = "支付密码错误"
 )

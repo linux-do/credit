@@ -25,6 +25,7 @@
 package payment
 
 import (
+	"crypto/subtle"
 	"errors"
 	"fmt"
 	"net/http"
@@ -59,6 +60,7 @@ type CreateOrderResponse struct {
 // PayOrderRequest 用户支付订单请求
 type PayOrderRequest struct {
 	OrderNo string `json:"order_no" binding:"required"`
+	PayKey  string `json:"pay_key" binding:"required,max=10"`
 }
 
 // GetOrderRequest 查询订单请求
@@ -202,6 +204,11 @@ func PayMerchantOrder(c *gin.Context) {
 	}
 	orderCtx, errCtx := ParseOrderNo(c, req.OrderNo)
 	if HandleParseOrderNoError(c, errCtx) {
+		return
+	}
+
+	if subtle.ConstantTimeCompare([]byte(orderCtx.CurrentUser.PayKey), []byte(req.PayKey)) != 1 {
+		c.JSON(http.StatusBadRequest, util.Err(PayKeyIncorrect))
 		return
 	}
 
