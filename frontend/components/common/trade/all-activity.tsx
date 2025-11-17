@@ -1,13 +1,18 @@
-"use client"
-
 import * as React from "react"
-import { TrendingUp, TrendingDown, ArrowRightLeft, Users } from "lucide-react"
-import { useUser } from "@/contexts/user-context"
 import { CountingNumber } from "@/components/animate-ui/primitives/texts/counting-number"
+import { TrendingUp, TrendingDown, ArrowRightLeft, Users } from "lucide-react"
 
+import { useUser } from "@/contexts/user-context"
+
+
+/**
+ * 所有活动组件
+ * 显示用户的所有活动统计数据
+ */
 export function AllActivity() {
   const { user, loading } = useUser()
 
+  /* 统计数据 */
   const stats = React.useMemo(() => ({
     totalReceive: user?.total_receive ?? 0,
     totalPayment: user?.total_payment ?? 0,
@@ -15,6 +20,7 @@ export function AllActivity() {
     totalCommunity: user?.total_community ?? 0
   }), [user])
 
+  /* 功能卡片 */
   const statCards = [
     {
       title: "总收款",

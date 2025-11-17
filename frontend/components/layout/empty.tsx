@@ -1,24 +1,21 @@
 import * as React from "react"
 import { FileTextIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
+
 import { cn } from "@/lib/utils"
 
-export interface EmptyStateProps {
-  /** 空状态标题 */
+
+/**
+ * 空状态展示组件属性
+ * 用于统一显示无数据、无内容等空状态
+ */
+export interface EmptyStateProps extends React.ComponentProps<"div"> {
   title?: string
-  /** 空状态描述 */
   description?: string
-  /** 自定义图标 */
   icon?: React.ComponentType<{ className?: string }>
-  /** 操作按钮文本 */
   actionText?: string
-  /** 操作按钮回调 */
   onAction?: () => void
-  /** 自定义类名 */
-  className?: string
-  /** 图标大小 */
   iconSize?: "sm" | "md" | "lg"
-  /** 加载模式 */
   loading?: boolean
 }
 
@@ -48,6 +45,8 @@ export interface EmptyStateProps {
  *   description="未发现提现记录"
  * />
  * ```
+ * @param {EmptyStateProps} props - 空状态展示组件属性
+ * @returns {React.ReactNode} 空状态展示组件
  */
 export function EmptyState({
   title,
@@ -59,19 +58,10 @@ export function EmptyState({
   iconSize = "md",
   loading = false,
 }: EmptyStateProps) {
-  const iconSizes = {
-    sm: "size-10",
-    md: "size-12",
-    lg: "size-16",
-  }
+  const iconSizes = { sm: "size-10", md: "size-12", lg: "size-16" }
+  const iconInnerSizes = { sm: "size-5", md: "size-6", lg: "size-8" }
 
-  const iconInnerSizes = {
-    sm: "size-5",
-    md: "size-6",
-    lg: "size-8",
-  }
-
-  // 渲染带加载动画的文字
+  /* 渲染带加载动画的文字 */
   const renderLoadingText = (text: string) => {
     const chars = text.split('')
     return (
@@ -94,7 +84,6 @@ export function EmptyState({
 
   return (
     <div className={cn("flex flex-col items-center justify-center py-12 text-center", className)}>
-      {/* 图标 */}
       <div className={cn(
         "rounded-full bg-muted flex items-center justify-center mb-4",
         iconSizes[iconSize],
@@ -103,21 +92,18 @@ export function EmptyState({
         <Icon className={cn("text-muted-foreground", iconInnerSizes[iconSize])} />
       </div>
 
-      {/* 标题 */}
       {title && (
         <h3 className="text-base font-medium mb-1">
           {loading ? renderLoadingText(title) : title}
         </h3>
       )}
 
-      {/* 描述 */}
       {description && (
         <p className="text-sm text-muted-foreground max-w-md">
           {loading ? renderLoadingText(description) : description}
         </p>
       )}
 
-      {/* 操作按钮 */}
       {onAction && actionText && !loading && (
         <Button
           onClick={onAction}
@@ -134,6 +120,16 @@ export function EmptyState({
 /**
  * 带边框的空状态组件
  * 适合在卡片或容器内使用
+ * 
+ * @example
+ * ```tsx
+ * <EmptyStateWithBorder
+ *   title="暂无数据"
+ *   description="当前没有任何记录"
+ * />
+ * ```
+ * @param {EmptyStateProps} props - 空状态展示组件属性
+ * @returns {React.ReactNode} 带边框的空状态组件
  */
 export function EmptyStateWithBorder(props: EmptyStateProps) {
   return (
@@ -146,6 +142,16 @@ export function EmptyStateWithBorder(props: EmptyStateProps) {
 /**
  * 简化版空状态组件（内联使用）
  * 适合在较小的区域显示
+ * 
+ * @example
+ * ```tsx
+ * <EmptyInline
+ *   message="暂无数据"
+ *   icon={FileTextIcon}
+ * />
+ * ```
+ * @param {Pick<EmptyStateProps, 'icon' | 'className'> & { message?: string }} props - 简化版空状态组件属性
+ * @returns {React.ReactNode} 简化版空状态组件
  */
 export function EmptyInline({
   message = "暂无数据",
@@ -159,4 +165,3 @@ export function EmptyInline({
     </div>
   )
 }
-

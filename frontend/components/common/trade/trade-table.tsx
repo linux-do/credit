@@ -1,23 +1,28 @@
-"use client"
-
 import * as React from "react"
 import { useEffect } from "react"
-import { ListRestart, Layers } from "lucide-react"
-import type { OrderType, OrderStatus, TransactionQueryParams } from "@/lib/services"
+import { Button } from "@/components/ui/button"
+import { Spinner } from "@/components/ui/spinner"
+import { ErrorInline } from "@/components/layout/error"
+import { EmptyStateWithBorder } from "@/components/layout/empty"
 import { TableFilter } from "@/components/common/general/table-filter"
 import { TransactionDataTable } from "@/components/common/general/table-data"
-import { Button } from "@/components/ui/button"
-import { ErrorInline } from "@/components/common/status/error"
-import { EmptyStateWithBorder } from "@/components/common/status/empty"
-import { Spinner } from "@/components/ui/spinner"
+import { ListRestart, Layers } from "lucide-react"
+
+import type { OrderType, OrderStatus, TransactionQueryParams } from "@/lib/services"
 import { TransactionProvider, useTransaction } from "@/contexts/transaction-context"
+
 
 /**
  * 交易表格组件
  * 支持类型、状态、时间范围筛选的交易记录显示（支持分页）
+ * 
+ * @example
+ * ```tsx
+ * <TradeTable type="receive" />
+ * ```
  */
 export function TradeTable({ type }: { type?: OrderType }) {
-  // 计算最近一个月的时间范围
+  /* 计算最近一个月的时间范围 */
   const getLastMonthRange = () => {
     const now = new Date()
     const endTime = now.toISOString()
@@ -25,6 +30,7 @@ export function TradeTable({ type }: { type?: OrderType }) {
     return { startTime, endTime }
   }
 
+  /* 获取时间范围 */
   const { startTime, endTime } = getLastMonthRange()
 
   return (
@@ -37,6 +43,12 @@ export function TradeTable({ type }: { type?: OrderType }) {
 
 /**
  * 交易列表组件
+ * 显示交易记录
+ * 
+ * @example
+ * ```tsx
+ * <TransactionList initialType="receive" />
+ * ```
  */
 function TransactionList({ initialType }: { initialType?: OrderType }) {
   const {
@@ -50,7 +62,7 @@ function TransactionList({ initialType }: { initialType?: OrderType }) {
     loadMore,
   } = useTransaction()
 
-  // 筛选状态
+  /* 筛选状态 */
   const [selectedTypes, setSelectedTypes] = React.useState<OrderType[]>(initialType ? [initialType] : [])
   const [selectedStatuses, setSelectedStatuses] = React.useState<OrderStatus[]>([])
   const [selectedQuickSelection, setSelectedQuickSelection] = React.useState<string | null>("最近 1 个月")
@@ -60,7 +72,7 @@ function TransactionList({ initialType }: { initialType?: OrderType }) {
     return { from, to: now }
   })
 
-  // 清空所有筛选
+  /* 清空所有筛选 */
   const clearAllFilters = () => {
     setSelectedTypes(initialType ? [initialType] : [])
     setSelectedStatuses([])
@@ -68,7 +80,7 @@ function TransactionList({ initialType }: { initialType?: OrderType }) {
     const from = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
     setDateRange({ from, to: now })
     setSelectedQuickSelection("最近 1 个月")
-    // 重新获取数据
+    /* 重新获取数据 */
     fetchTransactions({
       page: 1,
       page_size: 20,
@@ -78,7 +90,7 @@ function TransactionList({ initialType }: { initialType?: OrderType }) {
     })
   }
 
-  // 当筛选条件改变时，重新加载数据
+  /* 当筛选条件改变时，重新加载数据 */
   useEffect(() => {
     const params: TransactionQueryParams = {
       page: 1,
@@ -92,7 +104,7 @@ function TransactionList({ initialType }: { initialType?: OrderType }) {
     fetchTransactions(params)
   }, [fetchTransactions, dateRange, selectedTypes, selectedStatuses])
 
-  // 当initialType改变时，更新筛选状态
+  /* 当initialType改变时，更新筛选状态 */
   useEffect(() => {
     if (initialType) {
       setSelectedTypes([initialType])
@@ -101,17 +113,12 @@ function TransactionList({ initialType }: { initialType?: OrderType }) {
     }
   }, [initialType])
 
-
-  // 注意：trade-table.tsx 不做客户端过滤，依赖后端API过滤
-
-  // 加载更多
+  /* 加载更多 */
   const handleLoadMore = () => {
     loadMore()
   }
 
-  // 渲染内容
   const renderContent = () => {
-    // 如果loading且没有数据，显示加载状态
     if (loading && transactions.length === 0) {
       return (
         <EmptyStateWithBorder
@@ -154,14 +161,7 @@ function TransactionList({ initialType }: { initialType?: OrderType }) {
             disabled={loading}
             className="w-full text-xs border-dashed"
           >
-            {loading ? (
-              <>
-                <Spinner className="size-4" />
-                正在加载
-              </>
-            ) : (
-              `加载更多 (${transactions.length}/${total})`
-            )}
+            {loading ? (<><Spinner /> 正在加载</>) : (`加载更多 (${transactions.length}/${total})`)}
           </Button>
         )}
 

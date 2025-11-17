@@ -2,11 +2,22 @@
 
 import * as React from "react"
 import { createContext, useContext, useState, useRef, useCallback } from "react"
-import type { UserPayConfig, SystemConfig } from "@/lib/services"
+
 import services, { isCancelError } from "@/lib/services"
+import type { UpdateUserPayConfigRequest } from "@/lib/services/admin/types"
+import type { UserPayConfig, SystemConfig, UpdateSystemConfigRequest } from "@/lib/services"
+
 
 /**
  * 通用的表格交互 hook
+ * 用于统一处理表格交互逻辑
+ * 
+ * @example
+ * ```tsx
+ * <TableInteraction>
+ *   <div>内容</div>
+ * </TableInteraction>
+ * ```
  */
 export function useTableInteraction<T extends { id?: number; key?: string }>(getInitialEditData: (item: T) => Partial<T>) {
   const [hoveredItem, setHoveredItem] = useState<T | null>(null)
@@ -53,72 +64,59 @@ export function useTableInteraction<T extends { id?: number; key?: string }>(get
 }
 
 /**
- * Admin 上下文状态
+ * Admin 上下文状态接口
+ * 用于统一管理 admin 相关的数据状态
+ * 
+ * @example
+ * ```tsx
+ * <AdminProvider>
+ *   <div>内容</div>
+ * </AdminProvider>
+ * ```
  */
-interface AdminContextState {
-  // User Pay Configs
+export interface AdminContextState {
   userPayConfigs: UserPayConfig[]
   userPayConfigsLoading: boolean
   userPayConfigsError: Error | null
   refetchUserPayConfigs: () => Promise<void>
-  createUserPayConfig: (data: {
-    level: number
-    min_score: number
-    max_score: number | null
-    daily_limit: number | null
-    fee_rate: string
-  }) => Promise<void>
-  updateUserPayConfig: (id: number, data: {
-    min_score: number
-    max_score?: number | null
-    daily_limit?: number | null
-    fee_rate: number | string
-  }) => Promise<void>
+  updateUserPayConfig: (id: number, data: UpdateUserPayConfigRequest) => Promise<void>
   deleteUserPayConfig: (id: number) => Promise<void>
 
-  // System Configs
   systemConfigs: SystemConfig[]
   systemConfigsLoading: boolean
   systemConfigsError: Error | null
   refetchSystemConfigs: () => Promise<void>
-  updateSystemConfig: (key: string, data: {
-    value: string
-    description?: string
-  }) => Promise<void>
+  updateSystemConfig: (key: string, data: UpdateSystemConfigRequest) => Promise<void>
   deleteSystemConfig: (key: string) => Promise<void>
 }
 
 const AdminContext = createContext<AdminContextState | null>(null)
 
 /**
- * Admin Provider 属性
- */
-interface AdminProviderProps {
-  children: React.ReactNode
-}
-
-/**
  * Admin Provider
  * 提供 admin 相关的数据状态管理
+ * 
+ * @example
+ * ```tsx
+ * <AdminProvider>
+ *   <div>内容</div>
+ * </AdminProvider>
+ * ```
+ * @param {React.ReactNode} children - Admin Provider 的子元素
  */
-export function AdminProvider({ children }: AdminProviderProps) {
-  // User Pay Configs 状态
+export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [userPayConfigs, setUserPayConfigs] = useState<UserPayConfig[]>([])
   const [userPayConfigsLoading, setUserPayConfigsLoading] = useState(false)
   const [userPayConfigsError, setUserPayConfigsError] = useState<Error | null>(null)
 
-  // System Configs 状态
   const [systemConfigs, setSystemConfigs] = useState<SystemConfig[]>([])
   const [systemConfigsLoading, setSystemConfigsLoading] = useState(false)
   const [systemConfigsError, setSystemConfigsError] = useState<Error | null>(null)
 
-  // 请求 ID 跟踪 - 分别管理
   const userPayRequestIdRef = useRef(0)
   const systemRequestIdRef = useRef(0)
 
-  /**
-   * 获取用户支付配置列表
-   */
+  /* 获取用户支付配置列表 */
   const refetchUserPayConfigs = useCallback(async () => {
     const requestId = ++userPayRequestIdRef.current
 
@@ -146,29 +144,9 @@ export function AdminProvider({ children }: AdminProviderProps) {
     }
   }, [])
 
-  /**
-   * 创建用户支付配置
-   */
-  const createUserPayConfig = useCallback(async (data: {
-    level: number
-    min_score: number
-    max_score: number | null
-    daily_limit: number | null
-    fee_rate: string
-  }) => {
-    await services.admin.createUserPayConfig(data)
-    await refetchUserPayConfigs()
-  }, [refetchUserPayConfigs])
 
-  /**
-   * 更新用户支付配置
-   */
-  const updateUserPayConfig = useCallback(async (id: number, data: {
-    min_score: number
-    max_score?: number | null
-    daily_limit?: number | null
-    fee_rate: number | string
-  }) => {
+  /* 更新用户支付配置 */
+  const updateUserPayConfig = useCallback(async (id: number, data: UpdateUserPayConfigRequest) => {
     try {
       await services.admin.updateUserPayConfig(id, data)
       await refetchUserPayConfigs()
@@ -180,17 +158,13 @@ export function AdminProvider({ children }: AdminProviderProps) {
     }
   }, [refetchUserPayConfigs])
 
-  /**
-   * 删除用户支付配置
-   */
+  /* 删除用户支付配置 */
   const deleteUserPayConfig = useCallback(async (id: number) => {
     await services.admin.deleteUserPayConfig(id)
     await refetchUserPayConfigs()
   }, [refetchUserPayConfigs])
 
-  /**
-   * 获取系统配置列表
-   */
+  /* 获取系统配置列表 */
   const refetchSystemConfigs = useCallback(async () => {
     const requestId = ++systemRequestIdRef.current
 
@@ -218,13 +192,8 @@ export function AdminProvider({ children }: AdminProviderProps) {
     }
   }, [])
 
-  /**
-   * 更新系统配置
-   */
-  const updateSystemConfig = useCallback(async (key: string, data: {
-    value: string
-    description?: string
-  }) => {
+  /* 更新系统配置 */
+  const updateSystemConfig = useCallback(async (key: string, data: UpdateSystemConfigRequest) => {
     try {
       await services.admin.updateSystemConfig(key, data)
       await refetchSystemConfigs()
@@ -236,25 +205,20 @@ export function AdminProvider({ children }: AdminProviderProps) {
     }
   }, [refetchSystemConfigs])
 
-  /**
-   * 删除系统配置
-   */
+  /* 删除系统配置 */
   const deleteSystemConfig = useCallback(async (key: string) => {
     await services.admin.deleteSystemConfig(key)
     await refetchSystemConfigs()
   }, [refetchSystemConfigs])
 
   const value: AdminContextState = {
-    // User Pay Configs
     userPayConfigs,
     userPayConfigsLoading,
     userPayConfigsError,
     refetchUserPayConfigs,
-    createUserPayConfig,
     updateUserPayConfig,
     deleteUserPayConfig,
 
-    // System Configs
     systemConfigs,
     systemConfigsLoading,
     systemConfigsError,
@@ -272,6 +236,12 @@ export function AdminProvider({ children }: AdminProviderProps) {
 
 /**
  * 使用 Admin 上下文
+ * 
+ * @example
+ * ```tsx
+ * const { userPayConfigs, systemConfigs } = useAdmin()
+ * ```
+ * @returns {AdminContextState} Admin 上下文状态
  */
 export function useAdmin() {
   const context = useContext(AdminContext)

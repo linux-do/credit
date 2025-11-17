@@ -1,15 +1,15 @@
-"use client"
-
 import * as React from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Area, AreaChart, XAxis, YAxis } from "recharts"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { ExternalLink, Info, Eye, EyeOff } from "lucide-react"
+
 import { format } from "date-fns"
 import { zhCN } from "date-fns/locale"
 
+/* mock data */
 const chartData = [
   { date: "10-31", value: 0 },
   { date: "11-01", value: 0 },
@@ -20,6 +20,7 @@ const chartData = [
   { date: "11-06", value: 0 },
 ]
 
+/* chart config */
 const chartConfig = {
   value: {
     label: "数值",
@@ -29,8 +30,7 @@ const chartConfig = {
 
 /**
  * 付款卡片
- * 
- * @returns {React.ReactNode} 付款卡片
+ * 展示付款数据
  */
 function PaymentCard() {
   const [isHidden, setIsHidden] = React.useState(false)

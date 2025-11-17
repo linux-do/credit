@@ -1,8 +1,13 @@
 "use client"
 
 import * as React from "react"
+import { toast } from "sonner"
+import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
+import { ErrorInline } from "@/components/layout/error"
+import { EmptyStateWithBorder } from "@/components/layout/empty"
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,17 +19,32 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
-import { Input } from "@/components/ui/input"
-import { toast } from "sonner"
-import type { UserPayConfig } from "@/lib/services"
 import { Trash2, ListRestart, Layers } from "lucide-react"
-import { ErrorInline } from "@/components/common/status/error"
-import { EmptyStateWithBorder } from "@/components/common/status/empty"
+
+import type { UserPayConfig } from "@/lib/services"
 import { useAdmin, useTableInteraction } from "@/contexts/admin-context"
+
 
 /**
  * 支付配置详情面板组件
+ * 显示支付配置的详细信息和编辑面板
+ * 
+ * @example
+ * ```tsx
+ * <PayConfigDetailPanel
+ *   config={config}
+ *   editData={editData}
+ *   onEditDataChange={onEditDataChange}
+ *   onSave={onSave}
+ *   saving={saving}
+ * />
+ * ```
+ * @param {UserPayConfig} config - 支付配置
+ * @param {Partial<UserPayConfig>} editData - 编辑数据
+ * @param {function} onEditDataChange - 编辑数据改变回调
+ * @param {function} onSave - 保存回调
+ * @param {boolean} saving - 是否正在保存
+ * @returns {React.ReactNode} 支付配置详情面板组件
  */
 function PayConfigDetailPanel({
   config,
@@ -39,7 +59,7 @@ function PayConfigDetailPanel({
   onSave: () => void
   saving: boolean
 }) {
-  // 格式化日期
+  /* 格式化日期 */
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleString('zh-CN', {
       year: 'numeric',
@@ -74,7 +94,7 @@ function PayConfigDetailPanel({
               size="sm"
               className="px-3 h-7 text-xs"
             >
-              {saving ? (<><Spinner className="h-3 w-3 mr-1" /> 更新中</>) : '更新'}
+              {saving ? (<><Spinner /> 更新中</>) : '更新'}
             </Button>
           )}
         </div>
@@ -240,6 +260,25 @@ function PayConfigDetailPanel({
 /**
  * 支付配置表格组件
  * 显示支付配置记录的表格，可复用于不同页面
+ * 
+ * @example
+ * ```tsx
+ * <UserPayConfigsTable
+ *   configs={configs}
+ *   onDelete={onDelete}
+ *   onHover={onHover}
+ *   onSelect={onSelect}
+ *   hoveredConfig={hoveredConfig}
+ *   selectedConfig={selectedConfig}
+ * />
+ * ```
+ * @param {UserPayConfig[]} configs - 支付配置列表
+ * @param {function} onDelete - 删除回调
+ * @param {function} onHover - 悬停回调
+ * @param {function} onSelect - 选择回调
+ * @param {UserPayConfig | null} hoveredConfig - 悬停配置
+ * @param {UserPayConfig | null} selectedConfig - 选中配置
+ * @returns {React.ReactNode} 支付配置表格组件
  */
 export function UserPayConfigsTable({
   configs,
@@ -291,6 +330,26 @@ export function UserPayConfigsTable({
 
 /**
  * 支付配置表格行组件
+ * 显示支付配置表格行
+ * 
+ * @example
+ * ```tsx
+ * <PayConfigTableRow
+ *   config={config}
+ *   onDelete={onDelete}
+ *   onHover={onHover}
+ *   onSelect={onSelect}
+ *   isHovered={isHovered}
+ *   isSelected={isSelected}
+ * />
+ * ```
+ * @param {UserPayConfig} config - 支付配置
+ * @param {function} onDelete - 删除回调
+ * @param {function} onHover - 悬停回调
+ * @param {function} onSelect - 选择回调
+ * @param {boolean} isHovered - 是否悬停
+ * @param {boolean} isSelected - 是否选中
+ * @returns {React.ReactNode} 支付配置表格行组件
  */
 function PayConfigTableRow({
   config,
@@ -373,6 +432,12 @@ function PayConfigTableRow({
 
 /**
  * 用户支付配置管理组件
+ * 
+ * @example
+ * ```tsx
+ * <UserPayConfigs />
+ * ```
+ * @returns {React.ReactNode} 用户支付配置管理组件
  */
 export function UserPayConfigs() {
   const {
@@ -384,6 +449,7 @@ export function UserPayConfigs() {
     deleteUserPayConfig,
   } = useAdmin()
 
+  /* 悬停配置 */
   const {
     hoveredItem: hoveredConfig,
     selectedItem: selectedConfig,
@@ -400,6 +466,7 @@ export function UserPayConfigs() {
     daily_limit: config.daily_limit,
   }))
 
+  /* 删除支付配置 */
   const handleDelete = async (id: number) => {
     try {
       await deleteUserPayConfig(id)
@@ -411,6 +478,7 @@ export function UserPayConfigs() {
     }
   }
 
+  /* 保存支付配置 */
   const handleSave = async () => {
     if (!selectedConfig) return
 
@@ -422,7 +490,6 @@ export function UserPayConfigs() {
         daily_limit: editData.daily_limit,
         fee_rate: editData.fee_rate?.toString() ?? selectedConfig.fee_rate.toString(),
       })
-      // 刷新本地缓存的数据
       await refetchUserPayConfigs()
       toast.success('保存成功')
     } catch (error) {
@@ -434,7 +501,6 @@ export function UserPayConfigs() {
     }
   }
 
-  // 渲染内容
   const renderContent = () => {
     if (loading && configs.length === 0) {
       return (

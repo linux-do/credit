@@ -1,7 +1,9 @@
-import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import Link from "next/link"
+import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { UserRound, Bell, Shield, Palette } from "lucide-react"
 
+
+/* 设置项 */
 const settingsItems = [
   {
     title: "个人资料",
@@ -63,4 +65,3 @@ export default function SettingsPage() {
     </div>
   )
 }
-

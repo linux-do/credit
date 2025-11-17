@@ -1,8 +1,10 @@
 "use client"
 
-import { createContext, useContext, useState, useRef, useCallback, type ReactNode } from "react"
-import services, { type MerchantAPIKey, type UpdateAPIKeyRequest, isCancelError } from "@/lib/services"
+import { createContext, useContext, useState, useRef, useCallback } from "react"
 import { toast } from "sonner"
+
+import services, { type MerchantAPIKey, type UpdateAPIKeyRequest, isCancelError } from "@/lib/services"
+
 
 /**
  * 商户数据状态接口
@@ -30,35 +32,26 @@ interface MerchantContextType extends MerchantDataState {
 
 /**
  * 商户 Context
+ * 提供全局商户数据状态管理，数据在页面切换间保持
  */
 const MerchantContext = createContext<MerchantContextType | undefined>(undefined)
 
 /**
  * 商户 Provider Props
+ * @param {React.ReactNode} children - 商户 Provider 的子元素
  */
-interface MerchantProviderProps {
-  children: ReactNode
-}
-
-/**
- * 商户数据 Provider
- * 提供全局商户数据状态管理，数据在页面切换间保持
- */
-export function MerchantProvider({ children }: MerchantProviderProps) {
+export function MerchantProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<MerchantDataState>({
     apiKeys: [],
-    loading: false, // 初始不加载，在需要时才加载
+    loading: false,
     error: null,
   })
 
-  // 使用 ref 来标记是否已经加载过数据（全局级别）
+  /* 使用 ref 来标记是否已经加载过数据（全局级别） */
   const hasLoadedRef = useRef(false)
 
-  /**
-   * 加载 API Keys
-   */
+  /* 获取 API Keys */
   const loadAPIKeys = useCallback(async () => {
-    // 如果已经加载过，直接返回
     if (hasLoadedRef.current && state.apiKeys.length > 0) {
       return
     }
@@ -95,9 +88,7 @@ export function MerchantProvider({ children }: MerchantProviderProps) {
     }
   }, [state.apiKeys.length])
 
-  /**
-   * 创建 API Key
-   */
+  /* 创建 API Key */
   const createAPIKey = useCallback(async (data: {
     app_name: string
     app_homepage_url: string
@@ -113,13 +104,11 @@ export function MerchantProvider({ children }: MerchantProviderProps) {
     return newKey
   }, [])
 
-  /**
-   * 更新 API Key
-   */
+  /* 更新 API Key */
   const updateAPIKey = useCallback(async (id: number, data: UpdateAPIKeyRequest): Promise<void> => {
     await services.merchant.updateAPIKey(id, data)
 
-    // 更新本地状态中的API Key
+    /* 更新本地状态中的API Key */
     setState(prev => ({
       ...prev,
       apiKeys: prev.apiKeys.map(key =>
@@ -128,9 +117,7 @@ export function MerchantProvider({ children }: MerchantProviderProps) {
     }))
   }, [])
 
-  /**
-   * 删除 API Key
-   */
+  /* 删除 API Key */
   const deleteAPIKey = useCallback(async (id: number) => {
     await services.merchant.deleteAPIKey(id)
 
@@ -140,9 +127,7 @@ export function MerchantProvider({ children }: MerchantProviderProps) {
     }))
   }, [])
 
-  /**
-   * 刷新数据
-   */
+  /* 刷新数据 */
   const refresh = useCallback(async () => {
     hasLoadedRef.current = false
     await loadAPIKeys()
@@ -166,6 +151,12 @@ export function MerchantProvider({ children }: MerchantProviderProps) {
 
 /**
  * 使用商户数据 Hook
+ * 用于在组件中使用商户数据状态
+ * 
+ * @example
+ * ```tsx
+ * const { apiKeys, loading, error, loadAPIKeys, createAPIKey, updateAPIKey, deleteAPIKey, refresh } = useMerchant()
+ * ```
  */
 export function useMerchant(): MerchantContextType {
   const context = useContext(MerchantContext)

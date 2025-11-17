@@ -1,15 +1,16 @@
-"use client"
-
 import * as React from "react"
+
 import { Button } from "@/components/ui/button"
-import { Settings, Plus } from "lucide-react"
 import { TableFilter } from "@/components/common/general/table-filter"
+import { Settings, Plus } from "lucide-react"
 
-interface OverviewToolProps {
-  onDateRangeChange?: (dateRange: { from: Date; to: Date } | null) => void
-}
 
-export function OverviewTool({ onDateRangeChange }: OverviewToolProps) {
+/**
+ * 概览工具组件
+ * 提供日期范围选择和筛选功能
+ */
+export function OverviewTool({ onDateRangeChange }: { onDateRangeChange?: (dateRange: { from: Date; to: Date } | null) => void }) {
+  /* 获取最近几天的时间 */
   const getLastDays = (days: number) => {
     const to = new Date()
     const from = new Date()
@@ -20,6 +21,7 @@ export function OverviewTool({ onDateRangeChange }: OverviewToolProps) {
   const [selectedQuickSelection, setSelectedQuickSelection] = React.useState<string | null>("最近 7 天")
   const [dateRange, setDateRange] = React.useState<{ from: Date; to: Date } | null>(getLastDays(7))
 
+  /* 处理日期范围变化 */
   const handleDateRangeChange = (range: { from: Date; to: Date } | null) => {
     setDateRange(range || getLastDays(7))
     onDateRangeChange?.(range)
@@ -51,4 +53,3 @@ export function OverviewTool({ onDateRangeChange }: OverviewToolProps) {
     </div>
   )
 }
-

@@ -1,7 +1,10 @@
-"use client"
-
 import * as React from "react"
 
+
+/**
+ * 转账组件
+ * 显示转账功能和规则
+ */
 export function Transfer() {
   return (
     <div className="space-y-4">

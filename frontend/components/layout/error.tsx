@@ -1,24 +1,22 @@
 import * as React from "react"
 import { AlertCircle } from "lucide-react"
-import { Button } from "../../ui/button"
+import { Button } from "@/components/ui/button"
+
 import { cn } from "@/lib/utils"
 
+
+/**
+ * 错误展示组件属性
+ * 用于统一显示加载失败、请求失败等错误状态
+ */
 export interface ErrorDisplayProps {
-  /** 错误标题 */
   title?: string
-  /** 错误消息 */
   message?: string
-  /** 错误对象 */
   error?: Error | null
-  /** 重试回调 */
   onRetry?: () => void
-  /** 重试按钮文本 */
   retryText?: string
-  /** 自定义图标 */
   icon?: React.ComponentType<{ className?: string }>
-  /** 自定义类名 */
   className?: string
-  /** 是否显示完整错误堆栈（开发模式） */
   showStack?: boolean
 }
 
@@ -47,6 +45,8 @@ export interface ErrorDisplayProps {
  *   className="min-h-[400px]"
  * />
  * ```
+ * @param {ErrorDisplayProps} props - 错误展示组件属性
+ * @returns {React.ReactNode} 错误展示组件
  */
 export function ErrorDisplay({
   title = "加载失败",
@@ -102,6 +102,15 @@ export function ErrorDisplay({
 /**
  * 区域级错误组件
  * 适合在较小的区域显示错误
+ * 
+ * @example
+ * ```tsx
+ * <ErrorInline 
+ *   message="发生错误" 
+ *   error={error} 
+ *   onRetry={() => refetch()} 
+ * />
+ * ```
  */
 export function ErrorInline({
   message = "发生错误",
@@ -132,6 +141,16 @@ export function ErrorInline({
 /**
  * 页面级错误组件
  * 适合作为页面主要内容的错误状态
+ * 
+ * @example
+ * ```tsx
+ * <ErrorPage 
+ *   title="加载失败" 
+ *   message="无法获取数据，请稍后重试" 
+ *   error={error} 
+ *   onRetry={() => refetch()} 
+ * />
+ * ```
  */
 export function ErrorPage(props: ErrorDisplayProps) {
   return (
@@ -143,4 +162,3 @@ export function ErrorPage(props: ErrorDisplayProps) {
     </div>
   )
 }
-

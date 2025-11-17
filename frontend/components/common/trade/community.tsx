@@ -1,7 +1,10 @@
-"use client"
-
 import * as React from "react"
 
+
+/**
+ * 社区积分划转组件
+ * 显示社区积分划转规则
+ */
 export function Community() {
   return (
     <div className="space-y-4">

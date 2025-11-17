@@ -1,14 +1,13 @@
-"use client"
-
 import * as React from "react"
-import type { Order } from "@/lib/services"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { typeConfig, statusConfig } from "@/components/common/general/table-filter"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
 
-import { typeConfig, statusConfig } from "@/components/common/general/table-filter"
+import type { Order } from "@/lib/services"
+
 
 /**
  * 交易数据表格组件
@@ -50,15 +49,17 @@ export function TransactionDataTable({ transactions }: { transactions: Order[] }
 
 /**
  * 交易表格行组件
+ * 展示交易记录的表格行
  */
 function TransactionTableRow({ order }: { order: Order }) {
+  /* 格式化金额 */
   const getAmountDisplay = (amount: string) => (
     <span className="text-xs font-semibold">
       {parseFloat(amount).toFixed(2)}
     </span>
   )
 
-  // 格式化时间
+  /* 格式化时间 */
   const formatTime = (timeStr: string) => {
     try {
       const date = new Date(timeStr)
@@ -157,4 +158,3 @@ function TransactionTableRow({ order }: { order: Order }) {
     </TableRow>
   )
 }
-

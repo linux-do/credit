@@ -1,18 +1,33 @@
 "use client"
 
 import { useState } from "react"
-import { cn } from "@/lib/utils"
-import { RippleButton } from "@/components/animate-ui/components/buttons/ripple"
-import services from "@/lib/services"
 import { toast } from "sonner"
-import { Spinner } from "../ui/spinner"
+import { Spinner } from "@/components/ui/spinner"
+import { RippleButton } from "@/components/animate-ui/components/buttons/ripple"
 
+import { cn } from "@/lib/utils"
+import services from "@/lib/services"
+
+
+/**
+ * 登录表单组件
+ * 显示登录表单和登录按钮
+ * 
+ * @example
+ * ```tsx
+ * <LoginForm />
+ * ```
+ * @param {React.ComponentProps<"div">} props - 组件属性
+ * @param {string} className - 组件类名
+ * @returns {React.ReactNode} 登录表单组件
+ */
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
   const [isLoading, setIsLoading] = useState(false)
 
+  /* 处理登录 */
   const handleLogin = async () => {
     setIsLoading(true)
     try {

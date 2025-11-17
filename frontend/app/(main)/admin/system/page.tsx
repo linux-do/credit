@@ -2,11 +2,14 @@
 
 import { useEffect } from "react"
 import { SystemConfigs } from "@/components/common/admin/system-configs"
-import { AdminProvider, useAdmin } from "@/contexts/admin-context"
-import { useUser } from "@/contexts/user-context"
-import { ErrorPage } from "@/components/common/status/error"
-import { LoadingPage } from "@/components/common/status/loading"
+import { ErrorPage } from "@/components/layout/error"
+import { LoadingPage } from "@/components/layout/loading"
 
+import { useUser } from "@/contexts/user-context"
+import { AdminProvider, useAdmin } from "@/contexts/admin-context"
+
+
+/* 系统配置页面 */
 export default function SystemConfigPage() {
   return (
     <AdminProvider>
@@ -15,6 +18,7 @@ export default function SystemConfigPage() {
   )
 }
 
+/* 系统配置页面内容 */
 function SystemConfigPageContent() {
   const { user, loading } = useUser()
   const { refetchSystemConfigs } = useAdmin()
@@ -25,10 +29,12 @@ function SystemConfigPageContent() {
     }
   }, [user?.is_admin, refetchSystemConfigs])
 
+  /* 等待用户信息加载完成 */
   if (loading) {
     return <LoadingPage text="系统配置" badgeText="系统" />
   }
 
+  /* 权限检查：只有管理员才能访问 */
   if (!user?.is_admin) {
     return (
       <ErrorPage

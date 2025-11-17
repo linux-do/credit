@@ -1,7 +1,7 @@
-"use client"
-
 import * as React from "react"
 import { useState } from "react"
+import Link from "next/link"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
   AlertDialog,
@@ -14,14 +14,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { MerchantDialog } from "@/components/common/merchant/merchant-dialog"
 import { Copy, Eye, EyeOff, Trash2, ExternalLink, Edit } from "lucide-react"
-import { toast } from "sonner"
+
 import { type MerchantAPIKey } from "@/lib/services"
-import { MerchantDialog } from "./merchant-dialog"
-import Link from "next/link"
+
 
 interface MerchantInfoProps {
-  /** 当前选中的 API Key */
+  /** API Key */
   apiKey: MerchantAPIKey
   /** 更新回调 */
   onUpdate: (updatedKey: MerchantAPIKey) => void
@@ -37,7 +37,7 @@ export function MerchantInfo({ apiKey, onUpdate, onDelete }: MerchantInfoProps) 
   const [showClientId, setShowClientId] = useState(false)
   const [showClientSecret, setShowClientSecret] = useState(false)
 
-  // 复制到剪贴板
+  /* 复制到剪贴板 */
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text).then(() => {
       toast.success(`${label} 已复制`)
@@ -46,7 +46,7 @@ export function MerchantInfo({ apiKey, onUpdate, onDelete }: MerchantInfoProps) 
     })
   }
 
-  // 格式化日期
+  /* 格式化日期 */
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleString('zh-CN', {
       year: 'numeric',
@@ -216,7 +216,6 @@ export function MerchantInfo({ apiKey, onUpdate, onDelete }: MerchantInfoProps) 
           </AlertDialog>
         </div>
       </div>
-  </div>
+    </div>
   )
 }
-

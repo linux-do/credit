@@ -3,27 +3,37 @@
 import * as React from "react"
 import { useState } from "react"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Receive } from "@/components/common/trade/receive"
+import { Payment } from "@/components/common/trade/payment"
+import { Transfer } from "@/components/common/trade/transfer"
+import { Community } from "@/components/common/trade/community"
+import { AllActivity } from "@/components/common/trade/all-activity"
+import { TradeTable } from "@/components/common/trade/trade-table"
+
 import type { OrderType } from "@/lib/services"
-import { Receive } from "./receive"
-import { Payment } from "./payment"
-import { Transfer } from "./transfer"
-import { Community } from "./community"
-import { AllActivity } from "./all-activity"
-import { TradeTable } from "./trade-table"
 import { TransactionProvider } from "@/contexts/transaction-context"
 
+
+/* 标签触发器样式 */
 const TAB_TRIGGER_STYLES = "data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-0 data-[state=active]:border-b-2 data-[state=active]:border-[#6366f1] bg-transparent rounded-none border-0 border-b-2 border-transparent px-0 text-sm font-bold text-muted-foreground data-[state=active]:text-[#6366f1] -mb-[2px] relative hover:text-foreground transition-colors flex-none"
 
-type TabValue = 'receive' | 'payment' | 'transfer' | 'community' | 'all'
+/* 标签值类型 */
+type TabValue = OrderType | 'all'
 
+/**
+ * 交易主页面组件
+ * 负责组装交易中心的各个子组件
+ */
 export function TradeMain() {
   const [activeTab, setActiveTab] = useState<TabValue>('receive')
 
+  /* 获取订单类型 */
   const getOrderType = (tab: TabValue): OrderType | undefined => {
     if (tab === 'all') return undefined
     return tab as OrderType
   }
 
+  /* 渲染页面内容 */
   const renderPageContent = () => {
     switch (activeTab) {
       case 'receive':
@@ -66,4 +76,3 @@ export function TradeMain() {
     </TransactionProvider>
   )
 }
-

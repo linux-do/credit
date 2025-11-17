@@ -1,11 +1,11 @@
-"use client"
-
 import { Area, AreaChart, XAxis, YAxis } from "recharts"
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { CountingNumber } from '@/components/animate-ui/primitives/texts/counting-number';
 
 import { useUser } from "@/contexts/user-context"
 
+
+/* mock data */
 const chartData = [
   { date: "10-28", total: 0 },
   { date: "10-29", total: 99 },
@@ -18,6 +18,7 @@ const chartData = [
   { date: "11-05", total: 0 },
 ]
 
+/* chart config */
 const chartConfig = {
   total: {
     label: "总额",
@@ -27,6 +28,7 @@ const chartConfig = {
 
 /**
  * 数据面板组件
+ * 展示用户数据和积分余额
  * @returns {React.ReactNode} 数据面板组件
  */
 export function DataPanel() {
@@ -110,4 +112,3 @@ export function DataPanel() {
     </div>
   )
 }
-

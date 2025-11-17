@@ -1,19 +1,17 @@
 "use client"
 
 import * as React from "react"
-import { useUser } from "@/contexts/user-context"
-import { PayLevel, User } from "@/lib/services/auth/types"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-  type CarouselApi,
-} from "@/components/ui/carousel"
-import { cn } from "@/lib/utils"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel"
 
+import { cn } from "@/lib/utils"
+import { PayLevel, User } from "@/lib/services/auth"
+import { useUser } from "@/contexts/user-context"
+
+
+/**
+ * 等级配置
+ */
 interface LevelConfig {
   level: PayLevel
   name: string
@@ -221,7 +219,6 @@ export function ProfileMain() {
         <div className="border-b border-border pb-4">
           <h1 className="text-2xl font-semibold">个人资料</h1>
         </div>
-        <div className="text-sm text-muted-foreground">加载中...</div>
       </div>
     )
   }

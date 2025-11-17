@@ -2,16 +2,17 @@
 
 import * as React from "react"
 import { useEffect } from "react"
-import { RefreshCw, Undo2, FileText, Settings, BarChart3, Zap } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Spinner } from "@/components/ui/spinner"
+import { ErrorInline } from "@/components/layout/error"
+import { EmptyStateWithBorder } from "@/components/layout/empty"
+import { TableFilter } from "@/components/common/general/table-filter"
+import { TransactionDataTable } from "@/components/common/general/table-data"
+import { RefreshCw, Undo2, FileText, Settings, BarChart3, Zap, Layers, ListRestart } from "lucide-react"
+
 import type { MerchantAPIKey, OrderType, OrderStatus } from "@/lib/services"
 import { TransactionProvider, useTransaction } from "@/contexts/transaction-context"
-import { TransactionDataTable } from "@/components/common/general/table-data"
-import { TableFilter } from "@/components/common/general/table-filter"
-import { Button } from "@/components/ui/button"
-import { ErrorInline } from "@/components/common/status/error"
-import { EmptyStateWithBorder } from "@/components/common/status/empty"
-import { Spinner } from "@/components/ui/spinner"
-import { Layers, ListRestart } from "lucide-react"
+
 
 interface MerchantDataProps {
   /** 当前选中的 API Key */
@@ -62,7 +63,6 @@ function MerchantDataContent({ apiKey }: MerchantDataProps) {
     loadMore,
   } = useTransaction()
 
-  // 筛选状态
   const [selectedTypes, setSelectedTypes] = React.useState<OrderType[]>([])
   const [selectedStatuses, setSelectedStatuses] = React.useState<OrderStatus[]>([])
   const [selectedQuickSelection, setSelectedQuickSelection] = React.useState<string | null>("最近 1 个月")
@@ -72,7 +72,6 @@ function MerchantDataContent({ apiKey }: MerchantDataProps) {
     return { from, to: now }
   })
 
-  // 清空所有筛选
   const clearAllFilters = () => {
     setSelectedTypes([])
     setSelectedStatuses([])
@@ -82,7 +81,9 @@ function MerchantDataContent({ apiKey }: MerchantDataProps) {
     setSelectedQuickSelection("最近 1 个月")
   }
 
-  // 当筛选条件或 API key 改变时，重新加载数据
+  /**
+   * 当筛选条件或 API key 改变时，重新加载数据
+   */
   useEffect(() => {
     const params = {
       page: 1,
@@ -97,12 +98,10 @@ function MerchantDataContent({ apiKey }: MerchantDataProps) {
     fetchTransactions(params)
   }, [fetchTransactions, dateRange, selectedTypes, selectedStatuses, apiKey.client_id])
 
-  // 加载更多
   const handleLoadMore = () => {
     loadMore()
   }
 
-  // 渲染内容
   const renderContent = () => {
     if (loading && transactions.length === 0) {
       return (
@@ -146,14 +145,7 @@ function MerchantDataContent({ apiKey }: MerchantDataProps) {
             disabled={loading}
             className="w-full text-xs border-dashed"
           >
-            {loading ? (
-              <>
-                <Spinner className="size-4" />
-                正在加载
-              </>
-            ) : (
-              `加载更多 (${transactions.length}/${total})`
-            )}
+            {loading ? (<><Spinner /> 正在加载</>) : (`加载更多 (${transactions.length}/${total})`)}
           </Button>
         )}
 
@@ -275,4 +267,3 @@ function MerchantDataContent({ apiKey }: MerchantDataProps) {
     </div>
   )
 }
-

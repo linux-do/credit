@@ -1,9 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { DataPanel } from "./data-panel"
-import { OverviewTool } from "./overview-tool"
-import { OverviewPanel } from "./overview-panel"
+
+import { DataPanel } from "@/components/common/home/data-panel"
+import { OverviewTool } from "@/components/common/home/overview-tool"
+import { OverviewPanel } from "@/components/common/home/overview-panel"
 
 export function HomeMain() {
   const [dateRange, setDateRange] = React.useState<{ from: Date; to: Date } | null>(null)

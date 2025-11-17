@@ -3,6 +3,41 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { AnimateIcon } from "@/components/animate-ui/icons/icon"
+import { ChevronLeft } from "@/components/animate-ui/icons/chevron-left"
+import { ChevronRight } from "@/components/animate-ui/icons/chevron-right"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { 
+  DropdownMenu, 
+  DropdownMenuTrigger, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu"
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from "@/components/ui/sidebar"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import {
   BarChart3,
   Home,
@@ -18,103 +53,41 @@ import {
   FileQuestionMark,
   ShieldCheck,
 } from "lucide-react"
-import { AnimateIcon } from "@/components/animate-ui/icons/icon"
-import { ChevronLeft } from "@/components/animate-ui/icons/chevron-left"
-import { ChevronRight } from "@/components/animate-ui/icons/chevron-right"
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar"
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from "@/components/ui/sidebar"
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+
 import { useUser } from "@/contexts/user-context"
 
+
+/* 导航数据 */
 const data = {
   navMain: [
-    {
-      title: "首页",
-      url: "/home",
-      icon: Home,
-    },
-    {
-      title: "交易",
-      url: "/trade",
-      icon: CircleDollarSign,
-    },
-    {
-      title: "商户",
-      url: "/merchant",
-      icon: Store,
-    },
-    {
-      title: "余额",
-      url: "/balance",
-      icon: Wallet,
-    },
+    { title: "首页", url: "/home", icon: Home },
+    { title: "交易", url: "/trade", icon: CircleDollarSign },
+    { title: "商户", url: "/merchant", icon: Store },
+    { title: "余额", url: "/balance", icon: Wallet },
   ],
   admin: [
-    {
-      title: "系统配置",
-      url: "/admin/system",
-      icon: ShieldCheck,
-    },
-    {
-      title: "支付配置",
-      url: "/admin/user_pay",
-      icon: Settings,
-    },
+    { title: "系统配置", url: "/admin/system", icon: ShieldCheck },
+    { title: "支付配置", url: "/admin/user_pay", icon: Settings },
   ],
   document: [
-    {
-      title: "接口文档",
-      url: "#",
-      icon: CreditCard,
-    },
-    {
-      title: "使用文档",
-      url: "#",
-      icon: FileText,
-    },
+    { title: "接口文档", url: "#", icon: CreditCard },
+    { title: "使用文档", url: "#", icon: FileText },
   ],
   products: [
-    {
-      title: "报表",
-      url: "#",
-      icon: BarChart3,
-    },
+    { title: "报表", url: "#", icon: BarChart3 },
   ],
 }
 
+/**
+ * 应用侧边栏组件
+ * 显示应用侧边栏
+ * 
+ * @example
+ * ```tsx
+ * <AppSidebar />
+ * ```
+ * @returns {React.ReactNode} 应用侧边栏组件
+ */
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { toggleSidebar, state } = useSidebar()
   const { user, getTrustLevelLabel, logout } = useUser()

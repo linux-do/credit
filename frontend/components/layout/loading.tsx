@@ -1,24 +1,9 @@
-"use client"
-
-import React from "react"
+import * as React from "react"
 import { motion, AnimatePresence } from "motion/react"
 import { Badge } from "@/components/ui/badge"
 
-interface LoadingPageProps {
-  /** 显示的文本内容，默认为"系统" */
-  text?: string
-  /** 显示的徽章文本，默认为"系统" */
-  badgeText?: string
-}
 
-/**
- * 加载页面组件
- * @param text - 显示的文本内容，默认为"系统"
- * @param badgeText - 显示的徽章文本，默认为"系统"
- * @returns 加载页面组件
- */
-
-// 渲染带动画效果的文字
+/* 渲染带动画效果的文字 */
 const renderAnimatedText = (text: string, startDelay: number = 0) => {
   const chars = text.split('')
   return (
@@ -39,7 +24,19 @@ const renderAnimatedText = (text: string, startDelay: number = 0) => {
   )
 }
 
-export function LoadingPage({ text = "系统", badgeText = "系统" }: LoadingPageProps) {
+/**
+ * 加载页面组件
+ * 
+ * 用于统一显示加载状态
+ * @example
+ * ```tsx
+ * <LoadingPage text="系统" badgeText="系统" />
+ * ```
+ * @param {string} text - 显示的文本内容，默认为"系统"
+ * @param {string} badgeText - 显示的徽章文本，默认为"系统"
+ * @returns {React.ReactNode} 加载页面组件
+ */
+export function LoadingPage({ text = "系统", badgeText = "系统" }: { text?: string, badgeText?: string }) {
   return (
     <div className="absolute inset-0 flex items-center justify-center">
       <div className="w-full max-w-md mx-auto text-center px-4">

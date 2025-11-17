@@ -1,19 +1,14 @@
-"use client"
-
 import * as React from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
-// 功能卡片组件
-function FeatureCard({ 
-  title, 
-  description, 
-  linkText 
-}: { 
-  title: string
-  description: string
-  linkText: string
-}) {
+
+/**
+ * 功能卡片组件
+ * 显示功能卡片
+ */
+function FeatureCard({ title, description, linkText }: { title: string, description: string, linkText: string }) {
+
   return (
     <Card className="bg-background border border-border shadow-none transition-shadow">
       <CardHeader>
@@ -31,6 +26,10 @@ function FeatureCard({
   )
 }
 
+/**
+ * 收款组件
+ * 显示收款功能和规则
+ */
 export function Receive() {
   return (
     <div className="space-y-4">

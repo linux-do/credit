@@ -1,19 +1,13 @@
-"use client"
-
 import * as React from "react"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
 import type { MerchantAPIKey } from "@/lib/services"
+
 
 interface MerchantSelectorProps {
   /** API Keys 列表 */
   apiKeys: MerchantAPIKey[]
-  /** 当前选中的 API Key ID */
+  /** 选中的 API Key */
   selectedKeyId: number | null
   /** 选择回调 */
   onSelect: (id: number) => void
@@ -57,4 +51,3 @@ export function MerchantSelector({
       </Select>
   )
 }
-

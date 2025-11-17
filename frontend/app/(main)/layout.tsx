@@ -1,12 +1,14 @@
 "use client"
 
+import { motion } from "motion/react"
+import { usePathname } from "next/navigation"
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { SiteHeader } from "@/components/layout/site-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
+
 import { UserProvider } from "@/contexts/user-context"
 import { MerchantProvider } from "@/contexts/merchant-context"
-import { motion } from "motion/react"
-import { usePathname } from "next/navigation"
+
 
 export default function MainLayout({
   children,
@@ -50,4 +52,3 @@ export default function MainLayout({
     </UserProvider>
   )
 }
-

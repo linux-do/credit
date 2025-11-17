@@ -2,17 +2,18 @@
 
 import * as React from "react"
 import { useState, useEffect } from "react"
-import { toast } from "sonner"
 import { motion } from "motion/react"
-import { useMerchant } from "@/contexts/merchant-context"
+import { toast } from "sonner"
+import { ErrorDisplay } from "@/components/layout/error"
+import { EmptyState } from "@/components/layout/empty"
+import { LoadingPage } from "@/components/layout/loading"
+import { MerchantSelector } from "@/components/common/merchant/merchant-selector"
+import { MerchantInfo } from "@/components/common/merchant/merchant-info"
+import { MerchantData } from "@/components/common/merchant/merchant-data"
+import { MerchantDialog } from "@/components/common/merchant/merchant-dialog"
+
 import { type MerchantAPIKey } from "@/lib/services"
-import { ErrorDisplay } from "../status/error"
-import { EmptyState } from "../status/empty"
-import { LoadingPage } from "../status/loading"
-import { MerchantSelector } from "./merchant-selector"
-import { MerchantInfo } from "./merchant-info"
-import { MerchantData } from "./merchant-data"
-import { MerchantDialog } from "./merchant-dialog"
+import { useMerchant } from "@/contexts/merchant-context"
 
 
 /**
@@ -25,20 +26,24 @@ export function MerchantMain() {
 
   const selectedKey = apiKeys.find(key => key.id === selectedKeyId) || null
 
+  /* 加载 API Keys */
   useEffect(() => {
     loadAPIKeys()
   }, [loadAPIKeys])
 
+  /* 选择默认 API Key */
   useEffect(() => {
     if (apiKeys.length > 0 && !selectedKeyId) {
       setSelectedKeyId(apiKeys[0].id)
     }
   }, [apiKeys, selectedKeyId])
 
+  /* 创建成功回调 */
   const handleCreateSuccess = (newKey: MerchantAPIKey) => {
     setSelectedKeyId(newKey.id)
   }
 
+  /* 更新成功回调 */
   const handleUpdate = async (updatedKey: MerchantAPIKey) => {
     try {
       await updateAPIKey(updatedKey.id, {
@@ -59,6 +64,7 @@ export function MerchantMain() {
     }
   }
 
+  /* 删除成功回调 */
   const handleDelete = async (id: number) => {
     try {
       await deleteAPIKey(id)
@@ -75,6 +81,7 @@ export function MerchantMain() {
     }
   }
 
+  /* 等待加载 API Keys */
   if (apiKeys.length === 0) {
     return <LoadingPage text="商户中心" badgeText="商户" />
   }

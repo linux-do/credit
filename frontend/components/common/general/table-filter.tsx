@@ -1,22 +1,17 @@
-"use client"
-
 import * as React from "react"
-import { Filter, CalendarIcon, X } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Calendar } from "@/components/ui/calendar"
 import { Separator } from "@/components/ui/separator"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Filter, CalendarIcon, X } from "lucide-react"
+
 import { zhCN } from "date-fns/locale"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Checkbox } from "@/components/ui/checkbox"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import type { OrderType, OrderStatus } from "@/lib/services"
 
-// 类型标签配置
+
+/* 类型标签配置 */
 export const typeConfig: Record<OrderType, { label: string; color: string }> = {
   receive: { label: '收款', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' },
   payment: { label: '付款', color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' },
@@ -24,7 +19,7 @@ export const typeConfig: Record<OrderType, { label: string; color: string }> = {
   community: { label: '社区划转', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300' }
 }
 
-// 状态标签配置
+/* 状态标签配置 */
 export const statusConfig: Record<OrderStatus, { label: string; color: string }> = {
   success: { label: '成功', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' },
   pending: { label: '处理中', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' },
@@ -35,7 +30,7 @@ export const statusConfig: Record<OrderStatus, { label: string; color: string }>
   refunding: { label: '退款中', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' }
 }
 
-// 时间范围选项
+/* 时间范围选项 */
 export const timeRangeOptions = [
   { label: "今天", getValue: () => {
     const today = new Date()
@@ -76,21 +71,35 @@ export const timeRangeOptions = [
   { label: "所有时间", getValue: () => null },
 ]
 
+
+/**
+ * 表格筛选组件的属性
+ * @example
+ * ```tsx
+ * <TableFilter
+ *   enabledFilters={{ type: true, status: true, timeRange: true }}
+ *   selectedTypes={["receive", "payment"]}
+ *   selectedStatuses={["success", "failed"]}
+ *   selectedTimeRange={{ from: new Date(), to: new Date() }}
+ *   selectedQuickSelection="最近 7 天"
+ * />
+ * ```
+ */
 export interface TableFilterProps {
-  // 启用的筛选类型
+  /* 启用的筛选类型 */
   enabledFilters?: {
     type?: boolean
     status?: boolean
     timeRange?: boolean
   }
 
-  // 当前选中的值
+  /* 当前选中的值 */
   selectedTypes?: OrderType[]
   selectedStatuses?: OrderStatus[]
   selectedTimeRange?: { from: Date; to: Date } | null
   selectedQuickSelection?: string | null
 
-  // 回调函数
+  /* 回调函数 */
   onTypeChange?: (types: OrderType[]) => void
   onStatusChange?: (statuses: OrderStatus[]) => void
   onTimeRangeChange?: (range: { from: Date; to: Date } | null) => void
@@ -103,6 +112,24 @@ export interface TableFilterProps {
 
 /**
  * 可复用的筛选组件
+ * 支持类型、状态、时间范围筛选
+ * 
+ * @example
+ * ```tsx
+ * <TableFilter
+ *   enabledFilters={{ type: true, status: true, timeRange: true }}
+ *   selectedTypes={["receive", "payment"]}
+ *   selectedStatuses={["success", "failed"]}
+ *   selectedTimeRange={{ from: new Date(), to: new Date() }}
+ *   selectedQuickSelection="最近 7 天"
+ *   onTypeChange={setSelectedTypes}
+ *   onStatusChange={setSelectedStatuses}
+ *   onTimeRangeChange={setDateRange}
+ *   onQuickSelectionChange={setSelectedQuickSelection}
+ *   showClearButton={true}
+ *   onClearAll={clearAllFilters}
+ * />
+ * ```
  */
 export function TableFilter({
   enabledFilters = { type: true, status: true, timeRange: true },
@@ -117,7 +144,7 @@ export function TableFilter({
   showClearButton = true,
   onClearAll,
 }: TableFilterProps) {
-  // 切换类型筛选
+  /* 切换类型筛选 */
   const toggleType = (type: OrderType) => {
     if (!onTypeChange) return
     const newTypes = selectedTypes.includes(type)
@@ -126,7 +153,7 @@ export function TableFilter({
     onTypeChange(newTypes)
   }
 
-  // 切换状态筛选
+  /* 切换状态筛选 */
   const toggleStatus = (status: OrderStatus) => {
     if (!onStatusChange) return
     const newStatuses = selectedStatuses.includes(status)
@@ -135,12 +162,12 @@ export function TableFilter({
     onStatusChange(newStatuses)
   }
 
-  // 处理时间范围变化
+  /* 处理时间范围变化 */
   const handleTimeRangeChange = (range: { from: Date; to: Date } | null) => {
     onTimeRangeChange?.(range)
   }
 
-  // 处理日历选择
+  /* 处理日历选择 */
   const handleCalendarSelect = (range: { from?: Date; to?: Date } | undefined) => {
     if (range?.from) {
       let to = range.to || range.from
@@ -153,12 +180,12 @@ export function TableFilter({
     }
   }
 
+  /* 是否有激活的筛选 */
   const hasActiveFilters = selectedTypes.length > 0 || selectedStatuses.length > 0
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
       <div className="flex items-center gap-2 flex-wrap">
-        {/* 类型筛选 */}
         {enabledFilters.type && (
           <FilterSelect<OrderType>
             label="类型"
@@ -168,7 +195,6 @@ export function TableFilter({
           />
         )}
 
-        {/* 状态筛选 */}
         {enabledFilters.status && (
           <FilterSelect<OrderStatus>
             label="状态"
@@ -178,7 +204,6 @@ export function TableFilter({
           />
         )}
 
-        {/* 时间范围筛选 */}
         {enabledFilters.timeRange && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -228,7 +253,6 @@ export function TableFilter({
         )}
       </div>
 
-      {/* 清空筛选按钮 */}
       {showClearButton && hasActiveFilters && onClearAll && (
         <Button
           variant="ghost"
@@ -246,13 +270,19 @@ export function TableFilter({
 
 /**
  * 可复用的筛选选择器组件
+ * 支持类型、状态、时间范围筛选
+ * 
+ * @example
+ * ```tsx
+ * <FilterSelect
+ *   label="类型"
+ *   selectedValues={["receive", "payment"]}
+ *   options={typeConfig}
+ *   onToggleValue={toggleType}
+ * />
+ * ```
  */
-function FilterSelect<T extends string>({
-  label,
-  selectedValues,
-  options,
-  onToggleValue
-}: {
+function FilterSelect<T extends string>({ label, selectedValues, options, onToggleValue }: {
   label: string
   selectedValues: T[]
   options: Record<T, { label: string; color: string }>

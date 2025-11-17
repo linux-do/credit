@@ -2,27 +2,20 @@
 
 import * as React from "react"
 import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { toast } from "sonner"
+import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+
 import services, { type MerchantAPIKey, type CreateAPIKeyRequest, type UpdateAPIKeyRequest } from "@/lib/services"
+
 
 interface MerchantDialogProps {
   /** 模式：创建或更新 */
   mode: 'create' | 'update'
-  /** 指定 API Key 更新*/
+  /** API Key*/
   apiKey?: MerchantAPIKey
   /** 创建成功回调 */
   onSuccess: (newKey: MerchantAPIKey) => void
@@ -55,7 +48,9 @@ export function MerchantDialog({
     redirect_uri: '',
   })
 
-  // 初始化表单数据
+  /**
+   * 初始化表单数据
+   */
   useEffect(() => {
     if (mode === 'update' && apiKey) {
       setFormData({
@@ -102,33 +97,27 @@ export function MerchantDialog({
   }
 
   const validateForm = (): { valid: boolean; error?: string } => {
-    // 验证必填项
+    /* 验证必填项 */
     if (!formData.app_name || !formData.app_homepage_url || !formData.redirect_uri) {
       return { valid: false, error: '请填写所有必填项' }
     }
 
-    // 验证应用名称长度
+    /* 验证应用名称长度 */
     if (formData.app_name.length > 20) {
       return { valid: false, error: '应用名称不能超过 20 个字符' }
     }
 
-    // 验证应用主页 URL
+    /* 验证应用主页 URL */
     if (!isValidUrl(formData.app_homepage_url)) {
-      return {
-        valid: false,
-        error: '应用主页 URL 格式不正确，请输入完整的 URL（例如：https://example.com）'
-      }
+      return { valid: false, error: '应用主页 URL 格式不正确' }
     }
 
-    // 验证回调 URI
+    /* 验证回调 URI */
     if (!isValidUrl(formData.redirect_uri)) {
-      return {
-        valid: false,
-        error: '回调 URI 格式不正确，请输入完整的 URL（例如：https://example.com/callback）'
-      }
+      return { valid: false, error: '回调 URI 格式不正确' }
     }
 
-    // 验证应用描述长度
+    /* 验证应用描述长度 */
     if (formData.app_description && formData.app_description.length > 100) {
       return { valid: false, error: '应用描述不能超过 100 个字符' }
     }
@@ -163,7 +152,7 @@ export function MerchantDialog({
           description: '应用信息已更新'
         })
 
-        // 更新本地状态
+        /* 更新本地状态 */
         const updatedKey = { ...apiKey, ...formData }
         onUpdate?.(updatedKey)
       }
@@ -201,18 +190,13 @@ export function MerchantDialog({
         <DialogHeader>
           <DialogTitle>{mode === 'create' ? '创建应用' : '更新应用信息'}</DialogTitle>
           <DialogDescription>
-            {mode === 'create'
-              ? '创建一个应用来接入支付功能，请仔细填写以下信息'
-              : '修改应用的基本信息和配置'
-            }
+            {mode === 'create' ? '创建一个应用来接入支付功能，请仔细填写以下信息' : '修改应用的基本信息和配置'}
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <Label htmlFor="app_name">
-              应用名称 <span className="text-red-500">*</span>
-            </Label>
+            <Label htmlFor="app_name">应用名称 <span className="text-red-500">*</span></Label>
             <Input
               id="app_name"
               placeholder="您的应用名称"
@@ -221,9 +205,7 @@ export function MerchantDialog({
               onChange={(e) => setFormData({ ...formData, app_name: e.target.value })}
               disabled={processing}
             />
-            <p className="text-xs text-muted-foreground">
-              最多 20 个字符，用于标识您的应用
-            </p>
+            <p className="text-xs text-muted-foreground">最多 20 个字符，用于标识您的应用</p>
           </div>
 
           <div className="grid gap-2">
@@ -236,15 +218,11 @@ export function MerchantDialog({
               onChange={(e) => setFormData({ ...formData, app_description: e.target.value })}
               disabled={processing}
             />
-            <p className="text-xs text-muted-foreground">
-              最多 100 个字符，用于描述您的应用，可选
-            </p>
+            <p className="text-xs text-muted-foreground">最多 100 个字符，用于描述您的应用，可选</p>
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="app_homepage_url">
-              应用主页 URL <span className="text-red-500">*</span>
-            </Label>
+            <Label htmlFor="app_homepage_url">应用主页 URL <span className="text-red-500">*</span></Label>
             <Input
               id="app_homepage_url"
               type="url"
@@ -254,15 +232,11 @@ export function MerchantDialog({
               onChange={(e) => setFormData({ ...formData, app_homepage_url: e.target.value })}
               disabled={processing}
             />
-            <p className="text-xs text-muted-foreground">
-              URL 必须为包含 http:// 或 https:// ，用于展示您的应用主页
-            </p>
+            <p className="text-xs text-muted-foreground">URL 必须为包含 http:// 或 https:// ，用于展示您的应用主页</p>
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="redirect_uri">
-              回调 URI <span className="text-red-500">*</span>
-            </Label>
+            <Label htmlFor="redirect_uri">回调 URI <span className="text-red-500">*</span></Label>
             <Input
               id="redirect_uri"
               type="url"
@@ -272,9 +246,7 @@ export function MerchantDialog({
               onChange={(e) => setFormData({ ...formData, redirect_uri: e.target.value })}
               disabled={processing}
             />
-            <p className="text-xs text-muted-foreground">
-              URL 必须为包含 http:// 或 https:// ，用于接收支付完成后的回调
-            </p>
+            <p className="text-xs text-muted-foreground">URL 必须为包含 http:// 或 https:// ，用于接收支付完成后的回调</p>
           </div>
         </div>
 
@@ -290,12 +262,10 @@ export function MerchantDialog({
             disabled={processing}
             className="bg-[#6366f1] hover:bg-[#5558e3] h-7 text-xs"
           >
-            {processing ? <><Spinner/> {mode === 'create' ? '创建中' : '更新中'}</> : (mode === 'create' ? '创建' : '更新')}
+            {processing ? <><Spinner /> {mode === 'create' ? '创建中' : '更新中'}</> : (mode === 'create' ? '创建' : '更新')}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   )
 }
-
-

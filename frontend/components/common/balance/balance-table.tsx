@@ -2,16 +2,18 @@
 
 import * as React from "react"
 import { useState, useEffect } from "react"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Layers, ListRestart } from "lucide-react"
-import type { OrderType } from "@/lib/services"
-import { TransactionDataTable } from "@/components/common/general/table-data"
 import { Button } from "@/components/ui/button"
-import { ErrorInline } from "@/components/common/status/error"
-import { EmptyStateWithBorder } from "@/components/common/status/empty"
 import { Spinner } from "@/components/ui/spinner"
+import { ErrorInline } from "@/components/layout/error"
+import { EmptyStateWithBorder } from "@/components/layout/empty"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { TransactionDataTable } from "@/components/common/general/table-data"
+import { Layers, ListRestart } from "lucide-react"
+
+import type { OrderType } from "@/lib/services"
 import { TransactionProvider, useTransaction } from "@/contexts/transaction-context"
 
+/* 标签触发器样式 */
 const TAB_TRIGGER_STYLES = "data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-0 data-[state=active]:border-b-2 data-[state=active]:border-[#6366f1] bg-transparent rounded-none border-0 border-b-2 border-transparent px-0 text-sm font-bold text-muted-foreground data-[state=active]:text-[#6366f1] -mb-[2px] relative hover:text-foreground transition-colors flex-none"
 
 /**
@@ -26,7 +28,7 @@ const TAB_TRIGGER_STYLES = "data-[state=active]:bg-transparent data-[state=activ
 export function BalanceTable() {
   const [activeTab, setActiveTab] = useState<OrderType | 'all'>('all')
 
-  // 计算最近一个月的时间范围
+  /* 计算最近一个月的时间范围 */
   const getLastMonthRange = () => {
     const now = new Date()
     const endTime = now.toISOString()
@@ -69,6 +71,14 @@ export function BalanceTable() {
 
 /**
  * 交易列表组件
+ * 显示交易记录
+ * 
+ * @example
+ * ```tsx
+ * <TransactionList type="receive" />
+ * ```
+ * @param {OrderType} type - 交易类型
+ * @returns {React.ReactNode} 交易列表组件
  */
 function TransactionList({ type }: { type?: OrderType }) {
   const {
@@ -83,23 +93,21 @@ function TransactionList({ type }: { type?: OrderType }) {
     loadMore,
   } = useTransaction()
 
-  // 重新加载数据
+  /* 重新加载数据 */
   useEffect(() => {
     fetchTransactions({ 
       page: 1, 
       type,
-      // 保留时间范围参数
       startTime: lastParams.startTime,
       endTime: lastParams.endTime,
     })
   }, [type, fetchTransactions, lastParams.startTime, lastParams.endTime])
 
-  // 加载更多
+  /* 加载更多 */
   const handleLoadMore = () => {
     loadMore()
   }
 
-  // 如果loading且没有数据，显示加载状态
   if (loading && transactions.length === 0) {
     return (
       <EmptyStateWithBorder
@@ -142,14 +150,7 @@ function TransactionList({ type }: { type?: OrderType }) {
           disabled={loading}
           className="w-full text-xs border-dashed"
         >
-          {loading ? (
-            <>
-              <Spinner className="size-4" />
-              正在加载
-            </>
-          ) : (
-            `加载更多 (${transactions.length}/${total})`
-          )}
+          {loading ? (<><Spinner className="size-4" />正在加载</>) : (`加载更多 (${transactions.length}/${total})`)}
         </Button>
       )}
 

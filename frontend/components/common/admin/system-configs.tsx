@@ -1,8 +1,13 @@
 "use client"
 
 import * as React from "react"
+import { toast } from "sonner"
+import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
+import { ErrorInline } from "@/components/layout/error"
+import { EmptyStateWithBorder } from "@/components/layout/empty"
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,18 +19,32 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
-import { Input } from "@/components/ui/input"
-import { toast } from "sonner"
-import type { SystemConfig } from "@/lib/services"
 import { Trash2, ListRestart, Layers } from "lucide-react"
-import { ErrorInline } from "@/components/common/status/error"
-import { EmptyStateWithBorder } from "@/components/common/status/empty"
+
+import type { SystemConfig } from "@/lib/services"
 import { useAdmin, useTableInteraction } from "@/contexts/admin-context"
 
 
 /**
- * 系统配置详情面板组件
+ * 系统配置
+ * 显示系统配置的详细信息和编辑面板
+ * 
+ * @example
+ * ```tsx
+ * <SystemConfigDetailPanel
+ *   config={config}
+ *   editData={editData}
+ *   onEditDataChange={onEditDataChange}
+ *   onSave={onSave}
+ *   saving={saving}
+ * />
+ * ```
+ * @param {SystemConfig} config - 系统配置
+ * @param {Partial<SystemConfig>} editData - 编辑数据
+ * @param {function} onEditDataChange - 编辑数据改变回调
+ * @param {function} onSave - 保存回调
+ * @param {boolean} saving - 是否正在保存
+ * @returns {React.ReactNode} 系统配置详情面板组件
  */
 function SystemConfigDetailPanel({
   config,
@@ -40,7 +59,7 @@ function SystemConfigDetailPanel({
   onSave: () => void
   saving: boolean
 }) {
-  // 格式化日期
+  /* 格式化日期 */
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleString('zh-CN', {
       year: 'numeric',
@@ -75,7 +94,7 @@ function SystemConfigDetailPanel({
               size="sm"
               className="px-3 h-7 text-xs"
             >
-              {saving ? (<><Spinner className="h-3 w-3 mr-1" /> 更新中</>) : '更新'}
+              {saving ? (<><Spinner /> 更新中</>) : '更新'}
             </Button>
           )}
         </div>
@@ -140,6 +159,26 @@ function SystemConfigDetailPanel({
 
 /**
  * 系统配置表格组件
+ * 显示系统配置的表格
+ * 
+ * @example
+ * ```tsx
+ * <SystemConfigsTable
+ *   configs={configs}
+ *   onDelete={onDelete}
+ *   onHover={onHover}
+ *   onSelect={onSelect}
+ *   hoveredConfig={hoveredConfig}
+ *   selectedConfig={selectedConfig}
+ * />
+ * ```
+ * @param {SystemConfig[]} configs - 系统配置列表
+ * @param {function} onDelete - 删除回调
+ * @param {function} onHover - 悬停回调
+ * @param {function} onSelect - 选择回调
+ * @param {SystemConfig | null} hoveredConfig - 悬停配置
+ * @param {SystemConfig | null} selectedConfig - 选中配置
+ * @returns {React.ReactNode} 系统配置表格组件
  */
 export function SystemConfigsTable({
   configs,
@@ -189,6 +228,26 @@ export function SystemConfigsTable({
 
 /**
  * 系统配置表格行组件
+ * 显示系统配置表格行
+ * 
+ * @example
+ * ```tsx
+ * <SystemConfigTableRow
+ *   config={config}
+ *   onDelete={onDelete}
+ *   onHover={onHover}
+ *   onSelect={onSelect}
+ *   isHovered={isHovered}
+ *   isSelected={isSelected}
+ * />
+ * ```
+ * @param {SystemConfig} config - 系统配置
+ * @param {function} onDelete - 删除回调
+ * @param {function} onHover - 悬停回调
+ * @param {function} onSelect - 选择回调
+ * @param {boolean} isHovered - 是否悬停
+ * @param {boolean} isSelected - 是否选中
+ * @returns {React.ReactNode} 系统配置表格行组件
  */
 function SystemConfigTableRow({
   config,
@@ -265,6 +324,12 @@ function SystemConfigTableRow({
 
 /**
  * 系统配置管理组件
+ * 
+ * @example
+ * ```tsx
+ * <SystemConfigs />
+ * ```
+ * @returns {React.ReactNode} 系统配置管理组件
  */
 export function SystemConfigs() {
   const {
@@ -290,6 +355,7 @@ export function SystemConfigs() {
     description: config.description,
   }))
 
+  /* 删除系统配置 */
   const handleDelete = async (key: string) => {
     try {
       await deleteSystemConfig(key)
@@ -301,6 +367,7 @@ export function SystemConfigs() {
     }
   }
 
+  /* 保存系统配置 */
   const handleSave = async () => {
     if (!selectedConfig) return
 
@@ -320,7 +387,6 @@ export function SystemConfigs() {
     }
   }
 
-  // 渲染内容
   const renderContent = () => {
     if (loading && configs.length === 0) {
       return (

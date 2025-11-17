@@ -1,12 +1,21 @@
-import { Bell, HelpCircle, Plus, Settings, Search, Grid3x3, Moon } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Bell, HelpCircle, Plus, Settings, Search, Grid3x3, Moon } from "lucide-react"
 
+
+/**
+ * 站点头部组件
+ * 用于显示站点头部
+ * 
+ * @example
+ * ```tsx
+ * <SiteHeader />
+ * ```
+ */
 export function SiteHeader() {
   return (
     <header className="flex h-(--header-height) shrink-0 items-center bg-background">
       <div className="flex w-full max-w-[1320px] mx-auto px-12 items-center gap-4">
-        {/* 搜索框 */}
         <div className="relative w-64">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -16,8 +25,6 @@ export function SiteHeader() {
           />
         </div>
 
-
-        {/* 右侧按钮组 */}
         <div className="ml-auto flex items-center gap-1">
           <Button variant="ghost" size="icon" className="size-9 text-muted-foreground hover:text-foreground">
             <Grid3x3 className="size-[18px]" />
@@ -40,7 +47,6 @@ export function SiteHeader() {
             <span className="sr-only">新建</span>
           </Button>
           
-          {/* 设置指南 */}
           <div className="ml-2 flex items-center gap-2">
             <span className="text-sm text-muted-foreground">设置指南</span>
             <Button variant="ghost" size="icon" className="size-9 text-muted-foreground hover:text-foreground">

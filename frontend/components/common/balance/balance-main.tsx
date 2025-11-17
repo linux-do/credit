@@ -1,11 +1,13 @@
 "use client"
 
 import * as React from "react"
-import { useUser } from "@/contexts/user-context"
-import { BalanceSummary } from "./balance-summary"
-import { BalanceTable } from "./balance-table"
-import { BalanceReport } from "./balance-report"
+import { BalanceTable } from "@/components/common/balance/balance-table"
+import { BalanceReport } from "@/components/common/balance/balance-report"
+import { BalanceSummary } from "@/components/common/balance/balance-summary"
 import { CountingNumber } from "@/components/animate-ui/primitives/texts/counting-number"
+
+import { useUser } from "@/contexts/user-context"
+
 
 /**
  * 余额主页面组件

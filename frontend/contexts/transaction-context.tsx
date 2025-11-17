@@ -2,47 +2,33 @@
 
 import * as React from "react"
 import { createContext, useContext, useCallback, useState, useRef } from "react"
-import type { Order, TransactionQueryParams } from "@/lib/services"
-import services from "@/lib/services"
 
-/**
- * 交易上下文状态
- */
+import services from "@/lib/services"
+import type { Order, TransactionQueryParams } from "@/lib/services"
+
+
+/* 交易上下文状态接口 */
 interface TransactionContextState {
-  /** 交易列表 */
   transactions: Order[]
-  /** 总记录数 */
   total: number
-  /** 当前页码 */
   currentPage: number
-  /** 每页数量 */
   pageSize: number
-  /** 总页数 */
   totalPages: number
-  /** 加载状态 */
   loading: boolean
-  /** 错误信息 */
   error: Error | null
-  /** 最后的查询参数 */
   lastParams: Partial<TransactionQueryParams>
-  /** 获取交易列表 */
   fetchTransactions: (params: Partial<TransactionQueryParams>) => Promise<void>
-  /** 加载更多 */
   loadMore: () => Promise<void>
-  /** 刷新当前页 */
   refresh: () => Promise<void>
-  /** 重置状态 */
   reset: () => void
 }
 
+/* 交易上下文 */
 const TransactionContext = createContext<TransactionContextState | null>(null)
 
-/**
- * 交易 Provider 属性
- */
+/* 交易 Provider Props 接口 */
 interface TransactionProviderProps {
   children: React.ReactNode
-  /** 默认查询参数 */
   defaultParams?: Partial<TransactionQueryParams>
 }
 
@@ -50,6 +36,8 @@ interface TransactionProviderProps {
  * 交易 Provider
  * 提供交易数据的全局状态管理
  * 
+ * @param {React.ReactNode} children - 交易 Provider 的子元素
+ * @param {Partial<TransactionQueryParams>} defaultParams - 默认查询参数
  * @example
  * ```tsx
  * <TransactionProvider defaultParams={{ type: 'receive', page_size: 20 }}>
@@ -66,13 +54,11 @@ export function TransactionProvider({ children, defaultParams = {} }: Transactio
   const [error, setError] = useState<Error | null>(null)
   const [lastParams, setLastParams] = useState<Partial<TransactionQueryParams>>(defaultParams)
 
-  // 使用 useRef 存储缓存
+  /* 使用 useRef 存储缓存 */
   const cacheRef = useRef<Record<string, { data: Order[], total: number, timestamp: number }>>({})
   const latestRequestIdRef = useRef(0)
 
-  /**
-   * 获取交易列表
-   */
+  /* 获取交易列表 */
   const fetchTransactions = useCallback(async (params: Partial<TransactionQueryParams>) => {
     const queryParams: TransactionQueryParams = {
       page: params.page || 1,
@@ -80,10 +66,10 @@ export function TransactionProvider({ children, defaultParams = {} }: Transactio
       ...params,
     }
 
-    // 生成唯一的请求 ID
+    /* 生成唯一的请求 ID */
     const requestId = ++latestRequestIdRef.current
 
-    // 生成缓存key
+    /* 生成缓存key */
     const typeKey = queryParams.type || 'all'
     const statusKey = queryParams.status || 'all'
     const clientIdKey = queryParams.client_id || 'all'
@@ -91,7 +77,7 @@ export function TransactionProvider({ children, defaultParams = {} }: Transactio
     const endTimeKey = queryParams.endTime || 'no-end'
     const cacheKey = `${typeKey}_${statusKey}_${clientIdKey}_${queryParams.page}_${queryParams.page_size}_${startTimeKey}_${endTimeKey}`
 
-    // 检查缓存（缓存5分钟）
+    /* 检查缓存（缓存5分钟） */
     const cached = cacheRef.current[cacheKey]
     const now = Date.now()
     const CACHE_DURATION = 5 * 60 * 1000 // 5分钟
@@ -101,20 +87,18 @@ export function TransactionProvider({ children, defaultParams = {} }: Transactio
         return
       }
       
-      // 使用缓存数据，同步更新状态
+      /* 使用缓存数据，同步更新状态 */
       setTransactions(cached.data)
       setTotal(cached.total)
       setCurrentPage(queryParams.page)
       setPageSize(queryParams.page_size)
       setLastParams(params)
       setError(null)
-      setLoading(false) // 确保loading状态为false
+      setLoading(false)
       return
     }
 
-    // 发起API请求
-    // 如果是第一页，立即清空旧数据并设置loading
-    // 必须先设置loading，再清空数据，确保UI先看到loading状态
+    /* 发起API请求 */
     setLoading(true)
     setError(null)
     if (queryParams.page === 1) {
@@ -132,7 +116,6 @@ export function TransactionProvider({ children, defaultParams = {} }: Transactio
         return
       }
 
-      // 替换数据并更新缓存；否则追加数据
       if (queryParams.page === 1) {
         setTransactions(result.orders)
         cacheRef.current[cacheKey] = {
@@ -149,7 +132,6 @@ export function TransactionProvider({ children, defaultParams = {} }: Transactio
       setPageSize(result.page_size)
       setLastParams(params)
     } catch (err) {
-      // 忽略请求取消错误
       if (err instanceof Error && err.message === '请求已被取消') {
         return
       }
@@ -167,9 +149,7 @@ export function TransactionProvider({ children, defaultParams = {} }: Transactio
     }
   }, [pageSize])
 
-  /**
-   * 加载更多
-   */
+  /* 加载更多 */
   const loadMore = useCallback(async () => {
     if (loading) return
     
@@ -180,11 +160,8 @@ export function TransactionProvider({ children, defaultParams = {} }: Transactio
     })
   }, [currentPage, fetchTransactions, lastParams, loading])
 
-  /**
-   * 刷新当前页
-   */
+  /* 刷新当前页 */
   const refresh = useCallback(async () => {
-    // 清除相关缓存
     const typeKey = lastParams.type || 'all'
     const statusKey = lastParams.status || 'all'
     const clientIdKey = lastParams.client_id || 'all'
@@ -199,9 +176,7 @@ export function TransactionProvider({ children, defaultParams = {} }: Transactio
     })
   }, [fetchTransactions, lastParams, pageSize])
 
-  /**
-   * 重置状态
-   */
+  /* 重置状态 */
   const reset = useCallback(() => {
     setTransactions([])
     setTotal(0)
@@ -211,7 +186,6 @@ export function TransactionProvider({ children, defaultParams = {} }: Transactio
     setLastParams(defaultParams)
   }, [defaultParams])
 
-  // 计算总页数
   const totalPages = Math.ceil(total / pageSize)
 
   const value: TransactionContextState = {
@@ -239,22 +213,9 @@ export function TransactionProvider({ children, defaultParams = {} }: Transactio
 /**
  * 使用交易上下文
  * 
- * @example
- * ```tsx
- * function TransactionList() {
- *   const { transactions, loading, fetchTransactions } = useTransaction()
- *   
- *   useEffect(() => {
- *     fetchTransactions({ type: 'receive' })
- *   }, [])
- *   
- *   return (
- *     <div>
- *       {transactions.map(t => <div key={t.order_no}>{t.order_name}</div>)}
- *     </div>
- *   )
- * }
- * ```
+ * @param {React.ReactNode} children - 交易上下文 Provider 的子元素
+ * @param {Partial<TransactionQueryParams>} defaultParams - 默认查询参数
+
  */
 export function useTransaction() {
   const context = useContext(TransactionContext)
@@ -265,4 +226,3 @@ export function useTransaction() {
   
   return context
 }
-

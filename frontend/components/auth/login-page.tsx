@@ -1,21 +1,34 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { motion, AnimatePresence } from "motion/react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { CreditCard, Check } from "lucide-react"
+import { toast } from "sonner"
+import { Button } from "@/components/ui/button"
+import { Spinner } from "@/components/ui/spinner"
 import { LoginForm } from "@/components/auth/login-form"
 import { AuroraBackground } from "@/components/ui/aurora-background"
-import { Spinner } from "@/components/ui/spinner"
-import { Button } from "@/components/ui/button"
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp"
-import { motion, AnimatePresence } from "motion/react"
-import services from "@/lib/services"
-import { toast } from "sonner"
+import { CreditCard, Check } from "lucide-react"
 
+import services from "@/lib/services"
+
+
+/**
+ * 登录页面组件
+ * 显示登录表单和登录按钮
+ * 
+ * @example
+ * ```tsx
+ * <LoginPage />
+ * ```
+ * @returns {React.ReactNode} 登录页面组件
+ */
 export function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
+  /* 是否正在处理OAuth回调 */
   const [isProcessingCallback, setIsProcessingCallback] = useState(() => {
     const state = searchParams.get('state')
     const code = searchParams.get('code')
@@ -34,30 +47,29 @@ export function LoginPage() {
   const isConfirmValid = confirmPayKey.length === 6 && /^\d{6}$/.test(confirmPayKey)
   const passwordsMatch = payKey === confirmPayKey
 
-  /**
-   * 处理支付密码输入
-   */
+  /* 处理支付密码输入 */
   const handlePayKeyChange = (value: string) => {
     const numericValue = value.replace(/\D/g, '')
     setPayKey(numericValue)
   }
 
-  /**
-   * 处理确认支付密码输入
-   */
+  /* 处理确认支付密码输入 */
   const handleConfirmPayKeyChange = (value: string) => {
     const numericValue = value.replace(/\D/g, '')
     setConfirmPayKey(numericValue)
   }
   
+  /* 标语 */
   const slogans = [
     "Fast and convenient payment solution.",
     "Pay your bills with ease and security.",
     "Secure transactions, anytime, anywhere.",
     "Your trusted payment partner."
   ]
+  /* 当前标语索引 */
   const [currentSloganIndex, setCurrentSloganIndex] = useState(0)
   
+  /* 定时更新标语 */
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSloganIndex((prev) => (prev + 1) % slogans.length)
@@ -66,6 +78,7 @@ export function LoginPage() {
     return () => clearInterval(interval)
   }, [slogans.length])
 
+  /* 处理OAuth回调 */
   useEffect(() => {
     const handleOAuthCallback = async () => {
       const state = searchParams.get('state')
@@ -104,9 +117,7 @@ export function LoginPage() {
 
 
 
-  /**
-   * 处理支付密码设置提交
-   */
+  /* 处理支付密码设置提交 */
   const handlePayKeySubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -116,7 +127,6 @@ export function LoginPage() {
         toast.error("支付密码必须为6位数字")
         return
       }
-      /* 切换到确认步骤 */
       setSetupStep('confirm')
     } else {
       /* 第二步：验证确认密码并提交 */
@@ -139,18 +149,15 @@ export function LoginPage() {
         toast.success("支付密码设置成功")
         setNeedsPayKeySetup(false)
         setLoginSuccess(true)
-        /* 重置状态 */
         setPayKey("")
         setConfirmPayKey("")
         setSetupStep('password')
-        /* 跳转到首页 */
         setTimeout(() => {
           router.replace('/home')
         }, 1500)
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "设置支付密码失败"
         toast.error(errorMessage)
-        /* 出错时重置到第一步 */
         setSetupStep('password')
         setConfirmPayKey("")
       } finally {
@@ -159,9 +166,7 @@ export function LoginPage() {
     }
   }
 
-  /**
-   * 渲染支付密码设置表单
-   */
+  /* 渲染支付密码设置表单 */
   const renderPayKeySetup = (key: string) => (
     <motion.div
       key={key}
@@ -439,7 +444,6 @@ export function LoginPage() {
           </AuroraBackground>
         </div>
       </div>
-
     </div>
   )
 }

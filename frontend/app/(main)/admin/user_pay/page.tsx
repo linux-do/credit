@@ -2,11 +2,14 @@
 
 import { useEffect } from "react"
 import { UserPayConfigs } from "@/components/common/admin/user-pay-configs"
-import { AdminProvider, useAdmin } from "@/contexts/admin-context"
-import { useUser } from "@/contexts/user-context"
-import { ErrorPage } from "@/components/common/status/error"
-import { LoadingPage } from "@/components/common/status/loading"
+import { ErrorPage } from "@/components/layout/error"
+import { LoadingPage } from "@/components/layout/loading"
 
+import { useUser } from "@/contexts/user-context"
+import { AdminProvider, useAdmin } from "@/contexts/admin-context"
+
+
+/* 用户支付配置页面 */
 export default function UserPayConfigPage() {
   return (
     <AdminProvider>
@@ -15,6 +18,7 @@ export default function UserPayConfigPage() {
   )
 }
 
+/* 用户支付配置页面内容 */
 function UserPayConfigPageContent() {
   const { user, loading } = useUser()
   const { refetchUserPayConfigs } = useAdmin()
@@ -25,12 +29,12 @@ function UserPayConfigPageContent() {
     }
   }, [user?.is_admin, refetchUserPayConfigs])
 
-  // 等待用户信息加载完成
+  /* 等待用户信息加载完成 */
   if (loading) {
     return <LoadingPage text="支付配置" badgeText="支付" />
   }
 
-  // 权限检查：只有管理员才能访问
+  /* 权限检查：只有管理员才能访问 */
   if (!user?.is_admin) {
     return (
       <ErrorPage

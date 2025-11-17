@@ -1,8 +1,8 @@
-"use client"
-
 import * as React from "react"
-import { useUser } from "@/contexts/user-context"
 import { CountingNumber } from "@/components/animate-ui/primitives/texts/counting-number"
+
+import { useUser } from "@/contexts/user-context"
+
 
 /**
  * 余额摘要组件
@@ -16,7 +16,7 @@ import { CountingNumber } from "@/components/animate-ui/primitives/texts/countin
 export function BalanceSummary() {
   const { user, loading } = useUser()
 
-  // 从用户信息中获取余额数据
+  /* 从用户信息中获取余额数据 */
   const available = user?.available_balance ?? 0
   const community = user?.community_balance ?? 0
   const total = available + community
@@ -69,4 +69,3 @@ export function BalanceSummary() {
     </div>
   )
 }
-
