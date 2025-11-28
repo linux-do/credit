@@ -37,6 +37,7 @@ import (
 	"time"
 
 	"github.com/linux-do/pay/internal/apps/admin"
+	publicconfig "github.com/linux-do/pay/internal/apps/config"
 	"github.com/linux-do/pay/internal/apps/dispute"
 	"github.com/linux-do/pay/internal/listener"
 
@@ -133,6 +134,19 @@ func Serve() {
 				orderRouter.POST("/disputes", dispute.ListDisputes)
 				orderRouter.POST("/refund-review", dispute.RefundReview)
 				orderRouter.POST("/dispute/close", dispute.CloseDispute)
+			}
+
+			// Payment
+			paymentRouter := apiV1Router.Group("/payment")
+			paymentRouter.Use(oauth.LoginRequired())
+			{
+				paymentRouter.POST("/transfer", payment.Transfer)
+			}
+
+			// Config (public)
+			configRouter := apiV1Router.Group("/config")
+			{
+				configRouter.GET("/public", publicconfig.GetPublicConfig)
 			}
 
 			// MerchantAPIKey
