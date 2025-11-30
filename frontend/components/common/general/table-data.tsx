@@ -373,7 +373,7 @@ function CancelDisputeDialog({ order, onSuccess }: { order: Order; onSuccess?: (
     try {
       setLoading(true)
 
-      /* 检查订单是否有争议ID*/
+      /* 检查订单是否有争议ID */
       if (!order.dispute_id) {
         toast.error('取消争议失败', {
           description: '未找到争议记录'
@@ -389,7 +389,7 @@ function CancelDisputeDialog({ order, onSuccess }: { order: Order; onSuccess?: (
         description: '争议已成功取消'
       })
 
-      /* 乐观更新：取消争议后，状态恢复为 success*/
+      /* 乐观更新：取消争议后，状态恢复为 success */
       updateOrderStatus(order.id, { status: 'success' })
 
       setOpen(false)
@@ -475,7 +475,7 @@ function ViewDisputeHistoryDialog({ order }: { order: Order }) {
     try {
       setFetchingHistory(true)
 
-      /* 检查订单是否有争议ID*/
+      /* 检查订单是否有争议ID */
       if (!order.dispute_id) {
         toast.error('获取争议记录失败', {
           description: '未找到争议记录'
@@ -483,7 +483,7 @@ function ViewDisputeHistoryDialog({ order }: { order: Order }) {
         return
       }
 
-      /* 作为发起者查询争议记录*/
+      /* 作为发起者查询争议记录 */
       const res = await DisputeService.listDisputes({
         page: 1,
         page_size: 1,
@@ -515,7 +515,7 @@ function ViewDisputeHistoryDialog({ order }: { order: Order }) {
     }
   }
 
-  /* 解析争议原因*/
+  /* 解析争议原因 */
   const parseDisputeReason = (fullReason: string) => {
     const match = fullReason.match(/^(.*?)\[商家拒绝理由: (.*?)\]$/)
     if (match) {
@@ -636,7 +636,7 @@ function RefundReviewDialog({ order, onSuccess }: { order: Order; onSuccess?: ()
     try {
       setFetchingDispute(true)
 
-      /* 检查订单是否有争议ID*/
+      /* 检查订单是否有争议ID */
       if (!order.dispute_id) {
         toast.error('获取争议详情失败', {
           description: '未找到争议记录'
@@ -697,7 +697,7 @@ function RefundReviewDialog({ order, onSuccess }: { order: Order; onSuccess?: ()
     try {
       setLoading(true)
 
-      /* 检查订单是否有争议ID*/
+      /* 检查订单是否有争议ID */
       if (!order.dispute_id) {
         toast.error('处理失败', {
           description: '未找到争议记录'

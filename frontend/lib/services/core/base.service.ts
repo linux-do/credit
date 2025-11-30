@@ -1,6 +1,6 @@
 import apiClient from './api-client';
 import { ApiResponse } from './types';
-import { AxiosRequestConfig } from 'axios';
+import { InternalAxiosRequestConfig } from 'axios';
 
 /**
  * 服务基类
@@ -44,11 +44,15 @@ export class BaseService {
   protected static async get<T>(
     path: string,
     params?: Record<string, unknown>,
-    config?: AxiosRequestConfig,
+    config?: InternalAxiosRequestConfig,
   ): Promise<T> {
+    const requestConfig: InternalAxiosRequestConfig = {
+      ...config,
+      params,
+    } as InternalAxiosRequestConfig;
     const response = await apiClient.get<ApiResponse<T>>(
       this.getFullPath(path),
-      { params, ...config },
+      requestConfig,
     );
     return response.data.data;
   }
@@ -64,7 +68,7 @@ export class BaseService {
   protected static async post<T>(
     path: string,
     data?: unknown,
-    config?: AxiosRequestConfig,
+    config?: InternalAxiosRequestConfig,
   ): Promise<T> {
     const response = await apiClient.post<ApiResponse<T>>(
       this.getFullPath(path),
@@ -85,7 +89,7 @@ export class BaseService {
   protected static async put<T>(
     path: string,
     data?: unknown,
-    config?: AxiosRequestConfig,
+    config?: InternalAxiosRequestConfig,
   ): Promise<T> {
     const response = await apiClient.put<ApiResponse<T>>(
       this.getFullPath(path),
@@ -106,7 +110,7 @@ export class BaseService {
   protected static async patch<T>(
     path: string,
     data?: unknown,
-    config?: AxiosRequestConfig,
+    config?: InternalAxiosRequestConfig,
   ): Promise<T> {
     const response = await apiClient.patch<ApiResponse<T>>(
       this.getFullPath(path),
@@ -127,11 +131,15 @@ export class BaseService {
   protected static async delete<T>(
     path: string,
     params?: Record<string, unknown>,
-    config?: AxiosRequestConfig,
+    config?: InternalAxiosRequestConfig,
   ): Promise<T> {
+    const requestConfig: InternalAxiosRequestConfig = {
+      ...config,
+      params,
+    } as InternalAxiosRequestConfig;
     const response = await apiClient.delete<ApiResponse<T>>(
       this.getFullPath(path),
-      { params, ...config },
+      requestConfig,
     );
     return response.data.data;
   }
