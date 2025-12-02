@@ -18,15 +18,31 @@
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
-package user_pay_config
+package util
 
-const (
-	UserPayConfigNotFound = "支付配置不存在"
-	LevelRequired         = "等级不能为空"
-	MinScoreRequired      = "最小分数不能为空"
-	ScoreRangeInvalid     = "分数范围无效：最大分数必须大于最小分数"
-	LevelExists           = "等级已存在"
+import (
+	"errors"
+
+	"github.com/shopspring/decimal"
 )
+
+// ValidateRates 所有 rate 必须在 [0, 1] 范围内，且小数位数不超过2位
+func ValidateRates(rates ...decimal.Decimal) error {
+	for _, rate := range rates {
+		// 验证范围：必须在 [0, 1] 之间
+		if rate.LessThan(decimal.Zero) || rate.GreaterThan(decimal.NewFromInt(1)) {
+			return errors.New("必须在 0 到 1 之间")
+		}
+
+		// 验证小数位数：不超过2位
+		if rate.Exponent() < -2 {
+			return errors.New("小数位数不能超过2位")
+		}
+	}
+
+	return nil
+}

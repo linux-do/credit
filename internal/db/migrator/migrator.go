@@ -124,6 +124,7 @@ func initUserPayConfigs() {
 			MaxScore:   int64Ptr(2000),
 			DailyLimit: int64Ptr(1000),
 			FeeRate:    decimal.Zero,
+			ScoreRate:  decimal.Zero,
 		},
 		{
 			Level:      model.PayLevelBasic,
@@ -131,6 +132,7 @@ func initUserPayConfigs() {
 			MaxScore:   int64Ptr(10000),
 			DailyLimit: int64Ptr(6000),
 			FeeRate:    decimal.Zero,
+			ScoreRate:  decimal.Zero,
 		},
 		{
 			Level:      model.PayLevelStandard,
@@ -138,6 +140,7 @@ func initUserPayConfigs() {
 			MaxScore:   int64Ptr(50000),
 			DailyLimit: int64Ptr(25000),
 			FeeRate:    decimal.Zero,
+			ScoreRate:  decimal.Zero,
 		},
 		{
 			Level:      model.PayLevelPremium,
@@ -145,6 +148,7 @@ func initUserPayConfigs() {
 			MaxScore:   nil,
 			DailyLimit: nil,
 			FeeRate:    decimal.Zero,
+			ScoreRate:  decimal.Zero,
 		},
 	}
 

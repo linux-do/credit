@@ -1214,7 +1214,8 @@ const docTemplate = `{
         "user_pay_config.CreateUserPayConfigRequest": {
             "type": "object",
             "required": [
-                "fee_rate"
+                "fee_rate",
+                "score_rate"
             ],
             "properties": {
                 "daily_limit": {
@@ -1232,13 +1233,17 @@ const docTemplate = `{
                 "min_score": {
                     "type": "integer",
                     "minimum": 0
+                },
+                "score_rate": {
+                    "type": "number"
                 }
             }
         },
         "user_pay_config.UpdateUserPayConfigRequest": {
             "type": "object",
             "required": [
-                "fee_rate"
+                "fee_rate",
+                "score_rate"
             ],
             "properties": {
                 "daily_limit": {
@@ -1253,6 +1258,9 @@ const docTemplate = `{
                 "min_score": {
                     "type": "integer",
                     "minimum": 0
+                },
+                "score_rate": {
+                    "type": "number"
                 }
             }
         },

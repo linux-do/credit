@@ -47,6 +47,7 @@ type UserPayConfig struct {
 	MaxScore   *int64          `json:"max_score" gorm:"index:idx_score_range,priority:2"`
 	DailyLimit *int64          `json:"daily_limit"`
 	FeeRate    decimal.Decimal `json:"fee_rate" gorm:"type:numeric(3,2);default:0;check:fee_rate >= 0 AND fee_rate <= 1"`
+	ScoreRate  decimal.Decimal `json:"score_rate" gorm:"type:numeric(3,2);default:0;check:score_rate >= 0 AND score_rate <= 1"`
 	CreatedAt  time.Time       `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt  time.Time       `json:"updated_at" gorm:"autoUpdateTime"`
 }

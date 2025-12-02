@@ -305,11 +305,21 @@ func RefundReview(c *gin.Context) {
 					return err
 				}
 
+				// 获取商家的支付配置
+				var merchantPayConfig model.UserPayConfig
+				if err := merchantPayConfig.GetByPayScore(tx, merchantUser.PayScore); err != nil {
+					return err
+				}
+
+				// 计算商家积分减少：订单金额 × 商家的 score_rate
+				merchantScoreDecrease := order.Amount.Mul(merchantPayConfig.ScoreRate).Round(0).IntPart()
+
 				if err := tx.Model(&model.User{}).
 					Where("id = ?", merchantUser.ID).
 					UpdateColumns(map[string]interface{}{
 						"available_balance": gorm.Expr("available_balance - ?", order.Amount),
 						"total_receive":     gorm.Expr("total_receive - ?", order.Amount),
+						"pay_score":         gorm.Expr("pay_score - ?", merchantScoreDecrease),
 					}).Error; err != nil {
 					return err
 				}

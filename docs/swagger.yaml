@@ -228,8 +228,11 @@ definitions:
       min_score:
         minimum: 0
         type: integer
+      score_rate:
+        type: number
     required:
     - fee_rate
+    - score_rate
     type: object
   user_pay_config.UpdateUserPayConfigRequest:
     properties:
@@ -242,8 +245,11 @@ definitions:
       min_score:
         minimum: 0
         type: integer
+      score_rate:
+        type: number
     required:
     - fee_rate
+    - score_rate
     type: object
   util.ResponseAny:
     properties:
