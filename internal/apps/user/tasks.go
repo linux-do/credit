@@ -109,26 +109,38 @@ func HandleUpdateSingleUserGamificationScore(ctx context.Context, t *asynq.Task)
 	}
 
 	// 获取用户积分
-	response, err := user.GetUserGamificationScore(ctx)
-	if err != nil {
-		logger.ErrorF(ctx, "处理用户[%s]失败: %v", user.Username, err)
-		return err
+	response, errGet := user.GetUserGamificationScore(ctx)
+	if errGet != nil {
+		logger.ErrorF(ctx, "处理用户[%s]失败: %v", user.Username, errGet)
+		return errGet
 	}
 
 	newCommunityBalance := decimal.NewFromInt(response.GamificationScore)
 
-	if user.TotalCommunity.Equal(newCommunityBalance) {
+	if user.CommunityBalance.IsZero() && user.TotalCommunity.IsZero() {
+		if err := db.DB(ctx).Model(&user).UpdateColumns(map[string]interface{}{
+			"community_balance": newCommunityBalance,
+		}).Error; err != nil {
+			return fmt.Errorf("初始化用户[%s]社区积分失败: %w", user.Username, err)
+		}
+		logger.InfoF(ctx, "用户[%s]首次同步社区积分: %s", user.Username, newCommunityBalance.String())
+		return nil
+	}
+
+	if newCommunityBalance.Equal(user.CommunityBalance) {
 		logger.InfoF(ctx, "用户[%s]积分未变化，跳过更新", user.Username)
 		return nil
 	}
 
-	diff := newCommunityBalance.Sub(user.TotalCommunity)
-	oldCommunityBalance := user.TotalCommunity
+	// 计算差值
+	diff := newCommunityBalance.Sub(user.CommunityBalance)
+	oldCommunityBalance := user.CommunityBalance
 	now := time.Now()
 
 	if err := db.DB(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Model(&user).UpdateColumns(map[string]interface{}{
-			"total_community":   newCommunityBalance,
+			"community_balance": newCommunityBalance,
+			"total_community":   gorm.Expr("total_community + ?", diff),
 			"total_receive":     gorm.Expr("total_receive + ?", diff),
 			"available_balance": gorm.Expr("available_balance + ?", diff),
 		}).Error; err != nil {
