@@ -56,10 +56,11 @@ func HandleParseOrderNoError(c *gin.Context, err error) bool {
 
 // OrderContext 订单上下文信息
 type OrderContext struct {
-	OrderID      uint64
-	MerchantUser *model.User
-	CurrentUser  *model.User
-	PayConfig    *model.UserPayConfig
+	OrderID           uint64
+	MerchantUser      *model.User
+	CurrentUser       *model.User
+	PayerPayConfig    *model.UserPayConfig
+	MerchantPayConfig *model.UserPayConfig
 }
 
 // ParseOrderNo 解析订单号，获取订单上下文信息
@@ -109,14 +110,25 @@ func ParseOrderNo(c *gin.Context, orderNo string) (*OrderContext, error) {
 		CurrentUser:  currentUser,
 	}
 
-	var payConfig model.UserPayConfig
-	if err := payConfig.GetByPayScore(db.DB(c.Request.Context()), currentUser.PayScore); err != nil {
+	// 获取付款用户的支付配置（用于限额检查）
+	var payerPayConfig model.UserPayConfig
+	if err := payerPayConfig.GetByPayScore(db.DB(c.Request.Context()), currentUser.PayScore); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New(PayConfigNotFound)
 		}
 		return nil, err
 	}
-	ctx.PayConfig = &payConfig
+	ctx.PayerPayConfig = &payerPayConfig
+
+	// 获取商家的支付配置（用于手续费倍率）
+	var merchantPayConfig model.UserPayConfig
+	if err := merchantPayConfig.GetByPayScore(db.DB(c.Request.Context()), merchantUser.PayScore); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New(PayConfigNotFound)
+		}
+		return nil, err
+	}
+	ctx.MerchantPayConfig = &merchantPayConfig
 
 	return ctx, nil
 }

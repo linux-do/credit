@@ -42,6 +42,7 @@ type CreateUserPayConfigRequest struct {
 	MaxScore   *int64          `json:"max_score" binding:"omitempty,gtfield=MinScore"`
 	DailyLimit *int64          `json:"daily_limit"`
 	FeeRate    decimal.Decimal `json:"fee_rate" binding:"required"`
+	ScoreRate  decimal.Decimal `json:"score_rate" binding:"required"`
 }
 
 // UpdateUserPayConfigRequest 更新支付配置请求
@@ -50,6 +51,7 @@ type UpdateUserPayConfigRequest struct {
 	MaxScore   *int64          `json:"max_score" binding:"omitempty,gtfield=MinScore"`
 	DailyLimit *int64          `json:"daily_limit"`
 	FeeRate    decimal.Decimal `json:"fee_rate" binding:"required"`
+	ScoreRate  decimal.Decimal `json:"score_rate" binding:"required"`
 }
 
 // CreateUserPayConfig 创建支付配置
@@ -66,15 +68,9 @@ func CreateUserPayConfig(c *gin.Context) {
 		return
 	}
 
-	// 验证费率范围
-	if req.FeeRate.LessThan(decimal.Zero) || req.FeeRate.GreaterThan(decimal.NewFromInt(1)) {
-		c.JSON(http.StatusBadRequest, util.Err(FeeRateInvalid))
-		return
-	}
-
-	// 验证小数位数不超过2位
-	if req.FeeRate.Exponent() < -2 {
-		c.JSON(http.StatusBadRequest, util.Err(AmountDecimalPlacesExceeded))
+	// 验证费率和积分倍率
+	if err := util.ValidateRates(req.FeeRate, req.ScoreRate); err != nil {
+		c.JSON(http.StatusBadRequest, util.Err(err.Error()))
 		return
 	}
 
@@ -94,6 +90,7 @@ func CreateUserPayConfig(c *gin.Context) {
 		MaxScore:   req.MaxScore,
 		DailyLimit: req.DailyLimit,
 		FeeRate:    req.FeeRate,
+		ScoreRate:  req.ScoreRate,
 	}
 
 	if err := db.DB(c.Request.Context()).Create(&config).Error; err != nil {
@@ -156,15 +153,9 @@ func UpdateUserPayConfig(c *gin.Context) {
 		return
 	}
 
-	// 验证费率范围
-	if req.FeeRate.LessThan(decimal.Zero) || req.FeeRate.GreaterThan(decimal.NewFromInt(1)) {
-		c.JSON(http.StatusBadRequest, util.Err(FeeRateInvalid))
-		return
-	}
-
-	// 验证小数位数不超过2位
-	if req.FeeRate.Exponent() < -2 {
-		c.JSON(http.StatusBadRequest, util.Err(AmountDecimalPlacesExceeded))
+	// 验证费率和积分倍率
+	if err := util.ValidateRates(req.FeeRate, req.ScoreRate); err != nil {
+		c.JSON(http.StatusBadRequest, util.Err(err.Error()))
 		return
 	}
 
@@ -186,6 +177,7 @@ func UpdateUserPayConfig(c *gin.Context) {
 			"min_score":   req.MinScore,
 			"max_score":   req.MaxScore,
 			"fee_rate":    req.FeeRate,
+			"score_rate":  req.ScoreRate,
 			"daily_limit": req.DailyLimit,
 		}).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, util.Err(err.Error()))

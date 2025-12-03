@@ -77,9 +77,9 @@ type MerchantInfo struct {
 
 // GetOrderResponse 查询订单响应
 type GetOrderResponse struct {
-	Order         *model.Order         `json:"order"`
-	UserPayConfig *model.UserPayConfig `json:"user_pay_config"`
-	Merchant      MerchantInfo         `json:"merchant"`
+	Order    *model.Order    `json:"order"`
+	FeeRate  decimal.Decimal `json:"fee_rate"`
+	Merchant MerchantInfo    `json:"merchant"`
 }
 
 // TransferRequest 转账请求
@@ -223,8 +223,8 @@ func GetMerchantOrder(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, util.OK(GetOrderResponse{
-		Order:         &order,
-		UserPayConfig: orderCtx.PayConfig,
+		Order:   &order,
+		FeeRate: orderCtx.MerchantPayConfig.FeeRate,
 		Merchant: MerchantInfo{
 			AppName: merchant.AppName,
 		},
@@ -283,8 +283,7 @@ func PayMerchantOrder(c *gin.Context) {
 			}
 
 			// 检查每日限额
-			if orderCtx.PayConfig.DailyLimit != nil && *orderCtx.PayConfig.DailyLimit > 0 {
-				// 基于用户ID和日期生成唯一的锁ID
+			if orderCtx.PayerPayConfig.DailyLimit != nil && *orderCtx.PayerPayConfig.DailyLimit > 0 {
 				now := time.Now()
 				datePart := int64(now.Year()*10000 + int(now.Month())*100 + now.Day())
 				// 使用 100000000 (1亿) 作为乘数，确保日期部分（8位）不会与用户ID冲突
@@ -313,18 +312,18 @@ func PayMerchantOrder(c *gin.Context) {
 				}
 
 				// 检查当日总金额 + 当前订单金额是否超过限额
-				dailyLimitDecimal := decimal.NewFromInt(*orderCtx.PayConfig.DailyLimit)
+				dailyLimitDecimal := decimal.NewFromInt(*orderCtx.PayerPayConfig.DailyLimit)
 				if todayTotalAmount.Add(order.Amount).GreaterThan(dailyLimitDecimal) {
 					return errors.New(DailyLimitExceeded)
 				}
 			}
 
-			// 计算手续费：订单金额 * 费率，保留两位小数
-			fee := order.Amount.Mul(orderCtx.PayConfig.FeeRate).Round(2)
+			// 计算手续费：订单金额 * 商家的费率，保留两位小数
+			fee := order.Amount.Mul(orderCtx.MerchantPayConfig.FeeRate).Round(2)
 			// 商户实际收到金额：订单金额 - 手续费
 			merchantAmount := order.Amount.Sub(fee)
 
-			feePercent := orderCtx.PayConfig.FeeRate.Mul(decimal.NewFromInt(100)).IntPart()
+			feePercent := orderCtx.MerchantPayConfig.FeeRate.Mul(decimal.NewFromInt(100)).IntPart()
 			feeRemark := fmt.Sprintf("[系统]: 收取商家%d%%手续费", feePercent)
 
 			// 更新订单状态和备注
@@ -357,12 +356,14 @@ func PayMerchantOrder(c *gin.Context) {
 				return errors.New(InsufficientBalance)
 			}
 
-			// 增加商户余额
+			// 增加商户余额和积分
+			merchantScoreIncrease := order.Amount.Mul(orderCtx.MerchantPayConfig.ScoreRate).Round(0).IntPart()
 			if err := tx.Model(&model.User{}).
 				Where("id = ?", orderCtx.MerchantUser.ID).
 				UpdateColumns(map[string]interface{}{
 					"available_balance": gorm.Expr("available_balance + ?", merchantAmount),
 					"total_receive":     gorm.Expr("total_receive + ?", merchantAmount),
+					"pay_score":         gorm.Expr("pay_score + ?", merchantScoreIncrease),
 				}).Error; err != nil {
 				return err
 			}

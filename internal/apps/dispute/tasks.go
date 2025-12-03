@@ -141,12 +141,22 @@ func HandleAutoRefundSingleDispute(ctx context.Context, t *asynq.Task) error {
 			return fmt.Errorf("查询收款方用户失败: %w", err)
 		}
 
-		// 商家(收款方)退款：扣除可用余额和总收款
+		// 获取商家的支付配置
+		var merchantPayConfig model.UserPayConfig
+		if err := merchantPayConfig.GetByPayScore(tx, payeeUser.PayScore); err != nil {
+			return fmt.Errorf("查询商家支付配置失败: %w", err)
+		}
+
+		// 计算商家积分减少：订单金额 × 商家的 score_rate
+		merchantScoreDecrease := order.Amount.Mul(merchantPayConfig.ScoreRate).Round(0).IntPart()
+
+		// 商家(收款方)退款：扣除可用余额、总收款和积分
 		if err := tx.Model(&model.User{}).
 			Where("id = ?", payeeUser.ID).
 			UpdateColumns(map[string]interface{}{
 				"available_balance": gorm.Expr("available_balance - ?", order.Amount),
 				"total_receive":     gorm.Expr("total_receive - ?", order.Amount),
+				"pay_score":         gorm.Expr("pay_score - ?", merchantScoreDecrease),
 			}).Error; err != nil {
 			return fmt.Errorf("商家退款失败: %w", err)
 		}
