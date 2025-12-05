@@ -117,7 +117,7 @@ apiClient.interceptors.response.use(
 
     /* 401 未授权错误 */
     if (error.response?.status === 401) {
-      return initiateLogin(window.location.pathname);
+      return initiateLogin(window.location.pathname + window.location.search);
     }
 
     /* 403 权限不足错误 */
