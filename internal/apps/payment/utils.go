@@ -1,33 +1,25 @@
 package payment
 
 import (
+	"crypto/md5"
+	"crypto/subtle"
 	"errors"
 	"fmt"
 	"net/http"
+	"sort"
 	"strconv"
-
-	"github.com/linux-do/pay/internal/apps/oauth"
+	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/linux-do/pay/internal/apps/oauth"
 	"github.com/linux-do/pay/internal/db"
 	"github.com/linux-do/pay/internal/model"
 	"github.com/linux-do/pay/internal/util"
 	"github.com/redis/go-redis/v9"
+	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
 )
-
-func GetAPIKeyFromContext(c *gin.Context) (*model.MerchantAPIKey, bool) {
-	apiKey, exists := c.Get(APIKeyObjKey)
-	if !exists {
-		return nil, false
-	}
-	key, ok := apiKey.(*model.MerchantAPIKey)
-	return key, ok
-}
-
-func SetAPIKeyToContext(c *gin.Context, apiKey *model.MerchantAPIKey) {
-	c.Set(APIKeyObjKey, apiKey)
-}
 
 // HandleParseOrderNoError 处理 ParseOrderNo 返回的错误，返回对应的 HTTP 响应
 func HandleParseOrderNoError(c *gin.Context, err error) bool {
@@ -87,7 +79,7 @@ func ParseOrderNo(c *gin.Context, orderNo string) (*OrderContext, error) {
 		return nil, err
 	}
 
-	currentUser, _ := oauth.GetUserFromContext(c)
+	currentUser, _ := util.GetFromContext[*model.User](c, oauth.UserObjKey)
 
 	// 验证不是商户自己支付自己的订单
 	if currentUser.ID == merchantUser.ID {
@@ -131,4 +123,83 @@ func ParseOrderNo(c *gin.Context, orderNo string) (*OrderContext, error) {
 	ctx.MerchantPayConfig = &merchantPayConfig
 
 	return ctx, nil
+}
+
+// GenerateSignature 生成MD5签名
+func GenerateSignature(params map[string]string, secret string) string {
+	// 按key排序
+	keys := make([]string, 0, len(params))
+	for k := range params {
+		if k == "sign" || k == "sign_type" {
+			continue
+		}
+		// 空值不参与签名
+		if params[k] == "" {
+			continue
+		}
+		keys = append(keys, k)
+	}
+
+	sort.Strings(keys)
+
+	// 拼接签名字符串
+	var builder strings.Builder
+	builder.Grow(256)
+	for i, k := range keys {
+		if i > 0 {
+			builder.WriteByte('&')
+		}
+		builder.WriteString(k)
+		builder.WriteByte('=')
+		builder.WriteString(params[k])
+	}
+	builder.WriteString(secret)
+
+	// MD5加密
+	hash := md5.Sum([]byte(builder.String()))
+	return fmt.Sprintf("%x", hash)
+}
+
+// VerifySignature 验证MD5签名
+func VerifySignature(c *gin.Context, apiKey *model.MerchantAPIKey) (*CreateOrderRequest, error) {
+	var req EPayRequest
+	if err := c.ShouldBindWith(&req, binding.FormPost); err != nil {
+		return nil, err
+	}
+
+	// 验证金额必须大于0
+	if req.Amount.LessThanOrEqual(decimal.Zero) {
+		return nil, errors.New(AmountMustBeGreaterThanZero)
+	}
+
+	// 验证小数位数不超过2位
+	if req.Amount.Exponent() < -2 {
+		return nil, errors.New(AmountDecimalPlacesExceeded)
+	}
+
+	if err := db.DB(c.Request.Context()).Where("client_id = ?", req.ClientID).First(&apiKey).Error; err != nil {
+		return nil, err
+	}
+
+	// 构建签名参数
+	params := map[string]string{
+		"pid":          req.ClientID,
+		"type":         req.PayType,
+		"out_trade_no": req.MerchantOrderNo,
+		"notify_url":   req.NotifyURL,
+		"return_url":   req.ReturnURL,
+		"name":         req.OrderName,
+		"money":        req.Amount.Truncate(2).StringFixed(2),
+		"device":       req.Device,
+	}
+
+	// 生成期望的签名
+	expectedSign := GenerateSignature(params, apiKey.ClientSecret)
+
+	// 常量时间比较签名（防止时序攻击）
+	if subtle.ConstantTimeCompare([]byte(strings.ToLower(expectedSign)), []byte(strings.ToLower(req.Sign))) != 1 {
+		return nil, errors.New("签名验证失败")
+	}
+
+	return req.ToCreateOrderRequest(), nil
 }

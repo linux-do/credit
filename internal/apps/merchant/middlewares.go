@@ -36,7 +36,7 @@ import (
 
 func RequireAPIKey() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		user, _ := oauth.GetUserFromContext(c)
+		user, _ := util.GetFromContext[*model.User](c, oauth.UserObjKey)
 
 		var apiKey model.MerchantAPIKey
 		if err := db.DB(c.Request.Context()).
@@ -46,7 +46,7 @@ func RequireAPIKey() gin.HandlerFunc {
 			return
 		}
 
-		SetAPIKeyToContext(c, &apiKey)
+		util.SetToContext(c, APIKeyObjKey, &apiKey)
 
 		c.Next()
 	}

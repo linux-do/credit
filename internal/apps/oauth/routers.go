@@ -124,7 +124,7 @@ type BasicUserInfo struct {
 // @Success 200 {object} util.ResponseAny
 // @Router /api/v1/oauth/user-info [get]
 func UserInfo(c *gin.Context) {
-	user, _ := GetUserFromContext(c)
+	user, _ := util.GetFromContext[*model.User](c, UserObjKey)
 
 	var payConfig model.UserPayConfig
 	if err := payConfig.GetByPayScore(db.DB(c.Request.Context()), user.PayScore); err != nil {

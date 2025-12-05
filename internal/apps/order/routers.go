@@ -75,7 +75,7 @@ func ListTransactions(c *gin.Context) {
 		return
 	}
 
-	user, _ := oauth.GetUserFromContext(c)
+	user, _ := util.GetFromContext[*model.User](c, oauth.UserObjKey)
 
 	baseQuery := db.DB(c.Request.Context()).Model(&model.Order{}).
 		Select("orders.*, merchant_api_keys.app_name, merchant_api_keys.app_homepage_url, merchant_api_keys.app_description, merchant_api_keys.redirect_uri, disputes.id as dispute_id, payer_user.username as payer_username, payee_user.username as payee_username").

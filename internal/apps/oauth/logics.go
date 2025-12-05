@@ -62,21 +62,6 @@ func GetUserIDFromContext(c *gin.Context) uint64 {
 	return GetUserIDFromSession(session)
 }
 
-// GetUserFromContext 从Context中获取User对象
-func GetUserFromContext(c *gin.Context) (*model.User, bool) {
-	user, exists := c.Get(UserObjKey)
-	if !exists {
-		return nil, false
-	}
-	u, ok := user.(*model.User)
-	return u, ok
-}
-
-// SetUserToContext 将User对象存储到Context中
-func SetUserToContext(c *gin.Context, user *model.User) {
-	c.Set(UserObjKey, user)
-}
-
 func doOAuth(ctx context.Context, code string) (*model.User, error) {
 	// init trace
 	ctx, span := otel_trace.Start(ctx, "OAuth")

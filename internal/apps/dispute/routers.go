@@ -75,7 +75,7 @@ func ListDisputes(c *gin.Context) {
 		return
 	}
 
-	user, _ := oauth.GetUserFromContext(c)
+	user, _ := util.GetFromContext[*model.User](c, oauth.UserObjKey)
 
 	baseQuery := db.DB(c.Request.Context()).Model(&model.Dispute{}).
 		Select("disputes.*, orders.order_name, payee_user.username as payee_username, orders.amount, initiator_user.username as initiator_username, handler_user.username as handler_username").
@@ -127,7 +127,7 @@ func ListMerchantDisputes(c *gin.Context) {
 		return
 	}
 
-	user, _ := oauth.GetUserFromContext(c)
+	user, _ := util.GetFromContext[*model.User](c, oauth.UserObjKey)
 
 	baseQuery := db.DB(c.Request.Context()).Model(&model.Dispute{}).
 		Select("disputes.*, orders.order_name, payee_user.username as payee_username, orders.amount, initiator_user.username as initiator_username, handler_user.username as handler_username").
@@ -185,7 +185,7 @@ func CreateDispute(c *gin.Context) {
 		return
 	}
 
-	user, _ := oauth.GetUserFromContext(c)
+	user, _ := util.GetFromContext[*model.User](c, oauth.UserObjKey)
 
 	// 获取争议时间窗口配置（小时）
 	disputeTimeHours, errKey := model.GetIntByKey(c.Request.Context(), model.ConfigKeyDisputeTimeWindowHours)
@@ -275,7 +275,7 @@ func RefundReview(c *gin.Context) {
 		return
 	}
 
-	merchantUser, _ := oauth.GetUserFromContext(c)
+	merchantUser, _ := util.GetFromContext[*model.User](c, oauth.UserObjKey)
 
 	if err := db.DB(c.Request.Context()).Transaction(
 		func(tx *gorm.DB) error {
@@ -402,7 +402,7 @@ func CloseDispute(c *gin.Context) {
 		return
 	}
 
-	user, _ := oauth.GetUserFromContext(c)
+	user, _ := util.GetFromContext[*model.User](c, oauth.UserObjKey)
 
 	if err := db.DB(c.Request.Context()).Transaction(
 		func(tx *gorm.DB) error {

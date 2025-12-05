@@ -53,7 +53,7 @@ func UpdatePayKey(c *gin.Context) {
 		return
 	}
 
-	user, _ := oauth.GetUserFromContext(c)
+	user, _ := util.GetFromContext[*model.User](c, oauth.UserObjKey)
 
 	if err := db.DB(c.Request.Context()).
 		Model(&model.User{}).

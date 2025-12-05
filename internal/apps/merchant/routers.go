@@ -67,7 +67,7 @@ func CreateAPIKey(c *gin.Context) {
 		return
 	}
 
-	user, _ := oauth.GetUserFromContext(c)
+	user, _ := util.GetFromContext[*model.User](c, oauth.UserObjKey)
 
 	apiKey := model.MerchantAPIKey{
 		UserID:         user.ID,
@@ -93,7 +93,7 @@ func CreateAPIKey(c *gin.Context) {
 // @Success 200 {object} util.ResponseAny
 // @Router /api/v1/merchant/api-keys [get]
 func ListAPIKeys(c *gin.Context) {
-	user, _ := oauth.GetUserFromContext(c)
+	user, _ := util.GetFromContext[*model.User](c, oauth.UserObjKey)
 
 	var apiKeys []model.MerchantAPIKey
 	if err := db.DB(c.Request.Context()).
@@ -114,7 +114,7 @@ func ListAPIKeys(c *gin.Context) {
 // @Success 200 {object} util.ResponseAny
 // @Router /api/v1/merchant/api-keys/{id} [get]
 func GetAPIKey(c *gin.Context) {
-	apiKey, _ := GetAPIKeyFromContext(c)
+	apiKey, _ := util.GetFromContext[*model.MerchantAPIKey](c, APIKeyObjKey)
 	c.JSON(http.StatusOK, util.OK(apiKey))
 }
 
@@ -133,7 +133,7 @@ func UpdateAPIKey(c *gin.Context) {
 		return
 	}
 
-	apiKey, _ := GetAPIKeyFromContext(c)
+	apiKey, _ := util.GetFromContext[*model.MerchantAPIKey](c, APIKeyObjKey)
 
 	updates := make(map[string]interface{})
 	if req.AppName != "" {
@@ -171,7 +171,7 @@ func UpdateAPIKey(c *gin.Context) {
 // @Success 200 {object} util.ResponseAny
 // @Router /api/v1/merchant/api-keys/{id} [delete]
 func DeleteAPIKey(c *gin.Context) {
-	apiKey, _ := GetAPIKeyFromContext(c)
+	apiKey, _ := util.GetFromContext[*model.MerchantAPIKey](c, APIKeyObjKey)
 
 	if err := db.DB(c.Request.Context()).Delete(&apiKey).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, util.Err(err.Error()))

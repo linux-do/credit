@@ -24,9 +24,12 @@
 package admin
 
 import (
-	"github.com/linux-do/pay/internal/logger"
-	"github.com/linux-do/pay/internal/otel_trace"
 	"net/http"
+
+	"github.com/linux-do/pay/internal/logger"
+	"github.com/linux-do/pay/internal/model"
+	"github.com/linux-do/pay/internal/otel_trace"
+	"github.com/linux-do/pay/internal/util"
 
 	"github.com/gin-gonic/gin"
 	"github.com/linux-do/pay/internal/apps/oauth"
@@ -38,7 +41,7 @@ func LoginAdminRequired() gin.HandlerFunc {
 		ctx, span := otel_trace.Start(c.Request.Context(), "LoginAdminRequired")
 		defer span.End()
 
-		user, _ := oauth.GetUserFromContext(c)
+		user, _ := util.GetFromContext[*model.User](c, oauth.UserObjKey)
 
 		if !user.IsAdmin {
 			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error_msg": AdminRequired, "data": nil})
