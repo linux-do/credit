@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Undo2, FileText, Zap } from "lucide-react"
+import { Undo2, FileText, Link2 } from "lucide-react"
 import { toast } from "sonner"
 import { TableFilter } from "@/components/common/general/table-filter"
 import { TransactionTableList } from "@/components/common/general/table-data"
@@ -14,7 +14,7 @@ import { TransactionProvider, useTransaction } from "@/contexts/transaction-cont
 const MERCHANT_ACTIONS = [
   {
     title: "处理争议",
-    description: "处理此商户的所有争议",
+    description: "获取此商户的所有争议",
     icon: Undo2,
     color: "text-orange-600",
     bgColor: "bg-orange-50 dark:bg-orange-950/20",
@@ -28,13 +28,14 @@ const MERCHANT_ACTIONS = [
     bgColor: "bg-blue-50 dark:bg-blue-950/20",
     action: "view-all",
   },
+
   {
-    title: "快速测试",
-    description: "创建此商户的测试订单",
-    icon: Zap,
-    color: "text-yellow-600",
-    bgColor: "bg-yellow-50 dark:bg-yellow-950/20",
-    action: "test",
+    title: "在线收款",
+    description: "创建自定义支付链接",
+    icon: Link2,
+    color: "text-purple-600",
+    bgColor: "bg-purple-50 dark:bg-purple-950/20",
+    action: "online-payment",
   },
 ]
 
@@ -141,9 +142,7 @@ function MerchantDataContent({ apiKey }: MerchantDataProps) {
     })
   }
 
-  const handleTest = () => {
-    router.push('/paying/demo')
-  }
+
 
   return (
     <div className="space-y-6">
@@ -162,8 +161,9 @@ function MerchantDataContent({ apiKey }: MerchantDataProps) {
                     handleRefund()
                   } else if (action.action === 'view-all') {
                     handleViewAllOrders()
-                  } else if (action.action === 'test') {
-                    handleTest()
+
+                  } else if (action.action === 'online-payment') {
+                    router.push(`/merchant/online-paying?apiKeyId=${apiKey.id}`)
                   }
                 }}
               >

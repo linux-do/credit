@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 import { motion } from "motion/react"
@@ -14,17 +14,6 @@ import type { GetMerchantOrderResponse } from "@/lib/services"
 /**
  * 支付主页面组件
  * 通过 order_no 查询订单信息并完成支付
- *
- * @param {string} encryptedOrderNo - 加密后的订单号
- * @param {GetMerchantOrderResponse} orderInfo - 订单信息
- * @param {boolean} loading - 是否加载中
- * @param {boolean} error - 是否错误
- * @param {boolean} paying - 是否支付中
- * @param {string} payKey - 支付密码
- * @param {PaymentStep} currentStep - 当前步骤
- * @param {string} selectedMethod - 选择的支付方式
- * @param {boolean} isOpen - 是否打开
- * @returns {JSX.Element} 支付主页面组件
  */
 export function PayingMain() {
   /** 获取URL参数中的订单号 */
@@ -41,27 +30,28 @@ export function PayingMain() {
   const [selectedMethod, setSelectedMethod] = useState<string>('')
   const [isOpen, setIsOpen] = useState(false)
 
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const isMountedRef = useRef(true)
+
+  useEffect(() => {
+    isMountedRef.current = true
+    return () => {
+      isMountedRef.current = false
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+        timeoutRef.current = null
+      }
+    }
+  }, [])
+
   /** 统一的服务错误处理函数 */
   const handleServiceError = (error: unknown, operation: string) => {
-    console.error(`${operation}失败:`, error)
+    console.error(`${ operation }失败:`, error)
 
-    let errorMessage = `${operation}失败`
+    let errorMessage = `${ operation }失败`
     if (error && typeof error === 'object' && 'message' in error) {
       errorMessage = String(error.message)
     }
-
-    console.error('错误详情:', {
-      message: errorMessage,
-      statusCode: error && typeof error === 'object' && 'statusCode' in error
-        ? error.statusCode
-        : undefined,
-      code: error && typeof error === 'object' && 'code' in error
-        ? error.code
-        : undefined,
-      details: error && typeof error === 'object' && 'details' in error
-        ? error.details
-        : undefined
-    })
 
     const errorMap: Record<string, string> = {
       '订单不存在': "订单不存在或已过期",
@@ -77,7 +67,8 @@ export function PayingMain() {
       errorMessage.includes(key)
     )?.[1] || errorMessage
 
-    toast.error(userMessage)
+    // Use a consistent ID for error toasts to avoid duplicates in Strict Mode
+    toast.error(userMessage, { id: 'payment-error' })
   }
 
   /** 组件初始化时查询订单信息 */
@@ -96,7 +87,7 @@ export function PayingMain() {
   const handleQueryOrder = async (queryOrderNo?: string) => {
     const targetOrderNo = queryOrderNo || encryptedOrderNo
     if (!targetOrderNo) {
-      toast.error("缺少订单号")
+      toast.error("缺少订单号", { id: 'missing-order-no' })
       return
     }
 
@@ -145,10 +136,9 @@ export function PayingMain() {
         pay_key: payKey
       })
 
-      toast.success("支付成功！")
-      setPayKey("")
+      toast.success("支付成功！", { id: 'payment-success' })
 
-      /** 支付成功后立即更新订单状态为成功，显示成功动画 */
+      /** 支付成功后立即更新订单状态为成功 */
       if (orderInfo) {
         setOrderInfo({
           ...orderInfo,
@@ -160,7 +150,9 @@ export function PayingMain() {
       }
 
       /** 5秒后跳转到redirect_uri或刷新页面 */
-      setTimeout(() => {
+      timeoutRef.current = setTimeout(() => {
+        if (!isMountedRef.current) return
+
         const redirectUri = orderInfo?.merchant?.redirect_uri
         if (redirectUri && redirectUri.trim()) {
           window.location.href = redirectUri
@@ -178,7 +170,8 @@ export function PayingMain() {
         'message' in error &&
         String(error.message).includes('已完成')
       ) {
-        setTimeout(() => {
+        timeoutRef.current = setTimeout(() => {
+          if (!isMountedRef.current) return
           window.location.reload()
         }, 500)
       }
@@ -189,67 +182,59 @@ export function PayingMain() {
 
   if (error) {
     return (
-      <motion.div
-        className="flex flex-col items-center justify-center min-h-screen text-center px-4 bg-white"
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{
-          duration: 0.6,
-          ease: "easeOut",
-          type: "spring",
-          stiffness: 100
-        }}
-      >
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{
-            delay: 0.2,
-            duration: 0.5,
-            type: "spring",
-            stiffness: 200
-          }}
-          className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-6"
-        >
-          <div className="size-8 text-red-600 font-bold text-4xl flex items-center justify-center">!</div>
-        </motion.div>
-        <motion.h1
-          className="text-2xl font-bold text-neutral-900 mb-4"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.3 }}
-        >
-          出了点问题
-        </motion.h1>
-        <motion.p
-          className="text-neutral-500 max-w-md"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6, duration: 0.3 }}
-        >
-          您访问的订单页面已经完成支付或不存在。请检查支付订单地址是否正确，对此如有疑问请联系商家或 LINUX DO PAY。
-        </motion.p>
-      </motion.div>
+      <div className="relative min-h-screen w-full flex flex-col items-center justify-center bg-background">
+        <div className="relative z-10 w-full h-full flex items-center justify-center p-4">
+          <motion.div
+            className="relative z-10 flex flex-col items-center justify-center min-h-screen text-center px-4"
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+          >
+            <div className="w-full rounded-3xl p-8 max-w-lg">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-6 bg-red-500/10">
+                <div className="size-8 text-red-500 font-bold text-4xl flex items-center justify-center">!</div>
+              </div>
+              <h1 className="text-2xl font-bold text-foreground mb-4">
+                出了点问题
+              </h1>
+              <p className="text-muted-foreground text-sm">
+                您访问的订单页面已经完成支付或不存在。请检查支付订单地址是否正确，对此如有疑问请联系商家或 LINUX DO PAY。
+              </p>
+            </div>
+          </motion.div>
+        </div>
+      </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row">
-      <PayingInfo orderInfo={orderInfo!} loading={loading} />
-      <PayingNow
-        orderInfo={orderInfo}
-        paying={paying}
-        payKey={payKey}
-        currentStep={currentStep}
-        selectedMethod={selectedMethod}
-        isOpen={isOpen}
-        loading={loading}
-        onPayKeyChange={setPayKey}
-        onCurrentStepChange={setCurrentStep}
-        onSelectedMethodChange={setSelectedMethod}
-        onIsOpenChange={setIsOpen}
-        onPayOrder={handlePayOrder}
-      />
+    <div className="relative min-h-screen w-full font-sans text-foreground overflow-hidden bg-background selection:bg-primary/30">
+      <div className="relative min-h-screen w-full flex flex-col items-center justify-center bg-background">
+        <div className="relative z-10 w-full h-full flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, y: 30, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className="flex flex-col md:flex-row w-full max-w-4xl bg-card/70 backdrop-blur-2xl border border-border/50 rounded-3xl overflow-hidden shadow-2xl"
+            style={{ minHeight: 'auto' }}
+          >
+            <PayingInfo orderInfo={orderInfo!} loading={loading} />
+            <PayingNow
+              orderInfo={orderInfo}
+              paying={paying}
+              payKey={payKey}
+              currentStep={currentStep}
+              selectedMethod={selectedMethod}
+              isOpen={isOpen}
+              loading={loading}
+              onPayKeyChange={setPayKey}
+              onCurrentStepChange={setCurrentStep}
+              onSelectedMethodChange={setSelectedMethod}
+              onIsOpenChange={setIsOpen}
+              onPayOrder={handlePayOrder}
+            />
+          </motion.div>
+        </div>
+      </div>
     </div>
   )
 }

@@ -39,6 +39,7 @@ export function MerchantDialog({
 }: MerchantDialogProps) {
   const [open, setOpen] = useState(false)
   const [processing, setProcessing] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const [formData, setFormData] = useState<CreateAPIKeyRequest | UpdateAPIKeyRequest>({
     app_name: '',
     app_homepage_url: '',
@@ -46,6 +47,10 @@ export function MerchantDialog({
     redirect_uri: '',
     notify_url: '',
   })
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   /**
    * 初始化表单数据
@@ -183,6 +188,10 @@ export function MerchantDialog({
       resetForm()
     }
     setOpen(newOpen)
+  }
+
+  if (!mounted) {
+    return null
   }
 
   return (

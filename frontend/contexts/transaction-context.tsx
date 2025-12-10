@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { createContext, useContext, useCallback, useState, useRef } from "react"
+import { createContext, useContext, useCallback, useState, useRef, useEffect } from "react"
 
 import services from "@/lib/services"
 import type { Order, TransactionQueryParams } from "@/lib/services"
@@ -23,6 +23,9 @@ interface TransactionContextState {
   reset: () => void
   updateOrderStatus: (orderId: number, updates: Partial<Pick<Order, 'status' | 'dispute_id'>>) => void
 }
+
+const MAX_CACHE_SIZE = 50
+const CACHE_DURATION = 5 * 60 * 1000 // 5分钟
 
 /* 交易上下文 */
 const TransactionContext = createContext<TransactionContextState | null>(null)
@@ -59,6 +62,28 @@ export function TransactionProvider({ children, defaultParams = {} }: Transactio
   const cacheRef = useRef<Record<string, { data: Order[], total: number, timestamp: number }>>({})
   const latestRequestIdRef = useRef(0)
 
+  const cleanExpiredCache = useCallback(() => {
+    const now = Date.now()
+    Object.keys(cacheRef.current).forEach(key => {
+      if (now - cacheRef.current[key].timestamp > CACHE_DURATION) {
+        delete cacheRef.current[key]
+      }
+    })
+  }, [])
+
+  const addToCache = useCallback((key: string, value: { data: Order[], total: number, timestamp: number }) => {
+    const cacheKeys = Object.keys(cacheRef.current)
+
+    if (cacheKeys.length >= MAX_CACHE_SIZE) {
+      const oldestKey = cacheKeys.reduce((oldest, current) => {
+        return cacheRef.current[current].timestamp < cacheRef.current[oldest].timestamp ? current : oldest
+      })
+      delete cacheRef.current[oldestKey]
+    }
+
+    cacheRef.current[key] = value
+  }, [])
+
   /* 获取交易列表 */
   const fetchTransactions = useCallback(async (params: Partial<TransactionQueryParams>) => {
     const queryParams: TransactionQueryParams = {
@@ -76,12 +101,10 @@ export function TransactionProvider({ children, defaultParams = {} }: Transactio
     const clientIdKey = queryParams.client_id || 'all'
     const startTimeKey = queryParams.startTime || 'no-start'
     const endTimeKey = queryParams.endTime || 'no-end'
-    const cacheKey = `${typeKey}_${statusKey}_${clientIdKey}_${queryParams.page}_${queryParams.page_size}_${startTimeKey}_${endTimeKey}`
+    const cacheKey = `${ typeKey }_${ statusKey }_${ clientIdKey }_${ queryParams.page }_${ queryParams.page_size }_${ startTimeKey }_${ endTimeKey }`
 
-    /* 检查缓存（缓存5分钟） */
     const cached = cacheRef.current[cacheKey]
     const now = Date.now()
-    const CACHE_DURATION = 5 * 60 * 1000 // 5分钟
 
     if (cached && (now - cached.timestamp) < CACHE_DURATION && queryParams.page === 1) {
       if (requestId !== latestRequestIdRef.current) {
@@ -119,11 +142,12 @@ export function TransactionProvider({ children, defaultParams = {} }: Transactio
 
       if (queryParams.page === 1) {
         setTransactions(result.orders)
-        cacheRef.current[cacheKey] = {
+        addToCache(cacheKey, {
           data: result.orders,
           total: result.total,
           timestamp: now
-        }
+        })
+        cleanExpiredCache()
       } else {
         setTransactions(prev => [...prev, ...result.orders])
       }
@@ -148,7 +172,7 @@ export function TransactionProvider({ children, defaultParams = {} }: Transactio
         setLoading(false)
       }
     }
-  }, [pageSize])
+  }, [pageSize, addToCache, cleanExpiredCache])
 
   /* 加载更多 */
   const loadMore = useCallback(async () => {
@@ -168,7 +192,7 @@ export function TransactionProvider({ children, defaultParams = {} }: Transactio
     const clientIdKey = lastParams.client_id || 'all'
     const startTimeKey = lastParams.startTime || 'no-start'
     const endTimeKey = lastParams.endTime || 'no-end'
-    const cacheKey = `${typeKey}_${statusKey}_${clientIdKey}_1_${pageSize}_${startTimeKey}_${endTimeKey}`
+    const cacheKey = `${ typeKey }_${ statusKey }_${ clientIdKey }_1_${ pageSize }_${ startTimeKey }_${ endTimeKey }`
     delete cacheRef.current[cacheKey]
 
     await fetchTransactions({
@@ -217,6 +241,12 @@ export function TransactionProvider({ children, defaultParams = {} }: Transactio
     reset,
     updateOrderStatus,
   }
+
+  useEffect(() => {
+    return () => {
+      cacheRef.current = {}
+    }
+  }, [])
 
   return (
     <TransactionContext.Provider value={value}>

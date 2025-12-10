@@ -34,6 +34,7 @@ export type {
   GetMerchantOrderRequest,
   GetMerchantOrderResponse,
   PaymentLink,
+  CreatePaymentLinkRequest,
   QueryMerchantOrderRequest,
   QueryMerchantOrderResponse,
   RefundMerchantOrderRequest,

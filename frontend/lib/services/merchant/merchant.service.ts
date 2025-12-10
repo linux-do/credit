@@ -9,6 +9,7 @@ import type {
   GetMerchantOrderRequest,
   GetMerchantOrderResponse,
   PaymentLink,
+  CreatePaymentLinkRequest,
   QueryMerchantOrderRequest,
   QueryMerchantOrderResponse,
   RefundMerchantOrderRequest,
@@ -127,6 +128,7 @@ export class MerchantService extends BaseService {
   /**
    * 创建支付链接
    * @param apiKeyId - API Key ID
+   * @param request - 创建支付链接请求参数
    * @returns 创建的支付链接信息
    * @throws {UnauthorizedError} 当未登录时
    * @throws {NotFoundError} 当 API Key 不存在时
@@ -134,12 +136,16 @@ export class MerchantService extends BaseService {
    * 
    * @example
    * ```typescript
-   * const link = await MerchantService.createPaymentLink(123);
+   * const link = await MerchantService.createPaymentLink(123, {
+   *   product_name: '测试商品',
+   *   amount: 100,
+   *   remark: '备注信息'
+   * });
    * console.log('支付链接 Token:', link.token);
    * ```
    */
-  static async createPaymentLink(apiKeyId: number): Promise<PaymentLink> {
-    return this.post<PaymentLink>(`/api-keys/${apiKeyId}/payment-links`, {});
+  static async createPaymentLink(apiKeyId: number, request: CreatePaymentLinkRequest): Promise<PaymentLink> {
+    return this.post<PaymentLink>(`/api-keys/${apiKeyId}/payment-links`, request);
   }
 
   /**

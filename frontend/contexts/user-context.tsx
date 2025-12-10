@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react'
 
 import services from '@/lib/services'
 import { User, TrustLevel, PayLevel } from '@/lib/services/auth/types'
@@ -63,6 +63,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
     error: null,
   })
 
+  const isMountedRef = useRef(true)
+
   /* 获取信任等级标签 */
   const getTrustLevelLabel = (trustLevel: TrustLevel): string => {
     return TRUST_LEVEL_LABELS[trustLevel] || '未知'
@@ -78,8 +80,13 @@ export function UserProvider({ children }: { children: ReactNode }) {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }))
       const user = await services.auth.getUserInfo()
+
+      if (!isMountedRef.current) return
+
       setState({ user, loading: false, error: null })
     } catch (error) {
+      if (!isMountedRef.current) return
+
       setState({
         user: null,
         loading: false,
@@ -103,9 +110,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     try {
       await services.auth.logout()
+
+      if (!isMountedRef.current) return
+
       setState({ user: null, loading: false, error: null })
       window.location.href = '/login'
     } catch (error) {
+      if (!isMountedRef.current) return
+
       setState(prev => ({
         ...prev,
         error: error instanceof Error ? error.message : '登出失败',
@@ -115,7 +127,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   /* 组件挂载时获取用户信息 */
   useEffect(() => {
+    isMountedRef.current = true
     fetchUser()
+
+    return () => {
+      isMountedRef.current = false
+    }
   }, [])
 
   return (

@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, useRef, useCallback } from "react"
+import { createContext, useContext, useState, useRef, useCallback, useEffect } from "react"
 import { toast } from "sonner"
 
 import services, { type MerchantAPIKey, type UpdateAPIKeyRequest, isCancelError } from "@/lib/services"
@@ -50,6 +50,7 @@ export function MerchantProvider({ children }: { children: React.ReactNode }) {
 
   /* 使用 ref 来标记是否已经加载过数据（全局级别） */
   const hasLoadedRef = useRef(false)
+  const isMountedRef = useRef(true)
 
   /* 获取 API Keys */
   const loadAPIKeys = useCallback(async () => {
@@ -61,6 +62,9 @@ export function MerchantProvider({ children }: { children: React.ReactNode }) {
       setState(prev => ({ ...prev, loading: true, error: null }))
 
       const data = await services.merchant.listAPIKeys()
+
+      if (!isMountedRef.current) return
+
       const validKeys = Array.isArray(data) ? data.filter(key => key != null) : []
 
       setState(prev => ({
@@ -75,6 +79,8 @@ export function MerchantProvider({ children }: { children: React.ReactNode }) {
       if (isCancelError(error)) {
         return
       }
+
+      if (!isMountedRef.current) return
 
       const errorMessage = (error as Error).message || '无法加载 API Keys'
       setState(prev => ({
@@ -98,6 +104,8 @@ export function MerchantProvider({ children }: { children: React.ReactNode }) {
   }): Promise<MerchantAPIKey> => {
     const newKey = await services.merchant.createAPIKey(data)
 
+    if (!isMountedRef.current) return newKey
+
     setState(prev => ({
       ...prev,
       apiKeys: [newKey, ...prev.apiKeys]
@@ -109,6 +117,8 @@ export function MerchantProvider({ children }: { children: React.ReactNode }) {
   /* 更新 API Key */
   const updateAPIKey = useCallback(async (id: number, data: UpdateAPIKeyRequest): Promise<void> => {
     await services.merchant.updateAPIKey(id, data)
+
+    if (!isMountedRef.current) return
 
     /* 更新本地状态中的API Key */
     setState(prev => ({
@@ -122,6 +132,8 @@ export function MerchantProvider({ children }: { children: React.ReactNode }) {
   /* 删除 API Key */
   const deleteAPIKey = useCallback(async (id: number) => {
     await services.merchant.deleteAPIKey(id)
+
+    if (!isMountedRef.current) return
 
     setState(prev => ({
       ...prev,
@@ -143,6 +155,13 @@ export function MerchantProvider({ children }: { children: React.ReactNode }) {
     deleteAPIKey,
     refresh,
   }
+
+  useEffect(() => {
+    isMountedRef.current = true
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
 
   return (
     <MerchantContext.Provider value={value}>

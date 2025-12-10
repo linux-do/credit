@@ -6,7 +6,7 @@ import { Send } from "@/components/animate-ui/icons/send"
 import { Check } from "@/components/animate-ui/icons/check"
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/animate-ui/primitives/radix/collapsible"
-import { AlertCircle, CreditCard, ArrowLeft, ShieldCheck } from "lucide-react"
+import { AlertCircle, CreditCard, ArrowLeft, ShieldCheck, Lock } from "lucide-react"
 
 import type { GetMerchantOrderResponse } from "@/lib/services"
 
@@ -30,34 +30,32 @@ const ORDER_STATUSES = {
 /**
  * 加载中骨架组件
  * 显示支付方式加载中的骨架
- * 
- * @returns {JSX.Element} 加载中骨架组件
  */
 function LoadingSkeleton() {
   return (
-    <div className="space-y-5">
+    <div className="space-y-6 w-full max-w-xs mx-auto">
       <div className="space-y-3">
-        <Skeleton className="h-7 w-32" />
-        <Skeleton className="h-3.5 w-48" />
+        <Skeleton className="h-6 w-32 bg-muted/50" />
+        <Skeleton className="h-4 w-48 bg-muted/50" />
       </div>
 
       <div className="space-y-3">
-        <div className="border rounded-xl p-3">
+        <div className="rounded-xl border border-border/50 p-3 bg-card/50">
           <div className="flex items-center space-x-3">
-            <Skeleton className="w-9 h-9 rounded-full" />
-            <Skeleton className="h-3.5 w-32" />
+            <Skeleton className="w-9 h-9 rounded-lg bg-muted/50" />
+            <Skeleton className="h-3.5 w-24 bg-muted/50" />
           </div>
         </div>
 
-        <div className="border rounded-xl p-3">
+        <div className="rounded-xl border border-border/50 p-3 bg-card/50">
           <div className="flex items-center space-x-3">
-            <Skeleton className="w-9 h-9 rounded-full" />
-            <Skeleton className="h-3.5 w-24" />
+            <Skeleton className="w-9 h-9 rounded-lg bg-muted/50" />
+            <Skeleton className="h-3.5 w-20 bg-muted/50" />
           </div>
         </div>
       </div>
 
-      <Skeleton className="h-10 w-full rounded-full" />
+      <Skeleton className="h-10 w-full rounded-full bg-muted/50" />
     </div>
   )
 }
@@ -65,55 +63,72 @@ function LoadingSkeleton() {
 /**
  * 成功状态组件
  * 显示支付成功状态
- * 
- * @returns {JSX.Element} 成功状态组件
  */
 function SuccessState() {
+  const [countdown, setCountdown] = React.useState(5)
+
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [])
+
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95, y: 20 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
       transition={{
         duration: 0.6,
         ease: "easeOut",
         type: "spring",
         stiffness: 100
       }}
-      className="text-center py-8"
+      className="text-center py-10"
     >
-      <motion.div
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{
-          delay: 0.2,
-          duration: 0.5,
-          type: "spring",
-          stiffness: 200
-        }}
-        className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-5 border border-green-100"
-      >
-        <Check
-          className="size-8 text-green-600"
-          animation="path"
-          animate={true}
-          loop={false}
-        />
-      </motion.div>
+      <div className="relative inline-block mb-6">
+        <div className="absolute inset-0 bg-green-500/20 blur-xl rounded-full" />
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{
+            delay: 0.2,
+            duration: 0.5,
+            type: "spring",
+            stiffness: 200
+          }}
+          className="relative w-10 h-10 bg-green-500 rounded-full flex items-center justify-center "
+        >
+          <Check
+            className="size-6 text-white"
+            animate={true}
+            loop={false}
+          />
+        </motion.div>
+      </div>
+
       <motion.h3
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6, duration: 0.3 }}
-        className="text-xl font-bold text-neutral-900 mb-1.5"
+        transition={{ delay: 0.4, duration: 0.4 }}
+        className="text-xl font-bold text-foreground mb-2"
       >
         支付成功
       </motion.h3>
       <motion.p
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.8, duration: 0.3 }}
-        className="text-sm text-neutral-500"
+        transition={{ delay: 0.6, duration: 0.4 }}
+        className="text-muted-foreground text-sm"
       >
-        您的订单已成功支付，感谢您的购买！
+        您的交易已安全完成，{countdown > 0 ? `${ countdown }秒后自动跳转...` : '正在跳转...'}
       </motion.p>
     </motion.div>
   )
@@ -122,14 +137,6 @@ function SuccessState() {
 /**
  * 支付方式选择步骤组件
  * 显示支付方式选择步骤
- * 
- * @param {GetMerchantOrderResponse} orderInfo - 订单信息
- * @param {string} selectedMethod - 选择的支付方式
- * @param {boolean} isOpen - 是否打开
- * @param {() => void} onSelectedMethodChange - 选择支付方式回调
- * @param {() => void} onIsOpenChange - 打开关闭回调
- * @param {() => void} onCurrentStepChange - 当前步骤回调
- * @returns {JSX.Element} 支付方式选择步骤组件
  */
 function MethodSelectionStep({
   orderInfo,
@@ -153,20 +160,20 @@ function MethodSelectionStep({
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
       transition={{ duration: 0.3 }}
-      className="space-y-6"
+      className="space-y-6 w-full max-w-xs mx-auto"
     >
-      <div className="w-full space-y-1.5">
-        <h2 className="text-xl font-bold text-neutral-900">支付方式</h2>
-        <p className="text-sm text-neutral-500">请选择您想要使用的支付方式</p>
+      <div className="space-y-2 text-center md:text-left">
+        <h2 className="text-xl font-bold text-foreground tracking-tight">选择支付方式</h2>
+        <p className="text-xs text-muted-foreground">请选择您想要使用的支付方式</p>
       </div>
 
-      <div className="space-y-3 w-full">
+      <div className="space-y-3">
         <Collapsible open={isOpen} onOpenChange={onIsOpenChange}>
           <CollapsibleTrigger asChild>
             <div
-              className={`group cursor-pointer border rounded-xl p-2 transition-all duration-200 ${selectedMethod === PAYMENT_METHODS.LINUX_DO_PAY
-                ? 'border-blue-600 bg-blue-50/50'
-                : 'border-neutral-200  bg-white'
+              className={`group cursor-pointer rounded-xl p-2.5 transition-all duration-300 border backdrop-blur-sm ${ selectedMethod === PAYMENT_METHODS.LINUX_DO_PAY
+                ? 'border-primary/50 bg-primary/5 shadow-sm'
+                : 'border-border/50 bg-card hover:bg-muted/50 hover:border-border'
                 }`}
               onClick={() => {
                 if (selectedMethod === PAYMENT_METHODS.LINUX_DO_PAY) {
@@ -178,18 +185,22 @@ function MethodSelectionStep({
                 }
               }}
             >
-              <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${selectedMethod === PAYMENT_METHODS.LINUX_DO_PAY ? 'bg-blue-600 text-white' : 'bg-neutral-100 text-neutral-600 group-hover:bg-neutral-200'
+              <div className="flex items-center gap-2.5">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300 ${ selectedMethod === PAYMENT_METHODS.LINUX_DO_PAY
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-muted-foreground group-hover:bg-muted/80'
                   }`}>
                   <CreditCard className="size-4" />
                 </div>
-                <div className="flex-1">
-                  <div className="font-bold text-sm text-neutral-900">LINUX DO PAY</div>
-                  <div className="text-[10px] text-neutral-500 mt-0.5">推荐使用</div>
+                <div className="flex-1 text-left">
+                  <div className="font-bold text-xs text-foreground">LINUX DO PAY</div>
+                  <div className="text-[9px] text-muted-foreground mt-0.5">即时安全支付</div>
                 </div>
-                <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${selectedMethod === PAYMENT_METHODS.LINUX_DO_PAY ? 'border-blue-600 bg-blue-600 text-white' : 'border-neutral-300'
+                <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all duration-300 ${ selectedMethod === PAYMENT_METHODS.LINUX_DO_PAY
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-border'
                   }`}>
-                  {selectedMethod === PAYMENT_METHODS.LINUX_DO_PAY && <Check className="size-2.5" />}
+                  {selectedMethod === PAYMENT_METHODS.LINUX_DO_PAY && <Check className="size-3" />}
                 </div>
               </div>
             </div>
@@ -197,18 +208,28 @@ function MethodSelectionStep({
 
           {selectedMethod === PAYMENT_METHODS.LINUX_DO_PAY && (
             <CollapsibleContent>
-              <div className="pt-3">
-                <div className="flex items-center gap-2 text-xs text-neutral-600 mb-4 bg-neutral-50 p-2.5 rounded-lg border border-neutral-100">
-                  <ShieldCheck className="size-3.5 text-blue-600" />
-                  <span>付款账户: <span className="font-medium text-neutral-900">{orderInfo.order.payer_username}</span></span>
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="pt-3 px-1"
+              >
+                <div className="flex items-center gap-2.5 text-xs text-muted-foreground mb-4 bg-muted/30 p-2.5 rounded-lg border">
+                  <div className="p-1 rounded">
+                    <Lock className="size-3 text-primary" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] opacity-70">付款账户</span>
+                    <span className="font-medium text-foreground">{orderInfo.order.payer_username}</span>
+                  </div>
                 </div>
                 <Button
                   onClick={() => onCurrentStepChange(PAYMENT_STEPS.PAY)}
-                  className="w-full h-8 rounded-full text-white font-bold text-sm transition-all"
+                  className="w-full rounded-full font-bold text-sm shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  继续
+                  确认并继续
                 </Button>
-              </div>
+              </motion.div>
             </CollapsibleContent>
           )}
         </Collapsible>
@@ -220,14 +241,6 @@ function MethodSelectionStep({
 /**
  * 支付步骤组件
  * 显示支付步骤
- * 
- * @param {GetMerchantOrderResponse} orderInfo - 订单信息
- * @param {string} payKey - 支付密码
- * @param {boolean} paying - 是否支付中
- * @param {() => void} onPayKeyChange - 支付密码回调
- * @param {() => void} onCurrentStepChange - 当前步骤回调
- * @param {() => void} onPayOrder - 支付订单回调
- * @returns {JSX.Element} 支付步骤组件
  */
 function PaymentStep({
   orderInfo,
@@ -251,24 +264,22 @@ function PaymentStep({
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 20 }}
       transition={{ duration: 0.3 }}
-      className="space-y-6"
+      className="space-y-6 w-full max-w-xs mx-auto"
     >
-      <div className="w-full space-y-1.5">
-        <div className="flex items-center gap-2 mb-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="-ml-2 h-7 w-7 rounded-full hover:bg-neutral-100"
-            onClick={() => onCurrentStepChange(PAYMENT_STEPS.METHOD)}
-          >
-            <ArrowLeft className="size-3.5 text-neutral-900" />
-          </Button>
-          <h2 className="text-xl font-bold text-neutral-900">身份验证</h2>
-        </div>
-        <p className="text-sm text-neutral-500">请输入您的6位支付密码进行身份验证</p>
+      <div className="space-y-1.5">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="-ml-3 h-8 text-muted-foreground hover:text-foreground mb-1"
+          onClick={() => onCurrentStepChange(PAYMENT_STEPS.METHOD)}
+        >
+          <ArrowLeft className="size-3.5 mr-1" /> 返回
+        </Button>
+        <h2 className="text-xl font-bold text-foreground tracking-tight">身份验证</h2>
+        <p className="text-xs text-muted-foreground">请输入您的6位支付密码</p>
       </div>
 
-      <div className="flex justify-center py-2">
+      <div className="flex justify-center py-4">
         <InputOTP
           maxLength={6}
           value={payKey}
@@ -284,7 +295,7 @@ function PaymentStep({
               <InputOTPSlot
                 key={index}
                 index={index}
-                className="size-10 rounded-lg bg-white text-base font-bold transition-all focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
+                className="size-11 bg-background border-border text-foreground text-lg font-bold transition-all focus:border-primary focus:ring-4 focus:ring-primary/10 ring-offset-0"
               />
             ))}
           </InputOTPGroup>
@@ -294,14 +305,14 @@ function PaymentStep({
       <Button
         onClick={onPayOrder}
         disabled={paying || payKey.length !== 6}
-        className="w-full h-8 rounded-full text-white font-bold text-sm transition-all"
+        className="w-full rounded-full font-bold text-sm shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]"
       >
         {paying ? (
-          <>
-            <Send className="mr-2 size-4" animate={true} loop={true} loopDelay={2000} /> 处理中...
-          </>
+          <span className="flex items-center gap-2">
+            <Send className="size-4" animate={true} loop={true} loopDelay={2000} /> 处理中...
+          </span>
         ) : (
-          `支付 LDC ${(parseFloat(orderInfo.order.amount)).toFixed(2)}`
+          `支付 LDC ${ (parseFloat(orderInfo.order.amount)).toFixed(2) }`
         )}
       </Button>
     </motion.div>
@@ -311,18 +322,15 @@ function PaymentStep({
 /**
  * 错误状态组件
  * 显示错误状态
- * 
- * @param {string} status - 错误状态
- * @returns {JSX.Element} 错误状态组件
  */
 function ErrorState({ status }: { status: string }) {
   return (
-    <div className="text-center py-8">
-      <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-100">
-        <AlertCircle className="size-6 text-red-600" />
+    <div className="text-center py-10">
+      <div className="w-14 h-14 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
+        <AlertCircle className="size-6 text-red-500" />
       </div>
-      <h3 className="text-lg font-bold text-neutral-900 mb-1.5">订单状态异常</h3>
-      <p className="text-sm text-neutral-500">订单状态: {status}</p>
+      <h3 className="text-lg font-bold text-foreground mb-1">订单问题</h3>
+      <p className="text-muted-foreground text-sm">状态：<span className="font-medium text-foreground">{status}</span></p>
     </div>
   )
 }
@@ -330,40 +338,20 @@ function ErrorState({ status }: { status: string }) {
 /**
  * 底部组件
  * 显示底部
- * 
- * @param {boolean} loading - 是否加载中
- * @returns {JSX.Element} 底部组件
  */
 function Footer({ loading }: { loading?: boolean }) {
   return loading ? (
-    <div className="flex flex-col items-center justify-center space-y-2 mt-8">
+    <div className="flex flex-col items-center justify-center space-y-2 mt-8 opacity-50">
       <Skeleton className="h-3 w-32" />
-      <Skeleton className="h-3 w-48" />
     </div>
   ) : (
-    <div className="flex flex-col items-center justify-center text-[10px] text-neutral-400 space-y-1 mt-8">
-      <div className="flex items-center gap-1">
-        <ShieldCheck className="size-3" />
-        <span>由 LINUX DO PAY 提供安全支付支持</span>
-      </div>
-      <span>Copyright © 2025 LINUX DO PAY。保留所有权利。</span>
+    <div className="flex items-center justify-center gap-2 text-[10px] uppercase font-bold text-muted-foreground/40 mt-10">
+      <ShieldCheck className="size-3" />
+      <span>由 LINUX DO PAY 提供安全支付</span>
     </div>
   )
 }
 
-/**
- * 支付现在组件的props
- * 显示支付现在组件
- * 
- * @param {GetMerchantOrderResponse | null} orderInfo - 订单信息
- * @param {boolean} paying - 是否支付中
- * @param {string} payKey - 支付密码
- * @param {PaymentStep} currentStep - 当前步骤
- * @param {string} selectedMethod - 选择的支付方式
- * @param {boolean} isOpen - 是否打开
- * @param {boolean} loading - 是否加载中
- * @returns {JSX.Element} 支付现在组件
- */
 interface PayingNowProps {
   orderInfo: GetMerchantOrderResponse | null
   paying: boolean
@@ -382,9 +370,6 @@ interface PayingNowProps {
 /**
  * 支付现在组件
  * 显示支付现在组件
- * 
- * @param {PayingNowProps} props - 支付现在组件的props
- * @returns {JSX.Element} 支付现在组件
  */
 export function PayingNow({
   orderInfo,
@@ -440,9 +425,11 @@ export function PayingNow({
   }
 
   return (
-    <div className="flex-1 bg-white flex items-center justify-center px-6 py-8 md:px-0 md:py-0">
-      <div className="w-full md:w-2/3 max-w-sm md:max-w-[360px]">
-        {renderContent()}
+    <div className="flex-1 flex flex-col items-center justify-center p-6 md:p-8 relative overflow-hidden bg-white dark:bg-neutral-900">
+      <div className="w-full relative z-10 flex flex-col h-full justify-center">
+        <div className="flex-1 flex flex-col justify-center">
+          {renderContent()}
+        </div>
         <Footer loading={loading} />
       </div>
     </div>

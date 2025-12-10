@@ -36,7 +36,7 @@ export function TableOfContents({ content, className }: TableOfContentsProps) {
       const count = slugs.get(slug);
       if (count !== undefined) {
         slugs.set(slug, count + 1);
-        return `${slug}-${count + 1}`;
+        return `${ slug }-${ count + 1 }`;
       } else {
         slugs.set(slug, 0);
         return slug;
@@ -57,6 +57,8 @@ export function TableOfContents({ content, className }: TableOfContentsProps) {
   }, [content]);
 
   useEffect(() => {
+    if (toc.length === 0) return;
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -73,6 +75,7 @@ export function TableOfContents({ content, className }: TableOfContentsProps) {
 
     return () => {
       headers.forEach((header) => observer.unobserve(header));
+      observer.disconnect();
     };
   }, [toc]);
 
@@ -85,7 +88,7 @@ export function TableOfContents({ content, className }: TableOfContentsProps) {
         {toc.map((item) => (
           <a
             key={item.id}
-            href={`#${item.id}`}
+            href={`#${ item.id }`}
             onClick={(e) => {
               e.preventDefault();
               document.getElementById(item.id)?.scrollIntoView({
@@ -100,7 +103,7 @@ export function TableOfContents({ content, className }: TableOfContentsProps) {
                 : "text-muted-foreground hover:text-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800"
             )}
             style={{
-              paddingLeft: `${(item.level - 1) * 12 + 12}px`, // 12px base padding
+              paddingLeft: `${ (item.level - 1) * 12 + 12 }px`, // 12px base padding
               paddingRight: "8px"
             }}
           >

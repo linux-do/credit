@@ -4,4 +4,4 @@
  */
 
 export { UserService } from './user.service';
-export type { UpdatePayKeyRequest, UserInfo, SearchUserRequest } from './types';
+export type { UpdatePayKeyRequest } from './types';

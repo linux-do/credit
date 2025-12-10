@@ -63,12 +63,20 @@ export function AllActivity() {
                 <div className="text-xs font-medium text-muted-foreground">
                   {card.title}
                 </div>
-                <div className={`p-1.5 rounded-full ${card.bgColor}`}>
-                  <IconComponent className={`h-3 w-3 ${card.color}`} />
+                <div className={`p-1.5 rounded-full ${ card.bgColor }`}>
+                  <IconComponent className={`h-3 w-3 ${ card.color }`} />
                 </div>
               </div>
               <div className="text-xl md:text-2xl font-bold mt-2">
-                {loading ? '-' : <CountingNumber number={card.value} decimalPlaces={2} />}
+                {loading ? '-' : (
+                  <CountingNumber
+                    number={typeof card.value === 'number' && !isNaN(card.value) ? card.value : 0}
+                    decimalPlaces={2}
+                    initiallyStable={true}
+                    inView={true}
+                    inViewOnce={true}
+                  />
+                )}
               </div>
             </div>
           )

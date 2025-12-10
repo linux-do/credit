@@ -155,10 +155,28 @@ export interface PaymentLink {
   merchant_api_key_id: number;
   /** 支付链接 Token */
   token: string;
+  /** 金额 */
+  amount: string;
+  /** 商品名称 */
+  product_name: string;
+  /** 备注 */
+  remark: string;
   /** 创建时间 */
   created_at: string;
   /** 更新时间 */
   updated_at: string;
+}
+
+/**
+ * 创建支付链接请求参数
+ */
+export interface CreatePaymentLinkRequest {
+  /** 金额 */
+  amount: number | string;
+  /** 商品名称 */
+  product_name: string;
+  /** 备注（可选） */
+  remark?: string;
 }
 
 /**
