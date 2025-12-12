@@ -179,7 +179,7 @@ func Serve() {
 					}
 				}
 
-				merchantRouter.GET("/payment-links/:token", oauth.LoginRequired(), link.RequirePaymentLink(), link.GetPaymentLinkByToken)
+				merchantRouter.GET("/payment-links/:token", oauth.LoginRequired(), link.GetPaymentLinkByToken)
 				merchantRouter.POST("/payment-links/pay", oauth.LoginRequired(), link.PayByLink)
 
 				// MerchantAPIKey Payment

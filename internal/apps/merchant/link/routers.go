@@ -26,6 +26,7 @@ package link
 
 import (
 	"crypto/subtle"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -99,6 +100,17 @@ func CreatePaymentLink(c *gin.Context) {
 	c.JSON(http.StatusOK, util.OK(paymentLink))
 }
 
+// PaymentLinkDetail 支付链接详情
+type PaymentLinkDetail struct {
+	ID          uint64          `json:"id"`
+	Token       string          `json:"token"`
+	Amount      decimal.Decimal `json:"amount"`
+	ProductName string          `json:"product_name"`
+	Remark      string          `json:"remark"`
+	CreatedAt   time.Time       `json:"created_at"`
+	AppName     string          `json:"app_name"`
+}
+
 // ListPaymentLinks 获取支付链接列表
 // @Tags merchant
 // @Produce json
@@ -108,10 +120,13 @@ func CreatePaymentLink(c *gin.Context) {
 func ListPaymentLinks(c *gin.Context) {
 	apiKey, _ := util.GetFromContext[*model.MerchantAPIKey](c, merchant.APIKeyObjKey)
 
-	var paymentLinks []model.MerchantPaymentLink
+	var paymentLinks []PaymentLinkDetail
 	if err := db.DB(c.Request.Context()).
-		Where("merchant_api_key_id = ?", apiKey.ID).
-		Order("created_at DESC").
+		Table("merchant_payment_links").
+		Select("merchant_payment_links.id, merchant_payment_links.token, merchant_payment_links.amount, merchant_payment_links.product_name, merchant_payment_links.remark, merchant_payment_links.created_at, merchant_api_keys.app_name").
+		Joins("JOIN merchant_api_keys ON merchant_api_keys.id = merchant_payment_links.merchant_api_key_id").
+		Where("merchant_payment_links.merchant_api_key_id = ? AND merchant_payment_links.deleted_at IS NULL", apiKey.ID).
+		Order("merchant_payment_links.created_at DESC").
 		Find(&paymentLinks).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, util.Err(err.Error()))
 		return
@@ -127,7 +142,20 @@ func ListPaymentLinks(c *gin.Context) {
 // @Success 200 {object} util.ResponseAny
 // @Router /api/v1/merchant/payment-links/{token} [get]
 func GetPaymentLinkByToken(c *gin.Context) {
-	paymentLink, _ := util.GetFromContext[*model.MerchantPaymentLink](c, merchant.PaymentLinkObjKey)
+	var paymentLink PaymentLinkDetail
+	if err := db.DB(c.Request.Context()).
+		Table("merchant_payment_links").
+		Select("merchant_payment_links.id, merchant_payment_links.token, merchant_payment_links.amount, merchant_payment_links.product_name, merchant_payment_links.remark, merchant_payment_links.created_at, merchant_api_keys.app_name").
+		Joins("JOIN merchant_api_keys ON merchant_api_keys.id = merchant_payment_links.merchant_api_key_id").
+		Where("merchant_payment_links.token = ? AND merchant_payment_links.deleted_at IS NULL", c.Param("token")).
+		First(&paymentLink).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, util.Err(PaymentLinkNotFound))
+		} else {
+			c.JSON(http.StatusInternalServerError, util.Err(err.Error()))
+		}
+		return
+	}
 
 	c.JSON(http.StatusOK, util.OK(paymentLink))
 }
