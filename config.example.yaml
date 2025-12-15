@@ -59,6 +59,9 @@ redis:
   dial_timeout: 5
   read_timeout: 3
   write_timeout: 3
+  max_retries: 3
+  pool_timeout: 4
+  conn_max_idle_time: 300
 
 # Log
 log:
@@ -93,3 +96,7 @@ worker:
 # linuxDo
 linuxDo:
   api_key: "<LINUX_DO_API_KEY>"
+
+# OpenTelemetry 配置
+otel:
+  sampling_rate: 0.1  # 采样率 0.0-1.0

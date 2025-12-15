@@ -53,15 +53,18 @@ func init() {
 
 	Redis = redis.NewClient(
 		&redis.Options{
-			Addr:         addr,
-			Username:     redisConfig.Username,
-			Password:     redisConfig.Password,
-			DB:           redisConfig.DB,
-			PoolSize:     redisConfig.PoolSize,
-			MinIdleConns: redisConfig.MinIdleConn,
-			DialTimeout:  time.Duration(redisConfig.DialTimeout) * time.Second,
-			ReadTimeout:  time.Duration(redisConfig.ReadTimeout) * time.Second,
-			WriteTimeout: time.Duration(redisConfig.WriteTimeout) * time.Second,
+			Addr:            addr,
+			Username:        redisConfig.Username,
+			Password:        redisConfig.Password,
+			DB:              redisConfig.DB,
+			PoolSize:        redisConfig.PoolSize,
+			MinIdleConns:    redisConfig.MinIdleConn,
+			DialTimeout:     time.Duration(redisConfig.DialTimeout) * time.Second,
+			ReadTimeout:     time.Duration(redisConfig.ReadTimeout) * time.Second,
+			WriteTimeout:    time.Duration(redisConfig.WriteTimeout) * time.Second,
+			MaxRetries:      redisConfig.MaxRetries,
+			PoolTimeout:     time.Duration(redisConfig.PoolTimeout) * time.Second,
+			ConnMaxIdleTime: time.Duration(redisConfig.ConnMaxIdleTime) * time.Second,
 			MaintNotificationsConfig: &maintnotifications.Config{
 				Mode: maintnotifications.ModeDisabled,
 			},

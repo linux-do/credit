@@ -34,6 +34,7 @@ type configModel struct {
 	Worker     workerConfig     `mapstructure:"worker"`
 	ClickHouse clickHouseConfig `mapstructure:"clickhouse"`
 	LinuxDo    linuxDoConfig    `mapstructure:"linuxdo"`
+	Otel       otelConfig       `mapstructure:"otel"`
 }
 
 // appConfig 应用基本配置
@@ -99,17 +100,20 @@ type clickHouseConfig struct {
 
 // redisConfig Redis配置
 type redisConfig struct {
-	Enabled      bool   `mapstructure:"enabled"`
-	Host         string `mapstructure:"host"`
-	Port         int    `mapstructure:"port"`
-	Username     string `mapstructure:"username"`
-	Password     string `mapstructure:"password"`
-	DB           int    `mapstructure:"db"`
-	PoolSize     int    `mapstructure:"pool_size"`
-	MinIdleConn  int    `mapstructure:"min_idle_conn"`
-	DialTimeout  int    `mapstructure:"dial_timeout"`
-	ReadTimeout  int    `mapstructure:"read_timeout"`
-	WriteTimeout int    `mapstructure:"write_timeout"`
+	Enabled         bool   `mapstructure:"enabled"`
+	Host            string `mapstructure:"host"`
+	Port            int    `mapstructure:"port"`
+	Username        string `mapstructure:"username"`
+	Password        string `mapstructure:"password"`
+	DB              int    `mapstructure:"db"`
+	PoolSize        int    `mapstructure:"pool_size"`
+	MinIdleConn     int    `mapstructure:"min_idle_conn"`
+	DialTimeout     int    `mapstructure:"dial_timeout"`
+	ReadTimeout     int    `mapstructure:"read_timeout"`
+	WriteTimeout    int    `mapstructure:"write_timeout"`
+	MaxRetries      int    `mapstructure:"max_retries"`
+	PoolTimeout     int    `mapstructure:"pool_timeout"`
+	ConnMaxIdleTime int    `mapstructure:"conn_max_idle_time"`
 }
 
 // logConfig 日志配置
@@ -148,4 +152,9 @@ type QueueConfig struct {
 // linuxDoConfig
 type linuxDoConfig struct {
 	ApiKey string `mapstructure:"api_key"`
+}
+
+// otelConfig OpenTelemetry 配置
+type otelConfig struct {
+	SamplingRate float64 `mapstructure:"sampling_rate"`
 }
