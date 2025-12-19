@@ -56,7 +56,7 @@ LINUX DO Credit is a credit service platform built for the Linux Do community, a
 - **[GIN](https://github.com/gin-gonic/gin)** - Web Framework
 - **[GORM](https://github.com/go-gorm/gorm)** - ORM Framework
 - **[Redis](https://github.com/redis/redis)** - Cache and session store
-- **[PostgreSQL]** - Primary Database
+- **[PostgreSQL](https://www.postgresql.org)** - Primary Database
 - **[OpenTelemetry](https://opentelemetry.io)** - Observability
 - **[Swagger](https://github.com/swaggo/swag)** - API Documentation
 
