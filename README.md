@@ -52,7 +52,7 @@ LINUX DO Credit 是一个为 Linux Do 社区打造的积分服务平台，旨在
 - **[GIN](https://github.com/gin-gonic/gin)** - Web 框架
 - **[GORM](https://github.com/go-gorm/gorm)** - ORM 框架
 - **[Redis](https://github.com/redis/redis)** - 缓存和会话存储
-- **[PostgreSQL]** - 主数据库
+- **[PostgreSQL](https://www.postgresql.org)** - 主数据库
 - **[OpenTelemetry](https://opentelemetry.io)** - 可观测性
 - **[Swagger](https://github.com/swaggo/swag)** - API 文档
 
