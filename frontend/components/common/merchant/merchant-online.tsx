@@ -49,7 +49,7 @@ const DEVICE_CONFIG = {
 
 export function MerchantOnline() {
   const searchParams = useSearchParams()
-  const { apiKeys, loading: loadingKeys, loadAPIKeys } = useMerchant()
+  const { apiKeys, loading: loadingKeys } = useMerchant()
   const apiKeyId = searchParams.get("apiKeyId")
   const selectedKey = apiKeys.find(k => k.id.toString() === apiKeyId) || null
 
