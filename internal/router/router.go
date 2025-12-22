@@ -170,7 +170,7 @@ func Serve() {
 			configRouter := apiV1Router.Group("/config")
 			{
 				configRouter.GET("/public", publicconfig.GetPublicConfig)
-				configRouter.GET("/user-pay", system_config.ListSystemConfigs)
+				configRouter.GET("/user-pay", user_pay_config.ListUserPayConfigs)
 			}
 
 			// MerchantAPIKey
