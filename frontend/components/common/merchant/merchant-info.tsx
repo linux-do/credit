@@ -88,19 +88,21 @@ export function MerchantInfo({ apiKey, onUpdate, onDelete, updateAPIKey }: Merch
             </Link>
           </div>
 
-          <div className="px-3 py-2 flex items-center justify-between border-b border-dashed last:border-b-0">
-            <label className="text-xs font-medium text-muted-foreground">回调 URI</label>
-            <Link
-              href={apiKey.redirect_uri}
-              target="_blank"
-              className="text-xs text-indigo-500 hover:underline flex items-center gap-1 text-right max-w-[70%]"
-            >
-              <span className="truncate flex-1 min-w-0">
-                {apiKey.redirect_uri}
-              </span>
-              <ExternalLink className="h-3 w-3 flex-shrink-0 ml-1" />
-            </Link>
-          </div>
+          {apiKey.redirect_uri && (
+            <div className="px-3 py-2 flex items-center justify-between border-b border-dashed last:border-b-0">
+              <label className="text-xs font-medium text-muted-foreground">回调 URI</label>
+              <Link
+                href={apiKey.redirect_uri}
+                target="_blank"
+                className="text-xs text-indigo-500 hover:underline flex items-center gap-1 text-right max-w-[70%]"
+              >
+                <span className="truncate flex-1 min-w-0">
+                  {apiKey.redirect_uri}
+                </span>
+                <ExternalLink className="h-3 w-3 flex-shrink-0 ml-1" />
+              </Link>
+            </div>
+          )}
 
           <div className="px-3 py-2 flex items-center justify-between">
             <label className="text-xs font-medium text-muted-foreground">通知 URL</label>

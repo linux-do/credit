@@ -239,7 +239,7 @@ function MerchantOnlineContent({ apiKeys, loadAPIKeys }: MerchantOnlineContentPr
 
   /* 处理复制链接 */
   const handleCopyLink = (token: string) => {
-    const url = `${ window.location.origin }/pay/${ token }`
+    const url = `${ window.location.origin }/paying/online?token=${ token }`
     navigator.clipboard.writeText(url)
     toast.success("在线积分流转服务链接已复制")
   }

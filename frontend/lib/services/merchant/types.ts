@@ -17,7 +17,7 @@ export interface MerchantAPIKey {
   /** 应用描述 */
   app_description: string;
   /** 重定向 URI */
-  redirect_uri: string;
+  redirect_uri?: string;
   /** 通知 URL */
   notify_url: string;
   /** 创建时间 */
@@ -38,8 +38,8 @@ export interface CreateAPIKeyRequest {
   app_homepage_url: string;
   /** 应用描述（最大100字符，可选） */
   app_description?: string;
-  /** 重定向 URI（最大100字符，必须是有效的 URL） */
-  redirect_uri: string;
+  /** 重定向 URI（最大100字符，必须是有效的 URL，可选） */
+  redirect_uri?: string;
   /** 通知 URL（最大100字符，必须是有效的 URL） */
   notify_url: string;
 }

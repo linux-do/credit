@@ -23,7 +23,7 @@ interface MerchantContextType extends MerchantDataState {
   createAPIKey: (data: {
     app_name: string
     app_homepage_url: string
-    redirect_uri: string
+    redirect_uri?: string
     notify_url: string
   }) => Promise<MerchantAPIKey>
   updateAPIKey: (id: number, data: UpdateAPIKeyRequest) => Promise<void>
@@ -103,7 +103,7 @@ export function MerchantProvider({ children }: { children: React.ReactNode }) {
   const createAPIKey = useCallback(async (data: {
     app_name: string
     app_homepage_url: string
-    redirect_uri: string
+    redirect_uri?: string
     notify_url: string
   }): Promise<MerchantAPIKey> => {
     const newKey = await services.merchant.createAPIKey(data)
