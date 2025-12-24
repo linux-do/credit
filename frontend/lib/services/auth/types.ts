@@ -18,14 +18,14 @@ export enum TrustLevel {
  * 支付等级
  */
 export enum PayLevel {
-  /** 黑金 */
-  BlackGold = 0,
-  /** 白金 */
-  WhiteGold = 1,
+  /** 普通 */
+  Ordinary = 0,
   /** 黄金 */
-  Gold = 2,
-  /** 铂金 */
-  Platinum = 3,
+  Gold = 1,
+  /** 白金 */
+  WhiteGold = 2,
+  /** 黑金 */
+  BlackGold = 3,
 }
 
 /**

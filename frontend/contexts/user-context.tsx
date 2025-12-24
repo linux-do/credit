@@ -36,7 +36,7 @@ const PAY_LEVEL_LABELS: Record<PayLevel, string> = {
   [PayLevel.BlackGold]: '黑金',
   [PayLevel.WhiteGold]: '白金',
   [PayLevel.Gold]: '黄金',
-  [PayLevel.Platinum]: '铂金',
+  [PayLevel.Ordinary]: '普通',
 }
 
 /** 用户上下文 */

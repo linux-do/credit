@@ -33,33 +33,35 @@ interface LevelConfig {
 /** 等级视觉样式配置（不包含业务数据） */
 const LEVEL_STYLES = [
   {
-    level: PayLevel.BlackGold,
-    name: "黑金会员",
-    nameEn: "BLACK MEMBER",
-    gradient: "from-slate-800 via-gray-900 to-black",
-    textColor: "text-white",
+    level: PayLevel.Ordinary,
+    name: "普通会员",
+    nameEn: "ORDINARY MEMBER",
+    gradient: "from-[#1e3a8a] via-[#2563eb] to-[#1d4ed8] shadow-lg shadow-blue-900/10",
+    textColor: "text-white/95",
+  },
+  {
+    level: PayLevel.Gold,
+    name: "黄金会员",
+    nameEn: "GOLD MEMBER",
+    gradient: "from-[#FDFCF0] via-[#FCE38A] to-[#B45309] shadow-lg shadow-amber-500/10",
+    textColor: "text-[#854D0E]",
     metalEffect: true,
   },
   {
     level: PayLevel.WhiteGold,
     name: "白金会员",
     nameEn: "PLATINUM MEMBER",
-    gradient: "from-slate-400 via-slate-300 to-slate-400",
-    textColor: "text-slate-900",
+    gradient: "from-[#F8FAFC] via-[#E2E8F0] to-[#94A3B8] shadow-lg shadow-slate-500/10",
+    textColor: "text-slate-800",
+    metalEffect: true,
   },
   {
-    level: PayLevel.Gold,
-    name: "黄金会员",
-    nameEn: "GOLD MEMBER",
-    gradient: "from-[#F3E3B3] via-[#E6D4A3] via-[#F3E3B3] to-[#D4AF37]",
-    textColor: "text-amber-950",
-  },
-  {
-    level: PayLevel.Platinum,
-    name: "铂金会员",
-    nameEn: "DIAMOND MEMBER",
-    gradient: "from-purple-600 via-pink-500 to-purple-600",
-    textColor: "text-white",
+    level: PayLevel.BlackGold,
+    name: "黑金会员",
+    nameEn: "BLACK MEMBER",
+    gradient: "from-[#020617] via-[#1e293b] to-[#020617] shadow-lg shadow-black/20",
+    textColor: "text-[#FFE5B4]",
+    metalEffect: true,
   },
 ] as const
 
@@ -91,10 +93,10 @@ function mergeLevelConfigs(apiConfigs: UserPayConfig[]): LevelConfig[] {
 function getLevelConfig(score: number, configs: LevelConfig[]): LevelConfig {
   if (configs.length === 0) {
     return {
-      level: PayLevel.BlackGold,
+      level: PayLevel.Ordinary,
       name: "加载中...",
       nameEn: "LOADING...",
-      gradient: "from-slate-800 via-gray-900 to-black",
+      gradient: "from-blue-600 via-blue-500 to-blue-700",
       textColor: "text-white",
       minScore: 0,
       maxScore: null,
@@ -128,7 +130,7 @@ function MembershipCard({
   levelConfigs: LevelConfig[]
 }) {
   const isAccessible = levelConfigs.findIndex(l => l.level === config.level) <= levelConfigs.findIndex(l => l.level === currentLevel.level)
-  const isDarkCard = config.level === PayLevel.BlackGold || config.level === PayLevel.Platinum
+  const isDarkCard = config.level === PayLevel.BlackGold || config.level === PayLevel.Ordinary
 
   return (
     <div
@@ -148,6 +150,7 @@ function MembershipCard({
           <div className="absolute top-0 right-0 w-40 h-40 bg-white rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-32 h-32 bg-white rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
         </div>
+        <div className="absolute inset-0 opacity-[0.15] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
 
         {config.metalEffect && (
           <>
@@ -224,8 +227,8 @@ function getPayLevelLabel(level: PayLevel): string {
       return "白金会员"
     case PayLevel.Gold:
       return "黄金会员"
-    case PayLevel.Platinum:
-      return "铂金会员"
+    case PayLevel.Ordinary:
+      return "普通会员"
     default:
       return "未知等级"
   }
@@ -344,7 +347,7 @@ export function ProfileMain() {
           </Avatar>
 
           <div className="flex-1 w-full">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               <div className="space-y-1">
                 <div className="text-xs text-muted-foreground">账户</div>
                 <div className="text-sm font-medium">@{user.username}</div>

@@ -5,6 +5,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import { Spinner } from "@/components/ui/spinner"
 import { AnimateIcon } from "@/components/animate-ui/icons/icon"
 import { ChevronLeft } from "@/components/animate-ui/icons/chevron-left"
@@ -18,6 +19,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
+import { SnowEffect } from "@/components/ui/snow-effect"
 import {
   Sidebar,
   SidebarContent,
@@ -80,6 +82,54 @@ const data = {
   ],
 }
 
+const ChristmasTree = ({ className }: { className?: string }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+  >
+    {/* 树干 */}
+    <rect x="10" y="18" width="4" height="4" fill="#92400E" rx="0.5" />
+    {/* 树叶层 - 从上到下 */}
+    <path d="M12 4L8 9H16L12 4Z" fill="#15803D" />
+    <path d="M12 8L7 14H17L12 8Z" fill="#16A34A" />
+    <path d="M12 12L6 19H18L12 12Z" fill="#22C55E" />
+    {/* 装饰球 */}
+    <circle cx="10" cy="10" r="0.8" fill="#EF4444" />
+    <circle cx="14" cy="11" r="0.8" fill="#F59E0B" />
+    <circle cx="9" cy="15" r="0.8" fill="#3B82F6" />
+    <circle cx="15" cy="16" r="0.8" fill="#EF4444" />
+    <circle cx="12" cy="14" r="0.8" fill="#F59E0B" />
+    {/* 顶部星星 */}
+    <path d="M12 2L12.5 3.5L14 4L12.5 4.5L12 6L11.5 4.5L10 4L11.5 3.5L12 2Z" fill="#FBBF24" />
+  </svg>
+)
+
+const ChristmasHat = ({ className }: { className?: string }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+  >
+    {/* 稍微倾斜的红色帽身 */}
+    <path
+      d="M12 3C12 3 5 10 5 15C5 17.5 7 19 8 19H16C17 19 19 17.5 19 15C19 10 12 3 12 3Z"
+      fill="#EF4444"
+      stroke="#B91C1C"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    {/* 顶部白色绒球 */}
+    <circle cx="12" cy="3" r="2.5" fill="white" stroke="#E5E7EB" strokeWidth="1.5" />
+    {/* 底部白色绒边 - 使用圆角矩形模拟 */}
+    <rect x="4" y="16" width="16" height="5" rx="2.5" fill="white" stroke="#E5E7EB" strokeWidth="1.5" />
+    {/* 添加一些简单的纹理/阴影细节 (可选，保持简洁) */}
+  </svg>
+)
+
 /**
  * 应用侧边栏组件
  * 显示应用侧边栏
@@ -97,6 +147,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [isLoggingOut, setIsLoggingOut] = React.useState(false)
   const pathname = usePathname()
   const router = useRouter()
+
+  const [showChristmasTree, setShowChristmasTree] = React.useState(false)
 
   const handleCloseSidebar = React.useCallback(() => {
     if (isMobile) {
@@ -119,6 +171,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <>
+      {showChristmasTree && <SnowEffect />}
       <Sidebar collapsible="icon" {...props} className="px-2 relative border-r border-border/40 group-data-[collapsible=icon]">
         <Button
           onClick={toggleSidebar}
@@ -145,20 +198,23 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 className="flex h-12 hover:bg-accent group-data-[collapsible=icon]:ml-2"
                 suppressHydrationWarning
               >
-                <Avatar className="size-6 rounded">
-                  <AvatarImage
-                    src={user?.avatar_url}
-                    alt={user?.nickname}
-                  />
-                  <AvatarFallback className="rounded bg-muted text-sm">
-                    {user?.nickname?.charAt(0)?.toUpperCase() || "L"}
-                  </AvatarFallback>
-                </Avatar>
+                <div className="relative overflow-visible">
+                  <ChristmasHat className="absolute -top-2 -left-1 w-5 h-5 z-20 rotate-[-20deg] drop-shadow-sm" />
+                  <Avatar className="size-6 rounded relative z-10">
+                    <AvatarImage
+                      src={user?.avatar_url}
+                      alt={user?.nickname}
+                    />
+                    <AvatarFallback className="rounded bg-muted text-sm">
+                      {user?.nickname?.charAt(0)?.toUpperCase() || "L"}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
                 <div className="flex flex-col items-start flex-1 text-left group-data-[collapsible=icon]:hidden">
-                  <span className="text-xs font-medium truncate w-full text-left">
+                  <span className="text-xs font-medium truncate w-full text-left ml-2">
                     {user?.nickname || user?.username || "Unknown User"}
                   </span>
-                  <span className="text-[11px] font-medium text-muted-foreground/100 truncate w-full text-left">
+                  <span className="text-[11px] font-medium text-muted-foreground/100 truncate w-full text-left ml-2">
                     {user ? getTrustLevelLabel(user.trust_level) : "Trust Level Unknown"}
                   </span>
                 </div>
@@ -167,17 +223,31 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-64" align="start" side="bottom" sideOffset={4}>
               <DropdownMenuLabel>
-                <div className="flex flex-col items-center mb-4 gap-1">
-                  <Avatar className="size-10 rounded">
-                    <AvatarImage
-                      src={user?.avatar_url}
-                      alt={user?.nickname}
+                <div className="flex flex-col items-center mb-4 gap-1 pt-4">
+                  <div
+                    className="relative w-32 h-16 flex items-center justify-center overflow-visible cursor-pointer select-none transition-transform active:scale-95"
+                    onClick={() => setShowChristmasTree(!showChristmasTree)}
+                  >
+                    <ChristmasTree
+                      className={cn(
+                        "absolute -top-2 right-2 w-12 h-12 z-0 rotate-[10deg] transition-all duration-500 ease-out",
+                        showChristmasTree ? "opacity-90 scale-100 translate-y-0" : "opacity-0 scale-50 translate-y-4"
+                      )}
                     />
-                    <AvatarFallback className="rounded bg-muted text-lg">
-                      {user?.nickname?.charAt(0)?.toUpperCase() || "L"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-base font-semibold truncate">
+                    <div className="relative z-10">
+                      <ChristmasHat className="absolute -top-3 -left-2 w-9 h-9 z-20 rotate-[-20deg] drop-shadow-md pointer-events-none" />
+                      <Avatar className="size-14 rounded-full pointer-events-none">
+                        <AvatarImage
+                          src={user?.avatar_url}
+                          alt={user?.nickname}
+                        />
+                        <AvatarFallback className="rounded-full bg-transparent text-lg">
+                          {user?.nickname?.charAt(0)?.toUpperCase() || "L"}
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
+                  </div>
+                  <span className="text-base font-semibold truncate mt-2">
                     {user?.nickname || user?.username || "Unknown User"}
                   </span>
                   <span className="text-xs font-base text-muted-foreground">
