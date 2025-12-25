@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/hibiken/asynq"
@@ -95,6 +96,9 @@ func HandleUpdateSingleUserGamificationScore(ctx context.Context, t *asynq.Task)
 	response, errGet := user.GetUserGamificationScore(ctx)
 	if errGet != nil {
 		logger.ErrorF(ctx, "处理用户[%s]失败: %v", user.Username, errGet)
+		// 添加随机延迟(1-60秒)防止重试时请求积聚
+		jitter := time.Duration(1+rand.Intn(60)) * time.Second
+		time.Sleep(jitter)
 		return errGet
 	}
 
