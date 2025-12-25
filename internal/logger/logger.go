@@ -43,7 +43,8 @@ func init() {
 		zapLogger,
 		otelzap.WithMinLevel(zapLogger.Level()),
 	)
-	logger.Level()
+
+	fmt.Printf("[Logger] %s\n", logger.Level())
 }
 
 func DebugF(ctx context.Context, format string, args ...interface{}) {
