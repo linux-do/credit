@@ -23,7 +23,7 @@ cp config.docker.yaml config.yaml
 1. Open LinuxDo's SSO application page and create an application:  
    [https://connect.linux.do/dash/sso](https://connect.linux.do/dash/sso)
 2. Set the callback URL to:
-   - `http://localhost:8000/login`
+   - `http://localhost:8080/login`
 3. After the app is created, you will get `client_id` and `client_secret`. Fill them into `config.yaml`:
 
 ```yaml

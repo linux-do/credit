@@ -23,7 +23,7 @@ cp config.docker.yaml config.yaml
 1. 打开 LinuxDo 的应用接入页面并创建应用：  
   [https://connect.linux.do/dash/sso](https://connect.linux.do/dash/sso)
 2. 回调地址填写为:
-- `http://localhost:8000/login`
+- `http://localhost:8080/login`
 3. 创建后可获得 `client_id` 与 `client_secret`，填写到 `config.yaml`：
 
 ```yaml
