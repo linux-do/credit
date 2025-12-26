@@ -89,6 +89,10 @@ export function OrderDetailDialog({ order }: { order: Order }) {
                   <span className="text-muted-foreground text-xs uppercase font-medium">服务方</span>
                   <span className="text-xs font-medium">{order.payee_username}</span>
                 </div>
+                <div className="flex justify-between items-center py-2 border-b border-dashed border-border/30 last:border-0">
+                  <span className="text-muted-foreground text-xs uppercase font-medium">备注</span>
+                  <span className="text-xs font-medium">{order.remark}</span>
+                </div>
                 {(order.status === 'success' || order.status === 'refund') && (
                   <div className="flex justify-between items-center py-2 border-b border-dashed border-border/30 last:border-0">
                     <span className="text-muted-foreground text-xs uppercase font-medium">时间</span>
