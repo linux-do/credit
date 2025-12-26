@@ -24,10 +24,13 @@ import (
 
 	"github.com/go-redis/redis_rate/v10"
 	"github.com/hibiken/asynq"
+	"github.com/linux-do/credit/internal/common"
 	"github.com/linux-do/credit/internal/config"
 	"github.com/linux-do/credit/internal/db"
 	"github.com/linux-do/credit/internal/logger"
 	"github.com/linux-do/credit/internal/model"
+	"github.com/linux-do/credit/internal/task"
+	"github.com/linux-do/credit/internal/task/scheduler"
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
 )
@@ -64,150 +67,207 @@ func waitForRateLimit(ctx context.Context, key string, limit redis_rate.Limit) e
 
 // HandleUpdateUserGamificationScores 处理所有用户积分更新任务
 func HandleUpdateUserGamificationScores(ctx context.Context, t *asynq.Task) error {
-	// 分页处理用户
-	pageSize := 1000
-	lastID := uint64(0)
-
-	// 计算一周前日期
-	now := time.Now()
-	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-	sessionAgeDays := config.Config.App.SessionAge / 86400
-	if sessionAgeDays < 7 {
-		sessionAgeDays = 7
+	rateLimit := config.Config.Worker.GamificationScoreRateLimit
+	limit := redis_rate.Limit{
+		Rate:   rateLimit.Rate,
+		Burst:  rateLimit.Rate,
+		Period: time.Duration(rateLimit.Period) * time.Second,
 	}
-	oneWeekAgo := today.AddDate(0, 0, -sessionAgeDays)
-	logger.InfoF(ctx, "[调度] 查询条件: 最后登录 >= %s, sessionAgeDays=%d", oneWeekAgo.Format("2006-01-02"), sessionAgeDays)
+
+	page := 0
+	totalProcessed := 0
 
 	for {
-		var users []model.User
-		if err := db.DB(ctx).Where("id > ? AND last_login_at >= ? AND is_active = ?", lastID, oneWeekAgo, true).
-			Select("id, username").
-			Order("id ASC").
-			Limit(pageSize).
-			Find(&users).Error; err != nil {
-			logger.ErrorF(ctx, "查询用户失败: %v", err)
+		if err := waitForRateLimit(ctx, rateLimitKey, limit); err != nil {
+			logger.ErrorF(ctx, "速率限制等待失败: %v", err)
 			return err
 		}
 
-		// 没有用户，退出循环
-		if len(users) == 0 {
+		leaderboard, err := model.GetLeaderboard(ctx, page)
+		if err != nil {
+			logger.ErrorF(ctx, "获取排行榜第 %d 页失败: %v", page, err)
+			return err
+		}
+
+		if len(leaderboard.Users) == 0 {
+			logger.InfoF(ctx, "[调度] 排行榜数据处理完成，共处理 %d 个用户", totalProcessed)
 			break
 		}
 
-		for _, user := range users {
-			rateLimit := config.Config.Worker.GamificationScoreRateLimit
-			limit := redis_rate.Limit{
-				Rate:   rateLimit.Rate,
-				Burst:  1,
-				Period: time.Duration(rateLimit.Period) * time.Second,
-			}
-			if err := waitForRateLimit(ctx, rateLimitKey, limit); err != nil {
-				logger.ErrorF(ctx, "速率限制等待失败: %v", err)
-				return err
-			}
-
-			if err := user.EnqueueBadgeScoreTask(ctx, 0); err != nil {
-				return err
-			}
+		if err = enqueueBatchScoreTask(ctx, leaderboard.Users); err != nil {
+			logger.ErrorF(ctx, "下发第 %d 页批量任务失败: %v", page, err)
+			return err
 		}
 
-		lastID = users[len(users)-1].ID
+		totalProcessed += len(leaderboard.Users)
+		logger.InfoF(ctx, "[调度] 已处理排行榜第 %d 页，本页 %d 个用户，累计 %d 个用户",
+			page, len(leaderboard.Users), totalProcessed)
+
+		page++
+	}
+
+	return nil
+}
+
+// enqueueBatchScoreTask 下发批量积分更新任务
+func enqueueBatchScoreTask(ctx context.Context, userScores []model.LeaderboardUser) error {
+	payload, _ := json.Marshal(map[string]interface{}{
+		"user_scores": userScores,
+	})
+
+	opts := []asynq.Option{
+		asynq.Queue(task.QueueWhitelistOnly),
+		asynq.MaxRetry(5),
+	}
+
+	if _, err := scheduler.AsynqClient.Enqueue(asynq.NewTask(task.UpdateSingleUserGamificationScoreTask, payload), opts...); err != nil {
+		logger.ErrorF(ctx, "下发批量积分任务失败: %v", err)
+		return err
 	}
 	return nil
 }
 
-// HandleUpdateSingleUserGamificationScore 处理单个用户积分更新任务
+// batchUpdateUserScores 批量更新用户积分
+func batchUpdateUserScores(ctx context.Context, userScores []model.LeaderboardUser) error {
+	if len(userScores) == 0 {
+		return nil
+	}
+
+	userIDs := make([]uint64, len(userScores))
+	scoreMap := make(map[uint64]int64, len(userScores))
+	for i, u := range userScores {
+		userIDs[i] = u.ID
+		scoreMap[u.ID] = u.TotalScore
+	}
+
+	users, err := model.GetByIDs(db.DB(ctx), userIDs)
+	if err != nil {
+		return fmt.Errorf("批量查询用户失败: %w", err)
+	}
+
+	protectionDays, err := model.GetIntByKey(ctx, model.ConfigKeyNewUserProtectionDays)
+	if err != nil {
+		return fmt.Errorf("%s: %w", common.GetProtectionDaysFailed, err)
+	}
+
+	now := time.Now()
+
+	return db.DB(ctx).Transaction(func(tx *gorm.DB) error {
+		for _, user := range users {
+			newScore, exists := scoreMap[user.ID]
+			if !exists {
+				continue
+			}
+
+			newCommunityBalance := decimal.NewFromInt(newScore)
+			oldCommunityBalance := user.CommunityBalance
+			diff := newCommunityBalance.Sub(oldCommunityBalance)
+
+			createOrder := func(amount decimal.Decimal, remark string) error {
+				order := model.Order{
+					OrderName:   "社区积分更新",
+					PayerUserID: 0,
+					PayeeUserID: user.ID,
+					Amount:      amount,
+					Status:      model.OrderStatusSuccess,
+					Type:        model.OrderTypeCommunity,
+					Remark:      remark,
+					TradeTime:   now,
+					ExpiresAt:   now,
+				}
+				if err = tx.Create(&order).Error; err != nil {
+					return fmt.Errorf("创建用户[%s]订单失败: %w", user.Username, err)
+				}
+				return nil
+			}
+
+			if user.CommunityBalance.IsZero() && user.TotalCommunity.IsZero() {
+				if err = tx.Model(&user).UpdateColumns(map[string]interface{}{
+					"community_balance": newCommunityBalance,
+				}).Error; err != nil {
+					return fmt.Errorf("初始化用户[%s]社区积分失败: %w", user.Username, err)
+				}
+				logger.InfoF(ctx, "用户[%s]首次同步社区积分: %s", user.Username, newCommunityBalance.String())
+				continue
+			}
+
+			// 积分未变化
+			if diff.IsZero() {
+				remark := fmt.Sprintf("社区积分从 %s 更新到 %s，变化 %s", oldCommunityBalance.String(), newCommunityBalance.String(), diff.String())
+				if err = createOrder(decimal.Zero, remark); err != nil {
+					return err
+				}
+				continue
+			}
+
+			// 新用户保护期检查
+			if diff.IsNegative() && protectionDays > 0 {
+				registeredDays := int(time.Since(user.CreatedAt).Hours() / 24)
+				if registeredDays < protectionDays {
+					if err = tx.Model(&user).UpdateColumns(map[string]interface{}{
+						"community_balance": newCommunityBalance,
+					}).Error; err != nil {
+						return fmt.Errorf("更新用户[%s]积分失败: %w", user.Username, err)
+					}
+					remark := fmt.Sprintf("社区积分从 %s 更新到 %s，变化 %s（保护期内，跳过扣分）",
+						oldCommunityBalance.String(), newCommunityBalance.String(), diff.String())
+					if err = createOrder(decimal.Zero, remark); err != nil {
+						return err
+					}
+					logger.InfoF(ctx, "用户[%s]在保护期内，积分下降%s，跳过扣分", user.Username, diff.Abs().String())
+					continue
+				}
+			}
+
+			// 更新用户积分
+			if err = tx.Model(&user).UpdateColumns(map[string]interface{}{
+				"community_balance": newCommunityBalance,
+				"total_community":   gorm.Expr("total_community + ?", diff),
+				"total_receive":     gorm.Expr("total_receive + ?", diff),
+				"available_balance": gorm.Expr("available_balance + ?", diff),
+			}).Error; err != nil {
+				return fmt.Errorf("更新用户[%s]积分失败: %w", user.Username, err)
+			}
+
+			remark := fmt.Sprintf("社区积分从 %s 更新到 %s，变化 %s",
+				oldCommunityBalance.String(), newCommunityBalance.String(), diff.String())
+			if err = createOrder(diff, remark); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+// HandleUpdateSingleUserGamificationScore 处理用户积分更新任务
 func HandleUpdateSingleUserGamificationScore(ctx context.Context, t *asynq.Task) error {
-	// 解析任务参数
 	var payload struct {
-		UserID uint64 `json:"user_id"`
+		UserID     uint64                  `json:"user_id"`
+		UserScores []model.LeaderboardUser `json:"user_scores"`
 	}
 	if err := json.Unmarshal(t.Payload(), &payload); err != nil {
 		return fmt.Errorf("解析任务参数失败: %w", err)
 	}
 
-	var user model.User
-	if err := user.GetByID(db.DB(ctx), payload.UserID); err != nil {
-		return fmt.Errorf("查询用户ID[%d]失败: %w", payload.UserID, err)
+	if len(payload.UserScores) > 0 {
+		return batchUpdateUserScores(ctx, payload.UserScores)
 	}
 
-	// 获取用户积分
-	response, errGet := user.GetUserGamificationScore(ctx)
-	if errGet != nil {
-		logger.ErrorF(ctx, "处理用户[%s]失败: %v", user.Username, errGet)
-		return errGet
-	}
-
-	newCommunityBalance := decimal.NewFromInt(response.User.GamificationScore)
-
-	if user.CommunityBalance.IsZero() && user.TotalCommunity.IsZero() {
-		if err := db.DB(ctx).Model(&user).UpdateColumns(map[string]interface{}{
-			"community_balance": newCommunityBalance,
-		}).Error; err != nil {
-			return fmt.Errorf("初始化用户[%s]社区积分失败: %w", user.Username, err)
-		}
-		logger.InfoF(ctx, "用户[%s]首次同步社区积分: %s", user.Username, newCommunityBalance.String())
-		return nil
-	}
-
-	if newCommunityBalance.Equal(user.CommunityBalance) {
-		logger.InfoF(ctx, "用户[%s]积分未变化，跳过更新", user.Username)
-		return nil
-	}
-
-	// 计算差值
-	diff := newCommunityBalance.Sub(user.CommunityBalance)
-
-	if diff.IsNegative() {
-		protectionDays, _ := model.GetIntByKey(ctx, model.ConfigKeyNewUserProtectionDays)
-		if protectionDays > 0 {
-			registeredDays := int(time.Since(user.CreatedAt).Hours() / 24)
-			if registeredDays < protectionDays {
-				if err := db.DB(ctx).Model(&user).UpdateColumns(map[string]interface{}{
-					"community_balance": newCommunityBalance,
-				}).Error; err != nil {
-					return fmt.Errorf("更新用户[%s]积分失败: %w", user.Username, err)
-				}
-
-				logger.InfoF(ctx, "用户[%s]在保护期内(注册%d天，保护期%d天)，积分下降%s，跳过扣分",
-					user.Username, registeredDays, protectionDays, diff.Abs().String())
-				return nil
-			}
-		}
-	}
-
-	oldCommunityBalance := user.CommunityBalance
-	now := time.Now()
-
-	if err := db.DB(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&user).UpdateColumns(map[string]interface{}{
-			"community_balance": newCommunityBalance,
-			"total_community":   gorm.Expr("total_community + ?", diff),
-			"total_receive":     gorm.Expr("total_receive + ?", diff),
-			"available_balance": gorm.Expr("available_balance + ?", diff),
-		}).Error; err != nil {
-			return fmt.Errorf("更新用户[%s]积分失败: %w", user.Username, err)
+	if payload.UserID > 0 {
+		var user model.User
+		if err := user.GetByID(db.DB(ctx), payload.UserID); err != nil {
+			return fmt.Errorf("查询用户[%d]失败: %w", payload.UserID, err)
 		}
 
-		order := model.Order{
-			OrderName:   "社区积分更新",
-			PayerUserID: 0,
-			PayeeUserID: user.ID,
-			Amount:      diff,
-			Status:      model.OrderStatusSuccess,
-			Type:        model.OrderTypeCommunity,
-			Remark:      fmt.Sprintf("社区积分从 %s 更新到 %s，变化 %s", oldCommunityBalance.String(), newCommunityBalance.String(), diff.String()),
-			TradeTime:   now,
-			ExpiresAt:   now,
-		}
-		if err := tx.Create(&order).Error; err != nil {
-			return fmt.Errorf("创建用户[%s]社区积分订单失败: %w", user.Username, err)
+		response, errGet := user.GetUserGamificationScore(ctx)
+		if errGet != nil {
+			logger.ErrorF(ctx, "处理用户[%s]失败: %v", user.Username, errGet)
+			return errGet
 		}
 
-		return nil
-	}); err != nil {
-		logger.ErrorF(ctx, "处理用户[%s]积分更新失败: %v", user.Username, err)
-		return err
+		return batchUpdateUserScores(ctx, []model.LeaderboardUser{
+			{ID: payload.UserID, TotalScore: response.User.GamificationScore},
+		})
 	}
 
 	return nil

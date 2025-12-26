@@ -80,6 +80,18 @@ type UserGamificationScoreResponse struct {
 	} `json:"user"`
 }
 
+// LeaderboardResponse 排行榜 API 响应
+type LeaderboardResponse struct {
+	Users []LeaderboardUser `json:"users"`
+}
+
+// LeaderboardUser 排行榜用户信息
+type LeaderboardUser struct {
+	ID         uint64 `json:"id"`
+	Username   string `json:"username"`
+	TotalScore int64  `json:"total_score"`
+}
+
 type User struct {
 	ID               uint64          `json:"id" gorm:"primaryKey"`
 	Username         string          `json:"username" gorm:"size:64;uniqueIndex"`
@@ -107,6 +119,15 @@ func (u *User) GetByID(tx *gorm.DB, id uint64) error {
 		return err
 	}
 	return nil
+}
+
+// GetByIDs 批量查询用户
+func GetByIDs(tx *gorm.DB, ids []uint64) ([]User, error) {
+	var users []User
+	if err := tx.Where("id IN ?", ids).Find(&users).Error; err != nil {
+		return nil, err
+	}
+	return users, nil
 }
 
 // VerifyPayKey 验证用户支付密码
@@ -138,6 +159,26 @@ func (u *User) GetUserGamificationScore(ctx context.Context) (*UserGamificationS
 	var response UserGamificationScoreResponse
 	if err = json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return nil, fmt.Errorf("解析用户积分响应失败: %w", err)
+	}
+	return &response, nil
+}
+
+// GetLeaderboard 获取排行榜数据
+func GetLeaderboard(ctx context.Context, page int) (*LeaderboardResponse, error) {
+	url := fmt.Sprintf("https://linux.do/leaderboard/1.json?period=all_time&page=%d", page)
+	resp, err := util.Request(ctx, http.MethodGet, url, nil, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("获取排行榜失败，状态码: %d", resp.StatusCode)
+	}
+
+	var response LeaderboardResponse
+	if err = json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, fmt.Errorf("解析排行榜响应失败: %w", err)
 	}
 	return &response, nil
 }

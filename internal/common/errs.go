@@ -25,3 +25,7 @@ const (
 	PayKeyIncorrect             = "支付密钥错误"
 	CannotPaySelf               = "不能给自己付款"
 )
+
+const (
+	GetProtectionDaysFailed = "获取新用户保护期配置失败"
+)
