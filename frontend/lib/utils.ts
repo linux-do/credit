@@ -50,11 +50,20 @@ export function generateTransactionCacheKey(params: {
   page_size?: number
   startTime?: string
   endTime?: string
+  id?: number
+  order_name?: string
+  payer_username?: string
+  payee_username?: string
 }): string {
   const typeKey = params.type || 'all'
   const statusKey = params.status || 'all'
   const clientIdKey = params.client_id || 'all'
   const startTimeKey = params.startTime || 'no-start'
   const endTimeKey = params.endTime || 'no-end'
-  return `${ typeKey }_${ statusKey }_${ clientIdKey }_${ params.page }_${ params.page_size }_${ startTimeKey }_${ endTimeKey }`
+  const idKey = params.id || 'no-id'
+  const orderNameKey = params.order_name || 'no-name'
+  const payerKey = params.payer_username || 'no-payer'
+  const payeeKey = params.payee_username || 'no-payee'
+
+  return `${ typeKey }_${ statusKey }_${ clientIdKey }_${ params.page }_${ params.page_size }_${ startTimeKey }_${ endTimeKey }_${ idKey }_${ orderNameKey }_${ payerKey }_${ payeeKey }`
 }

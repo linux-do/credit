@@ -5,6 +5,8 @@ import Link from "next/link"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel"
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Info } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { PayLevel, User } from "@/lib/services/auth"
@@ -400,6 +402,25 @@ export function ProfileMain() {
                   {typeof currentLevel.scoreRate === 'number'
                     ? `${ (currentLevel.scoreRate * 100).toFixed(2) }%`
                     : `${ (parseFloat(currentLevel.scoreRate as string) * 100).toFixed(2) }%`}
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <div className="text-xs text-muted-foreground flex items-center gap-1">
+                  社区积分
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-3 w-3 cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-[200px]">
+                        <p className="text-xs">上一次从社区同步的积分，积分会在每日划转时通过系统定时任务自动同步更新</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <div className="text-sm font-medium tabular-nums">
+                  {parseFloat(user.community_balance).toLocaleString()}
                 </div>
               </div>
             </div>

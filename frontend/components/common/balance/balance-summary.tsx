@@ -40,9 +40,9 @@ export function BalanceSummary() {
   const { user, loading } = useUser()
 
   const available = parseFloat(user?.available_balance || '0')
-  const community = parseFloat(user?.community_balance || '0')
-  const total = available + community
-  const pending = total - available
+  // const community = parseFloat(user?.community_balance || '0')
+  const total = available
+  const pending = 0
 
   const percentages = React.useMemo(
     () => calculatePercentages(available, total),

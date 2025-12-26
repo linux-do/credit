@@ -1,6 +1,6 @@
 import * as React from "react"
 import { TransactionTableList } from "@/components/common/general/table-data"
-import { TableFilter } from "@/components/common/general/table-filter"
+import { TableFilter, type SearchValues } from "@/components/common/general/table-filter"
 import { TransactionProvider, useTransaction } from "@/contexts/transaction-context"
 import type { OrderStatus, OrderType, TransactionQueryParams } from "@/lib/services"
 import { formatLocalDate } from "@/lib/utils"
@@ -57,6 +57,7 @@ function TransactionList({ initialType }: { initialType?: OrderType }) {
   const [selectedStatuses, setSelectedStatuses] = React.useState<OrderStatus[]>([])
   const [selectedQuickSelection, setSelectedQuickSelection] = React.useState<string | null>("最近 1 个月")
   const [dateRange, setDateRange] = React.useState<{ from: Date; to: Date } | null>(getDefaultDateRange)
+  const [selectedSearch, setSelectedSearch] = React.useState<SearchValues>({})
 
   /* 清空所有筛选 */
   const clearAllFilters = () => {
@@ -65,6 +66,7 @@ function TransactionList({ initialType }: { initialType?: OrderType }) {
     const { from, to: tomorrow } = getDefaultDateRange()
     setDateRange({ from, to: tomorrow })
     setSelectedQuickSelection("最近 1 个月")
+    setSelectedSearch({})
 
     /* 重新获取数据 */
     fetchTransactions({
@@ -89,10 +91,14 @@ function TransactionList({ initialType }: { initialType?: OrderType }) {
         endDate.setDate(endDate.getDate() + 1)
         return formatLocalDate(endDate)
       })() : undefined,
+      id: selectedSearch.id ? parseInt(selectedSearch.id) : undefined,
+      order_name: selectedSearch.order_name || undefined,
+      payer_username: selectedSearch.payer_username || undefined,
+      payee_username: selectedSearch.payee_username || undefined,
     }
 
     fetchTransactions(params)
-  }, [fetchTransactions, dateRange, selectedTypes, selectedStatuses])
+  }, [fetchTransactions, dateRange, selectedTypes, selectedStatuses, selectedSearch])
 
   /* 当initialType改变时，更新筛选状态 */
   React.useEffect(() => {
@@ -109,7 +115,8 @@ function TransactionList({ initialType }: { initialType?: OrderType }) {
         enabledFilters={{
           type: initialType === undefined,
           status: true,
-          timeRange: true
+          timeRange: true,
+          search: true
         }}
         selectedTypes={selectedTypes}
         selectedStatuses={selectedStatuses}
@@ -119,6 +126,8 @@ function TransactionList({ initialType }: { initialType?: OrderType }) {
         onStatusChange={setSelectedStatuses}
         onTimeRangeChange={setDateRange}
         onQuickSelectionChange={setSelectedQuickSelection}
+        onSearch={setSelectedSearch}
+        searchValues={selectedSearch}
         onClearAll={clearAllFilters}
       />
 

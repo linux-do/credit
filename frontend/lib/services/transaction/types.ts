@@ -78,6 +78,14 @@ export interface TransactionQueryParams {
   startTime?: string;
   /** 结束时间（可选） */
   endTime?: string;
+  /** 订单 ID（可选） */
+  id?: number;
+  /** 订单名称，支持前缀模糊查询（可选） */
+  order_name?: string;
+  /** 付款方账户，支持前缀模糊查询（可选） */
+  payer_username?: string;
+  /** 收款方账户，支持前缀模糊查询（可选） */
+  payee_username?: string;
 }
 
 /**

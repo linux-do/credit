@@ -1,10 +1,12 @@
 import * as React from "react"
-import { Filter, CalendarIcon, X } from "lucide-react"
+import { Filter, CalendarIcon, X, Search } from "lucide-react"
 import { zhCN } from "date-fns/locale"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Separator } from "@/components/ui/separator"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -111,6 +113,7 @@ export interface TableFilterProps {
     type?: boolean
     status?: boolean
     timeRange?: boolean
+    search?: boolean
   }
 
   /* 当前选中的值 */
@@ -118,12 +121,15 @@ export interface TableFilterProps {
   selectedStatuses?: OrderStatus[]
   selectedTimeRange?: { from: Date; to: Date } | null
   selectedQuickSelection?: string | null
+  /* 搜索值 */
+  searchValues?: SearchValues
 
   /* 回调函数 */
   onTypeChange?: (types: OrderType[]) => void
   onStatusChange?: (statuses: OrderStatus[]) => void
   onTimeRangeChange?: (range: { from: Date; to: Date } | null) => void
   onQuickSelectionChange?: (selection: string | null) => void
+  onSearch?: (values: SearchValues) => void
 
   // 其他选项
   showClearButton?: boolean
@@ -135,15 +141,17 @@ export interface TableFilterProps {
  * 支持类型、状态、时间范围筛选
  */
 export function TableFilter({
-  enabledFilters = { type: true, status: true, timeRange: true },
+  enabledFilters = { type: true, status: true, timeRange: true, search: true },
   selectedTypes = [],
   selectedStatuses = [],
   selectedTimeRange = null,
   selectedQuickSelection = null,
+  searchValues = {},
   onTypeChange,
   onStatusChange,
   onTimeRangeChange,
   onQuickSelectionChange,
+  onSearch,
   showClearButton = true,
   onClearAll,
 }: TableFilterProps) {
@@ -172,11 +180,18 @@ export function TableFilter({
   }
 
   /* 是否有激活的筛选 */
-  const hasActiveFilters = selectedTypes.length > 0 || selectedStatuses.length > 0 || selectedTimeRange !== null
+  const hasActiveFilters = selectedTypes.length > 0 || selectedStatuses.length > 0 || selectedTimeRange !== null || Object.values(searchValues).some(v => v)
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
       <div className="flex items-center gap-2 flex-wrap">
+        {enabledFilters.search && (
+          <SearchFilter
+            values={searchValues}
+            onSearch={onSearch}
+          />
+        )}
+
         {enabledFilters.type && (
           <FilterSelect<OrderType>
             label="类型"
@@ -377,6 +392,135 @@ function TimeRangeFilter({
               numberOfMonths={2}
               locale={zhCN}
             />
+          </div>
+        </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+export interface SearchValues {
+  id?: string
+  order_name?: string
+  payer_username?: string
+  payee_username?: string
+}
+
+function SearchFilter({
+  values,
+  onSearch
+}: {
+  values?: SearchValues
+  onSearch?: (values: SearchValues) => void
+}) {
+  const [localValues, setLocalValues] = React.useState<SearchValues>(values || {})
+  const [isOpen, setIsOpen] = React.useState(false)
+
+  // 当外部 values 更新时，同步到本地
+  React.useEffect(() => {
+    setLocalValues(values || {})
+  }, [values, isOpen])
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      onSearch?.(localValues)
+      setIsOpen(false)
+    }
+  }
+
+  const handleSearch = () => {
+    onSearch?.(localValues)
+    setIsOpen(false)
+  }
+
+  const handleClear = () => {
+    const empty = { id: '', order_name: '', payer_username: '', payee_username: '' }
+    setLocalValues(empty)
+    onSearch?.(empty)
+    setIsOpen(false)
+  }
+
+  const hasSearchValues = Object.values(values || {}).some(v => v)
+
+  return (
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className={cn(
+            "h-5 border-dashed text-[10px] font-medium shadow-none focus-visible:ring-0",
+            hasSearchValues && "bg-primary/5 border-primary/20"
+          )}
+        >
+          <Search className="size-3 mr-1" />
+          搜索
+          {hasSearchValues && (
+            <>
+              <Separator orientation="vertical" className="mx-1" />
+              <Badge
+                variant="secondary"
+                className="text-[10px] h-3 px-1 rounded-full bg-primary text-primary-foreground"
+              >
+                !
+              </Badge>
+            </>
+          )}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-[280px] p-4" align="start">
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label className="text-xs">编号 ID</Label>
+            <Input
+              value={localValues.id || ''}
+              onChange={e => setLocalValues(prev => ({ ...prev, id: e.target.value }))}
+              onKeyDown={handleKeyDown}
+              placeholder="精确匹配"
+              className="h-8 text-xs"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs">活动名称</Label>
+            <Input
+              value={localValues.order_name || ''}
+              onChange={e => setLocalValues(prev => ({ ...prev, order_name: e.target.value }))}
+              onKeyDown={handleKeyDown}
+              placeholder="模糊匹配"
+              className="h-8 text-xs"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-2">
+              <Label className="text-xs">消费方</Label>
+              <Input
+                value={localValues.payer_username || ''}
+                onChange={e => setLocalValues(prev => ({ ...prev, payer_username: e.target.value }))}
+                onKeyDown={handleKeyDown}
+                placeholder="模糊匹配"
+                className="h-8 text-xs"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">服务方</Label>
+              <Input
+                value={localValues.payee_username || ''}
+                onChange={e => setLocalValues(prev => ({ ...prev, payee_username: e.target.value }))}
+                onKeyDown={handleKeyDown}
+                placeholder="模糊匹配"
+                className="h-8 text-xs"
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-2 pt-2">
+            <Button size="sm" variant="outline" className="flex-1 h-7 text-xs" onClick={handleClear}>
+              重置
+            </Button>
+            <Button size="sm" className="flex-1 h-7 text-xs" onClick={handleSearch}>
+              搜索
+            </Button>
           </div>
         </div>
       </DropdownMenuContent>
