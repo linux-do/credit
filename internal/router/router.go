@@ -30,6 +30,7 @@ import (
 	"github.com/linux-do/credit/internal/apps/admin"
 	publicconfig "github.com/linux-do/credit/internal/apps/config"
 	"github.com/linux-do/credit/internal/apps/dispute"
+	"github.com/linux-do/credit/internal/apps/health"
 	"github.com/linux-do/credit/internal/apps/merchant/api_key"
 	"github.com/linux-do/credit/internal/apps/merchant/link"
 	"github.com/linux-do/credit/internal/listener"
@@ -44,7 +45,6 @@ import (
 	"github.com/linux-do/credit/internal/apps/admin/system_config"
 	"github.com/linux-do/credit/internal/apps/admin/user_pay_config"
 	"github.com/linux-do/credit/internal/apps/dashboard"
-	"github.com/linux-do/credit/internal/apps/health"
 	"github.com/linux-do/credit/internal/apps/oauth"
 	"github.com/linux-do/credit/internal/apps/order"
 	"github.com/linux-do/credit/internal/apps/user"
@@ -57,7 +57,7 @@ import (
 
 func Serve() {
 	// 运行模式
-	if config.Config.App.Env == "production" {
+	if config.Config.App.IsProduction() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
@@ -108,7 +108,7 @@ func Serve() {
 
 	apiGroup := r.Group(config.Config.App.APIPrefix)
 	{
-		if config.Config.App.Env == "development" {
+		if !config.Config.App.IsProduction() {
 			// Swagger
 			apiGroup.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 		}

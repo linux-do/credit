@@ -46,6 +46,11 @@ type appConfig struct {
 	SessionSecure           bool   `mapstructure:"session_secure"`
 }
 
+// IsProduction 检查当前环境是否为生产环境
+func (a *appConfig) IsProduction() bool {
+	return a.Env == "production"
+}
+
 // OAuth2Config OAuth2/OIDC认证配置
 type OAuth2Config struct {
 	ClientID              string `mapstructure:"client_id"`

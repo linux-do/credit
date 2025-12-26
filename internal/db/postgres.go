@@ -59,8 +59,8 @@ func init() {
 		logger.Config{
 			SlowThreshold:             200 * time.Millisecond,
 			LogLevel:                  logger.Warn,
-			IgnoreRecordNotFoundError: config.Config.App.Env == "production",
-			Colorful:                  config.Config.App.Env == "development",
+			IgnoreRecordNotFoundError: config.Config.App.IsProduction(),
+			Colorful:                  !config.Config.App.IsProduction(),
 		},
 	)
 

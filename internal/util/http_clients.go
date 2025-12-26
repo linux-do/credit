@@ -21,8 +21,19 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"time"
 )
+
+// IsLocalhost 检查 URL 是否为 localhost
+func IsLocalhost(urlStr string) bool {
+	u, err := url.Parse(urlStr)
+	if err != nil {
+		return false
+	}
+	hostname := u.Hostname()
+	return hostname == "localhost" || hostname == "127.0.0.1" || hostname == "::1"
+}
 
 // 配置HTTP客户端
 var httpClient = &http.Client{

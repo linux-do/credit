@@ -28,11 +28,12 @@ import (
 	"github.com/linux-do/credit/internal/apps/merchant"
 	"github.com/linux-do/credit/internal/apps/oauth"
 	"github.com/linux-do/credit/internal/common"
+	"github.com/linux-do/credit/internal/config"
 	"github.com/linux-do/credit/internal/db"
 	"github.com/linux-do/credit/internal/model"
 	"github.com/linux-do/credit/internal/service"
 	"github.com/linux-do/credit/internal/task"
-    "github.com/linux-do/credit/internal/task/scheduler"
+	"github.com/linux-do/credit/internal/task/scheduler"
 	"github.com/linux-do/credit/internal/util"
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
@@ -294,6 +295,10 @@ func PayByLink(c *gin.Context) {
 			merchantScoreIncrease := paymentLink.Amount.Mul(merchantPayConfig.ScoreRate).Round(0).IntPart()
 			if err := service.AddMerchantBalance(tx, merchantUser.ID, merchantAmount, merchantScoreIncrease); err != nil {
 				return err
+			}
+
+			if config.Config.App.IsProduction() && util.IsLocalhost(merchantAPIKey.NotifyURL) {
+				return nil
 			}
 
 			notifyPayload, _ := json.Marshal(map[string]interface{}{
