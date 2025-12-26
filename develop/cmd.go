@@ -1,9 +1,26 @@
+/*
+Copyright 2025 linux.do
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+
 package main
 
 import (
     "bytes"
     "context"
-    crand "crypto/rand" // Aliased for cryptographic random
+    crand "crypto/rand"
     "crypto/aes"
     "crypto/cipher"
     "crypto/sha256"
@@ -16,7 +33,8 @@ import (
     "fmt"
     "io"
     "log"
-    mrand "math/rand" // Aliased for math random
+    mrand "math/rand/v2"
+    "math/big"
     "net/http"
     "strings"
     "time"
@@ -339,9 +357,6 @@ func runGenUser(postgresDSN string, redisDSN string, apiKey string, sessionSecre
     var user UserData
     var err error
 
-    // Initialize RNG source
-    mrand.New(mrand.NewSource(time.Now().UnixNano()))
-
     if apiKey != "" {
         user, err = fetchRealUser(apiKey)
         if err != nil {
@@ -354,12 +369,18 @@ func runGenUser(postgresDSN string, redisDSN string, apiKey string, sessionSecre
 
     // If level is invalid or -1, pick a random level
     if level < LevelMin || level > LevelMax {
-        level = mrand.Intn(LevelMax + 1) // 0, 1, 2, 3
+        level = mrand.IntN(LevelMax + 1) // 0, 1, 2, 3
     }
     user.PayScore = generatePayScore(level)
 
     user.SignKey = GenerateUniqueIDSimple()
-    payPwd := fmt.Sprintf("%06d", mrand.Intn(PayPwdMax))
+
+    max := big.NewInt(int64(PayPwdMax))
+    n, err := crand.Int(crand.Reader, max)
+    if err != nil {
+        log.Fatalf("Critical error generating secure random number: %v", err)
+    }
+    payPwd := fmt.Sprintf("%06d", n.Int64())
 
     encryptedPayKey, err := Encrypt(user.SignKey, payPwd)
     if err != nil {
@@ -393,12 +414,11 @@ func generatePayScore(level int) int {
     }
 
     // [min, max)
-    return mrand.Intn(max-min) + min
+    return mrand.IntN(max-min) + min
 }
 
 func generateRandomUser() UserData {
-    mrand.New(mrand.NewSource(time.Now().UnixNano()))
-    id := mrand.Intn(MaxRandomUserID)
+    id := mrand.IntN(MaxRandomUserID)
     return UserData{
         ID:         id,
         Username:   fmt.Sprintf("mock_user_%06d", id),
@@ -410,8 +430,7 @@ func generateRandomUser() UserData {
 }
 
 func fetchRealUser(apiKey string) (UserData, error) {
-    mrand.New(mrand.NewSource(time.Now().UnixNano()))
-    page := mrand.Intn(MaxLeaderPages) + 1
+    page := mrand.IntN(MaxLeaderPages) + 1
     url := fmt.Sprintf(APIURLTemplate, page)
 
     req, err := http.NewRequest("GET", url, nil)
@@ -436,7 +455,11 @@ func fetchRealUser(apiKey string) (UserData, error) {
         return UserData{}, fmt.Errorf("API returned status: %d", resp.StatusCode)
     }
 
-    body, _ := io.ReadAll(resp.Body)
+    body, err := io.ReadAll(resp.Body)
+    if err != nil {
+        return UserData{}, fmt.Errorf("failed to read response body: %w", err)
+    }
+
     var result LeaderboardResponse
     if err := json.Unmarshal(body, &result); err != nil {
         return UserData{}, err
@@ -447,7 +470,7 @@ func fetchRealUser(apiKey string) (UserData, error) {
     }
 
     // Pick random user
-    target := result.Users[mrand.Intn(len(result.Users))]
+    target := result.Users[mrand.IntN(len(result.Users))]
 
     // Format avatar
     avatar := strings.Replace(target.AvatarTemplate, "{size}", "288", 1)
