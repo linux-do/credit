@@ -18,6 +18,7 @@ package order
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	"github.com/hibiken/asynq"
@@ -34,11 +35,22 @@ func HandleSyncOrdersToClickHouse(ctx context.Context, t *asynq.Task) error {
 		return nil
 	}
 
-	// 计算昨天的时间范围
-	now := time.Now()
-	yesterday := now.AddDate(0, 0, -1)
-	startOfDay := time.Date(yesterday.Year(), yesterday.Month(), yesterday.Day(), 0, 0, 0, 0, yesterday.Location())
-	endOfDay := startOfDay.AddDate(0, 0, 1)
+	var payload struct {
+		StartTime *time.Time `json:"start_time"`
+		EndTime   *time.Time `json:"end_time"`
+	}
+	_ = json.Unmarshal(t.Payload(), &payload)
+
+	var startOfDay, endOfDay time.Time
+	if payload.StartTime != nil && payload.EndTime != nil {
+		startOfDay = *payload.StartTime
+		endOfDay = *payload.EndTime
+	} else {
+		now := time.Now()
+		yesterday := now.AddDate(0, 0, -1)
+		startOfDay = time.Date(yesterday.Year(), yesterday.Month(), yesterday.Day(), 0, 0, 0, 0, yesterday.Location())
+		endOfDay = startOfDay.AddDate(0, 0, 1)
+	}
 
 	logger.InfoF(ctx, "开始同步订单到 ClickHouse: %s ~ %s", startOfDay.Format("2006-01-02 15:04:05"), endOfDay.Format("2006-01-02 15:04:05"))
 

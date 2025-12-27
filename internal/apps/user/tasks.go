@@ -19,6 +19,7 @@ package user
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -256,6 +257,10 @@ func HandleUpdateSingleUserGamificationScore(ctx context.Context, t *asynq.Task)
 	if payload.UserID > 0 {
 		var user model.User
 		if err := user.GetByID(db.DB(ctx), payload.UserID); err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				logger.InfoF(ctx, "用户[%d]不存在，跳过积分更新", payload.UserID)
+				return nil
+			}
 			return fmt.Errorf("查询用户[%d]失败: %w", payload.UserID, err)
 		}
 

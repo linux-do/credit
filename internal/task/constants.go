@@ -30,3 +30,62 @@ const (
 	QueueWebhook       = "webhook"
 	QueueDefault       = "default"
 )
+
+// 管理员可下发的任务类型标识
+const (
+	TaskTypeOrderSync        = "order_sync"
+	TaskTypeUserGamification = "user_gamification"
+	TaskTypeDisputeRefund    = "dispute_auto_refund"
+)
+
+// TaskMeta 任务元数据
+type TaskMeta struct {
+	Type         string
+	AsynqTask    string
+	Name         string
+	Description  string
+	SupportsTime bool
+	MaxRetry     int
+	Queue        string
+}
+
+// DispatchableTasks 可下发的任务列表
+var DispatchableTasks = []TaskMeta{
+	{
+		Type:         TaskTypeOrderSync,
+		AsynqTask:    SyncOrdersToClickHouseTask,
+		Name:         "订单同步",
+		Description:  "同步订单数据到 ClickHouse",
+		SupportsTime: true,
+		MaxRetry:     5,
+		Queue:        QueueDefault,
+	},
+	{
+		Type:         TaskTypeUserGamification,
+		AsynqTask:    UpdateSingleUserGamificationScoreTask,
+		Name:         "用户积分更新",
+		Description:  "更新指定用户的游戏化积分",
+		SupportsTime: false,
+		MaxRetry:     5,
+		Queue:        QueueWhitelistOnly,
+	},
+	{
+		Type:         TaskTypeDisputeRefund,
+		AsynqTask:    AutoRefundExpiredDisputesTask,
+		Name:         "争议自动退款",
+		Description:  "处理过期争议的自动退款",
+		SupportsTime: false,
+		MaxRetry:     5,
+		Queue:        QueueDefault,
+	},
+}
+
+// GetTaskMeta 根据任务类型获取元数据
+func GetTaskMeta(taskType string) *TaskMeta {
+	for _, t := range DispatchableTasks {
+		if t.Type == taskType {
+			return &t
+		}
+	}
+	return nil
+}

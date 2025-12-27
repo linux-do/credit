@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/linux-do/credit/internal/apps/admin"
+	admin_task "github.com/linux-do/credit/internal/apps/admin/task"
 	publicconfig "github.com/linux-do/credit/internal/apps/config"
 	"github.com/linux-do/credit/internal/apps/dispute"
 	"github.com/linux-do/credit/internal/apps/health"
@@ -203,6 +204,10 @@ func Serve() {
 			adminRouter := apiV1Router.Group("/admin")
 			adminRouter.Use(oauth.LoginRequired(), admin.LoginAdminRequired())
 			{
+				// Task dispatch
+				adminRouter.GET("/tasks/types", admin_task.ListTaskTypes)
+				adminRouter.POST("/tasks/dispatch", admin_task.DispatchTask)
+
 				// System Config
 				adminRouter.POST("/system-configs", system_config.CreateSystemConfig)
 				adminRouter.GET("/system-configs", system_config.ListSystemConfigs)

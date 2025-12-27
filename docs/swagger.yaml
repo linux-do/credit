@@ -319,6 +319,19 @@ definitions:
     required:
     - value
     type: object
+  task.DispatchTaskRequest:
+    properties:
+      end_time:
+        type: string
+      start_time:
+        type: string
+      task_type:
+        type: string
+      user_id:
+        type: integer
+    required:
+    - task_type
+    type: object
   user.UpdatePayKeyRequest:
     properties:
       pay_key:
@@ -504,6 +517,37 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/system_config.UpdateSystemConfigRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - admin
+  /api/v1/admin/tasks/dispatch:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/task.DispatchTaskRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - admin
+  /api/v1/admin/tasks/types:
+    get:
       produces:
       - application/json
       responses:
