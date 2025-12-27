@@ -29,6 +29,7 @@ import (
 
 	"github.com/linux-do/credit/internal/apps/admin"
 	admin_task "github.com/linux-do/credit/internal/apps/admin/task"
+	admin_user "github.com/linux-do/credit/internal/apps/admin/user"
 	publicconfig "github.com/linux-do/credit/internal/apps/config"
 	"github.com/linux-do/credit/internal/apps/dispute"
 	"github.com/linux-do/credit/internal/apps/health"
@@ -207,6 +208,10 @@ func Serve() {
 				// Task dispatch
 				adminRouter.GET("/tasks/types", admin_task.ListTaskTypes)
 				adminRouter.POST("/tasks/dispatch", admin_task.DispatchTask)
+
+				// Users
+				adminRouter.GET("/users", admin_user.ListUsers)
+				adminRouter.PUT("/users/:id/status", admin_user.UpdateUserStatus)
 
 				// System Config
 				adminRouter.POST("/system-configs", system_config.CreateSystemConfig)

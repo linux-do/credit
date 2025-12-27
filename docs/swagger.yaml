@@ -340,6 +340,11 @@ definitions:
     required:
     - pay_key
     type: object
+  user.updateUserStatusRequest:
+    properties:
+      is_active:
+        type: boolean
+    type: object
   user_pay_config.CreateUserPayConfigRequest:
     properties:
       daily_limit:
@@ -635,6 +640,53 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/user_pay_config.UpdateUserPayConfigRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - admin
+  /api/v1/admin/users:
+    get:
+      parameters:
+      - in: query
+        minimum: 1
+        name: page
+        type: integer
+      - in: query
+        maximum: 100
+        minimum: 1
+        name: page_size
+        type: integer
+      - in: query
+        name: username
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - admin
+  /api/v1/admin/users/{id}/status:
+    put:
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 状态
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/user.updateUserStatusRequest'
       produces:
       - application/json
       responses:
