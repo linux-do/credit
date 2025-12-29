@@ -261,13 +261,22 @@ export function ProfileMain() {
   }, [api])
 
   React.useEffect(() => {
-    if (user && api) {
+    if (!api || levelConfigs.length === 0 || !currentLevel) return
+
+    const scrollToCurrentLevel = () => {
       const currentLevelIndex = levelConfigs.findIndex(
         (config) => config.level === currentLevel.level
       )
-      api.scrollTo(currentLevelIndex, false)
+      if (currentLevelIndex >= 0) {
+        api.scrollTo(currentLevelIndex, true)
+      }
     }
-  }, [user, currentLevel.level, api, levelConfigs])
+    scrollToCurrentLevel()
+    api.on("reInit", scrollToCurrentLevel)
+    return () => {
+      api.off("reInit", scrollToCurrentLevel)
+    }
+  }, [api, currentLevel, levelConfigs])
 
   if (loading) {
     return (
