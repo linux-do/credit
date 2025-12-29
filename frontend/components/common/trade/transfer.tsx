@@ -120,7 +120,7 @@ export function Transfer() {
             快速、安全地将积分转移给其他用户，支持实时到账，积分即刻可用。
           </p>
           <Button
-            onClick={() => setIsFormOpen(true)}
+            onClick={() => toast.error('积分转移功能已下架，请遵循积分使用规范并使用正确流转功能继续！')}
             className="bg-primary hover:bg-primary/90 font-medium px-6 rounded-md shadow-sm"
           >
             开始转移

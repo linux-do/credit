@@ -1,6 +1,4 @@
 import { BaseService } from '../core/base.service';
-import apiClient from '../core/api-client';
-import type { ApiResponse } from '../core/types';
 import type { TransactionQueryParams, TransactionListResponse, TransferRequest, TransferResponse } from './types';
 
 /**
@@ -58,9 +56,9 @@ export class TransactionService extends BaseService {
    * - 不能给自己转账
    * - 需要确保账户余额充足
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   static async transfer(data: TransferRequest): Promise<TransferResponse> {
-    const response = await apiClient.post<ApiResponse<TransferResponse>>('/api/v1/payment/transfer', data);
-    return response.data.data;
+    throw new Error('积分转移功能已下架，请遵循积分使用规范并使用正确流转功能继续！');
   }
 }
 
