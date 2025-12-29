@@ -1,15 +1,16 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
-import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
-import { Spinner } from "@/components/ui/spinner"
-import { AnimateIcon } from "@/components/animate-ui/icons/icon"
-import { ChevronLeft } from "@/components/animate-ui/icons/chevron-left"
-import { ChevronRight } from "@/components/animate-ui/icons/chevron-right"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import * as React from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { Badge } from "@/components/ui/badge";
+import { AnimateIcon } from "@/components/animate-ui/icons/icon";
+import { ChevronLeft } from "@/components/animate-ui/icons/chevron-left";
+import { ChevronRight } from "@/components/animate-ui/icons/chevron-right";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -17,8 +18,8 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu"
-import { getCurrentTheme } from "@/components/layout/avater-style/registry"
+} from "@/components/ui/dropdown-menu";
+import { getCurrentTheme } from "@/components/layout/avater-style/registry";
 import {
   Sidebar,
   SidebarContent,
@@ -30,7 +31,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,7 +41,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
 import {
   Home,
   CreditCard,
@@ -56,10 +57,10 @@ import {
   ShieldCheck,
   Globe,
   Layers,
-} from "lucide-react"
+  Trophy,
+} from "lucide-react";
 
-import { useUser } from "@/contexts/user-context"
-
+import { useUser } from "@/contexts/user-context";
 
 /* 导航数据 */
 const data = {
@@ -68,6 +69,7 @@ const data = {
     { title: "集市", url: "/merchant", icon: Store },
     { title: "积分", url: "/balance", icon: Wallet },
     { title: "活动", url: "/trade", icon: CircleDollarSign },
+    { title: "排行榜", url: "/leaderboard", icon: Trophy, badge: "New" },
   ],
   admin: [
     { title: "系统配置", url: "/admin/system", icon: ShieldCheck },
@@ -82,12 +84,12 @@ const data = {
   products: [
     { title: "在线流转", url: "/merchant/online-paying", icon: Globe },
   ],
-}
+};
 
 /**
  * 应用侧边栏组件
  * 显示应用侧边栏
- * 
+ *
  * @example
  * ```tsx
  * <AppSidebar />
@@ -95,48 +97,53 @@ const data = {
  * @returns {React.ReactNode} 应用侧边栏组件
  */
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { toggleSidebar, state, isMobile, setOpenMobile } = useSidebar()
-  const { user, getTrustLevelLabel, logout } = useUser()
-  const [showLogoutDialog, setShowLogoutDialog] = React.useState(false)
-  const [isLoggingOut, setIsLoggingOut] = React.useState(false)
-  const pathname = usePathname()
-  const router = useRouter()
+  const { toggleSidebar, state, isMobile, setOpenMobile } = useSidebar();
+  const { user, getTrustLevelLabel, logout } = useUser();
+  const [showLogoutDialog, setShowLogoutDialog] = React.useState(false);
+  const [isLoggingOut, setIsLoggingOut] = React.useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
 
-  const currentTheme = getCurrentTheme()
+  const currentTheme = getCurrentTheme();
   const {
     MainDecoration,
     InteractionDecoration,
     BackgroundEffect,
     smallMainDecorationConfig,
     largeMainDecorationConfig,
-    interactionDecorationConfig
-  } = currentTheme
+    interactionDecorationConfig,
+  } = currentTheme;
 
-  const [showEffect, setShowEffect] = React.useState(false)
+  const [showEffect, setShowEffect] = React.useState(false);
 
   const handleCloseSidebar = React.useCallback(() => {
     if (isMobile) {
-      setOpenMobile(false)
+      setOpenMobile(false);
     }
-  }, [isMobile, setOpenMobile])
+  }, [isMobile, setOpenMobile]);
 
   const handleLogout = async () => {
-    setIsLoggingOut(true)
+    setIsLoggingOut(true);
     try {
-      await logout()
-      setShowLogoutDialog(false)
+      await logout();
+      setShowLogoutDialog(false);
     } catch (error) {
       toast.error("登出失败", {
-        description: error instanceof Error ? error.message : "登出时发生错误，请重试"
-      })
-      setIsLoggingOut(false)
+        description:
+          error instanceof Error ? error.message : "登出时发生错误，请重试",
+      });
+      setIsLoggingOut(false);
     }
-  }
+  };
 
   return (
     <>
       {showEffect && BackgroundEffect && <BackgroundEffect />}
-      <Sidebar collapsible="icon" {...props} className="px-2 relative border-r border-border/40 group-data-[collapsible=icon]">
+      <Sidebar
+        collapsible="icon"
+        {...props}
+        className="px-2 relative border-r border-border/40 group-data-[collapsible=icon]"
+      >
         <Button
           onClick={toggleSidebar}
           variant="ghost"
@@ -163,12 +170,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 suppressHydrationWarning
               >
                 <div className="relative overflow-visible">
-                  <MainDecoration className={smallMainDecorationConfig?.className} />
+                  <MainDecoration
+                    className={smallMainDecorationConfig?.className}
+                  />
                   <Avatar className="size-6 rounded relative z-10">
-                    <AvatarImage
-                      src={user?.avatar_url}
-                      alt={user?.nickname}
-                    />
+                    <AvatarImage src={user?.avatar_url} alt={user?.nickname} />
                     <AvatarFallback className="rounded bg-muted text-sm">
                       {user?.nickname?.charAt(0)?.toUpperCase() || "L"}
                     </AvatarFallback>
@@ -179,14 +185,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     {user?.nickname || user?.username || "Unknown User"}
                   </span>
                   <span className="text-[11px] font-medium text-muted-foreground/100 truncate w-full text-left ml-2">
-                    {user ? getTrustLevelLabel(user.trust_level) : "Trust Level Unknown"}
+                    {user
+                      ? getTrustLevelLabel(user.trust_level)
+                      : "Trust Level Unknown"}
                   </span>
                 </div>
                 <ChevronDown className="size-4 text-muted-foreground ml-auto group-data-[collapsible=icon]:hidden" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
-              className={isMobile || state === "collapsed" ? "ml-1 w-68 z-[200]" : "w-64 z-[200]"}
+              className={
+                isMobile || state === "collapsed"
+                  ? "ml-1 w-68 z-[200]"
+                  : "w-64 z-[200]"
+              }
               align="start"
               side={isMobile || state === "collapsed" ? "bottom" : "right"}
               sideOffset={4}
@@ -202,7 +214,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       className={interactionDecorationConfig?.className}
                     />
                     <div className="relative z-10">
-                      <MainDecoration className={largeMainDecorationConfig?.className} />
+                      <MainDecoration
+                        className={largeMainDecorationConfig?.className}
+                      />
                       <Avatar className="size-14 rounded-full pointer-events-none">
                         <AvatarImage
                           src={user?.avatar_url}
@@ -218,33 +232,44 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     {user?.nickname || user?.username || "Unknown User"}
                   </span>
                   <span className="text-xs font-base text-muted-foreground">
-                    {user ? getTrustLevelLabel(user.trust_level) : "Trust Level Unknown"}
+                    {user
+                      ? getTrustLevelLabel(user.trust_level)
+                      : "Trust Level Unknown"}
                   </span>
                 </div>
               </DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => {
-                router.push("/settings/profile")
-                handleCloseSidebar()
-              }}>
+              <DropdownMenuItem
+                onClick={() => {
+                  router.push("/settings/profile");
+                  handleCloseSidebar();
+                }}
+              >
                 <UserRound className="mr-2 size-4" />
                 <span>我的资料</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => {
-                router.push("/settings")
-                handleCloseSidebar()
-              }}>
+              <DropdownMenuItem
+                onClick={() => {
+                  router.push("/settings");
+                  handleCloseSidebar();
+                }}
+              >
                 <Settings className="mr-2 size-4" />
                 <span>设置</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator className="my-2" />
-              <DropdownMenuItem onClick={() => {
-                router.push("/docs/how-to-use")
-                handleCloseSidebar()
-              }}>
+              <DropdownMenuItem
+                onClick={() => {
+                  router.push("/docs/how-to-use");
+                  handleCloseSidebar();
+                }}
+              >
                 <FileQuestionMark className="mr-2 size-4" />
                 <span>使用帮助</span>
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive hover:bg-destructive/50" onClick={() => setShowLogoutDialog(true)}>
+              <DropdownMenuItem
+                className="text-destructive hover:bg-destructive/50"
+                onClick={() => setShowLogoutDialog(true)}
+              >
                 <LogOut className="mr-2 size-4 text-destructive" />
                 <span>退出登录</span>
               </DropdownMenuItem>
@@ -265,6 +290,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       <Link href={item.url} onClick={handleCloseSidebar}>
                         {item.icon && <item.icon />}
                         <span>{item.title}</span>
+                        {"badge" in item && item.badge && (
+                          <Badge
+                            variant="secondary"
+                            className="ml-auto text-[10px] px-1.5 py-0 h-4 group-data-[collapsible=icon]:hidden"
+                          >
+                            {item.badge}
+                          </Badge>
+                        )}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -307,11 +340,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <SidebarMenu className="gap-1">
                 {data.document.map((item) => (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      tooltip={item.title}
-                      asChild
-                    >
-                      <Link href={item.url} target="_blank" rel="noopener noreferrer" onClick={handleCloseSidebar}>
+                    <SidebarMenuButton tooltip={item.title} asChild>
+                      <Link
+                        href={item.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={handleCloseSidebar}
+                      >
                         {item.icon && <item.icon />}
                         <span>{item.title}</span>
                       </Link>
@@ -330,10 +365,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <SidebarMenu className="gap-1">
                 {data.products.map((item) => (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      tooltip={item.title}
-                      asChild
-                    >
+                    <SidebarMenuButton tooltip={item.title} asChild>
                       <Link href={item.url} onClick={handleCloseSidebar}>
                         {item.icon && <item.icon />}
                         <span>{item.title}</span>
@@ -347,23 +379,28 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarContent>
       </Sidebar>
 
-      <AlertDialog open={showLogoutDialog} onOpenChange={(open) => !isLoggingOut && setShowLogoutDialog(open)}>
+      <AlertDialog
+        open={showLogoutDialog}
+        onOpenChange={(open) => !isLoggingOut && setShowLogoutDialog(open)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>确认登出</AlertDialogTitle>
             <AlertDialogDescription>
-              {isLoggingOut ? '正在登出，请稍候...' : '您确定要登出当前账户吗？'}
+              {isLoggingOut
+                ? "正在登出，请稍候..."
+                : "您确定要登出当前账户吗？"}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isLoggingOut}>取消</AlertDialogCancel>
             <AlertDialogAction onClick={handleLogout} disabled={isLoggingOut}>
               {isLoggingOut && <Spinner className="mr-2" />}
-              {isLoggingOut ? '登出中...' : '确认登出'}
+              {isLoggingOut ? "登出中..." : "确认登出"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </>
-  )
+  );
 }
