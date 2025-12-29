@@ -171,7 +171,7 @@ export function CreateDisputeDialog({ order, onSuccess }: { order: Order; onSucc
   }
 
   const handleOpenChange = (newOpen: boolean) => {
-    if (!newOpen && !loading) {
+    if (newOpen && !loading) {
       resetForm()
     }
     setOpen(newOpen)
@@ -194,7 +194,6 @@ export function CreateDisputeDialog({ order, onSuccess }: { order: Order; onSucc
       toast.success('争议已发起', { description: '请等待服务方处理' })
       updateOrderStatus(order.id, { status: 'disputing' })
       setOpen(false)
-      resetForm()
       onSuccess?.()
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : '发起争议失败'
@@ -389,10 +388,10 @@ export function ViewDisputeHistoryDialog({ order }: { order: Order }) {
   const handleOpenChange = (newOpen: boolean) => {
     if (newOpen) {
       setOpen(true)
+      resetForm()
       fetchDisputeHistory()
     } else {
       setOpen(false)
-      resetForm()
     }
   }
 
@@ -530,10 +529,10 @@ export function RefundReviewDialog({ order, onSuccess }: { order: Order; onSucce
   const handleOpenChange = (newOpen: boolean) => {
     if (newOpen) {
       setOpen(true)
+      resetForm()
       fetchDisputeInfo()
     } else if (!loading) {
       setOpen(false)
-      resetForm()
     }
   }
 
@@ -576,7 +575,6 @@ export function RefundReviewDialog({ order, onSuccess }: { order: Order; onSucce
       })
 
       setOpen(false)
-      resetForm()
       refetchUser()
       onSuccess?.()
     } catch (error: unknown) {

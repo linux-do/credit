@@ -172,7 +172,6 @@ export function MerchantDialog({
       }
 
       setOpen(false)
-      resetForm()
     } catch (error) {
       const errorMessage = (error as Error).message || `无法${ mode === 'create' ? '创建' : '更新' }应用`
       toast.error(`${ mode === 'create' ? '创建' : '更新' }失败`, {
@@ -185,7 +184,7 @@ export function MerchantDialog({
   }
 
   const handleOpenChange = (newOpen: boolean) => {
-    if (!newOpen && !processing) {
+    if (newOpen && !processing) {
       resetForm()
     }
     setOpen(newOpen)
