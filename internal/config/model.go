@@ -141,10 +141,11 @@ type logConfig struct {
 
 // schedulerConfig 定时任务配置
 type schedulerConfig struct {
-	UpdateUserGamificationScoresTaskCron     string `mapstructure:"update_user_gamification_scores_task_cron"`
-	DisputeAutoRefundDispatchIntervalSeconds int    `mapstructure:"dispute_auto_refund_dispatch_interval_seconds"`
-	AutoRefundExpiredDisputesTaskCron        string `mapstructure:"auto_refund_expired_disputes_task_cron"`
-	SyncOrdersToClickHouseTaskCron           string `mapstructure:"sync_orders_to_clickhouse_task_cron"`
+	UpdateUserGamificationScoresTaskCron      string `mapstructure:"update_user_gamification_scores_task_cron"`
+	DisputeAutoRefundDispatchIntervalSeconds  int    `mapstructure:"dispute_auto_refund_dispatch_interval_seconds"`
+	AutoRefundExpiredDisputesTaskCron         string `mapstructure:"auto_refund_expired_disputes_task_cron"`
+	SyncOrdersToClickHouseTaskCron            string `mapstructure:"sync_orders_to_clickhouse_task_cron"`
+	SyncLeaderboardScoresToClickHouseTaskCron string `mapstructure:"sync_leaderboard_scores_to_clickhouse_task_cron"`
 }
 
 // workerConfig 工作配置

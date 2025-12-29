@@ -83,6 +83,18 @@ func StartScheduler() error {
 			return
 		}
 
+		// 排行榜聚合同步任务
+		if config.Config.Scheduler.SyncLeaderboardScoresToClickHouseTaskCron != "" {
+			if _, err = scheduler.Register(
+				config.Config.Scheduler.SyncLeaderboardScoresToClickHouseTaskCron,
+				asynq.NewTask(task.SyncLeaderboardScoresToClickHouseTask, nil),
+				asynq.MaxRetry(5),
+				asynq.Unique(23*time.Hour),
+			); err != nil {
+				return
+			}
+		}
+
 		// 启动调度器
 		err = scheduler.Run()
 	})
