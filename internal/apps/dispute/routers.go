@@ -37,7 +37,7 @@ type ListDisputesRequest struct {
 	Page      int     `json:"page" form:"page" binding:"min=1"`
 	PageSize  int     `json:"page_size" form:"page_size" binding:"min=1,max=100"`
 	Status    string  `json:"status" form:"status" binding:"omitempty,oneof=disputing refund closed"`
-	DisputeID *uint64 `json:"dispute_id" form:"dispute_id" binding:"omitempty"`
+	DisputeID *uint64 `json:"dispute_id,string" form:"dispute_id" binding:"omitempty"`
 }
 
 // ListDisputesResponse 查询争议列表响应
@@ -159,7 +159,7 @@ func ListMerchantDisputes(c *gin.Context) {
 
 // CreateDisputeRequest 发起争议请求
 type CreateDisputeRequest struct {
-	OrderID uint64 `json:"order_id" binding:"required"`
+	OrderID uint64 `json:"order_id,string" binding:"required"`
 	Reason  string `json:"reason" binding:"required,max=100"`
 }
 
@@ -242,7 +242,7 @@ func CreateDispute(c *gin.Context) {
 
 // RefundReviewRequest 退款审核请求
 type RefundReviewRequest struct {
-	DisputeID uint64 `json:"dispute_id" binding:"required"`
+	DisputeID uint64 `json:"dispute_id,string" binding:"required"`
 	Status    string `json:"status" binding:"required,oneof=refund closed"`
 	Reason    string `json:"reason" binding:"omitempty,max=100"`
 }
@@ -375,7 +375,7 @@ func RefundReview(c *gin.Context) {
 
 // CloseDisputeRequest 关闭争议请求
 type CloseDisputeRequest struct {
-	DisputeID uint64 `json:"dispute_id" binding:"required"`
+	DisputeID uint64 `json:"dispute_id,string" binding:"required"`
 }
 
 // CloseDispute 用户主动关闭争议（只能由发起者关闭）

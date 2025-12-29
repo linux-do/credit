@@ -65,7 +65,7 @@ type GetOrderResponse struct {
 
 // TransferRequest 转账请求
 type TransferRequest struct {
-	RecipientID       uint64          `json:"recipient_id" binding:"required"`
+	RecipientID       uint64          `json:"recipient_id,string" binding:"required"`
 	RecipientUsername string          `json:"recipient_username" binding:"required"`
 	Amount            decimal.Decimal `json:"amount" binding:"required"`
 	PayKey            string          `json:"pay_key" binding:"required,max=6"`

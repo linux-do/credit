@@ -1440,7 +1440,8 @@
             ],
             "properties": {
                 "dispute_id": {
-                    "type": "integer"
+                    "type": "string",
+                    "example": "0"
                 }
             }
         },
@@ -1452,7 +1453,8 @@
             ],
             "properties": {
                 "order_id": {
-                    "type": "integer"
+                    "type": "string",
+                    "example": "0"
                 },
                 "reason": {
                     "type": "string",
@@ -1464,7 +1466,8 @@
             "type": "object",
             "properties": {
                 "dispute_id": {
-                    "type": "integer"
+                    "type": "string",
+                    "example": "0"
                 },
                 "page": {
                     "type": "integer",
@@ -1493,7 +1496,8 @@
             ],
             "properties": {
                 "dispute_id": {
-                    "type": "integer"
+                    "type": "string",
+                    "example": "0"
                 },
                 "reason": {
                     "type": "string",
@@ -1593,7 +1597,8 @@
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string",
+                    "example": "0"
                 },
                 "order_name": {
                     "type": "string"
@@ -1788,7 +1793,8 @@
                     "maxLength": 6
                 },
                 "recipient_id": {
-                    "type": "integer"
+                    "type": "string",
+                    "example": "0"
                 },
                 "recipient_username": {
                     "type": "string"

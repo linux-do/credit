@@ -24,7 +24,7 @@ import (
 )
 
 type MerchantAPIKey struct {
-	ID             uint64         `json:"id" gorm:"primaryKey"`
+	ID             uint64         `json:"id,string" gorm:"primaryKey"`
 	UserID         uint64         `json:"user_id" gorm:"not null;index:idx_merchant_api_keys_user_created,priority:1"`
 	ClientID       string         `json:"client_id" gorm:"size:64;uniqueIndex;index:idx_client_credentials,priority:2;not null"`
 	ClientSecret   string         `json:"client_secret" gorm:"size:64;index:idx_client_credentials,priority:1;not null"`

@@ -46,14 +46,16 @@ definitions:
   dispute.CloseDisputeRequest:
     properties:
       dispute_id:
-        type: integer
+        example: "0"
+        type: string
     required:
     - dispute_id
     type: object
   dispute.CreateDisputeRequest:
     properties:
       order_id:
-        type: integer
+        example: "0"
+        type: string
       reason:
         maxLength: 100
         type: string
@@ -64,7 +66,8 @@ definitions:
   dispute.ListDisputesRequest:
     properties:
       dispute_id:
-        type: integer
+        example: "0"
+        type: string
       page:
         minimum: 1
         type: integer
@@ -82,7 +85,8 @@ definitions:
   dispute.RefundReviewRequest:
     properties:
       dispute_id:
-        type: integer
+        example: "0"
+        type: string
       reason:
         maxLength: 100
         type: string
@@ -156,7 +160,8 @@ definitions:
       endTime:
         type: string
       id:
-        type: integer
+        example: "0"
+        type: string
       order_name:
         type: string
       page:
@@ -292,7 +297,8 @@ definitions:
         maxLength: 6
         type: string
       recipient_id:
-        type: integer
+        example: "0"
+        type: string
       recipient_username:
         type: string
       remark:

@@ -1449,7 +1449,8 @@ const docTemplate = `{
             ],
             "properties": {
                 "dispute_id": {
-                    "type": "integer"
+                    "type": "string",
+                    "example": "0"
                 }
             }
         },
@@ -1461,7 +1462,8 @@ const docTemplate = `{
             ],
             "properties": {
                 "order_id": {
-                    "type": "integer"
+                    "type": "string",
+                    "example": "0"
                 },
                 "reason": {
                     "type": "string",
@@ -1473,7 +1475,8 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "dispute_id": {
-                    "type": "integer"
+                    "type": "string",
+                    "example": "0"
                 },
                 "page": {
                     "type": "integer",
@@ -1502,7 +1505,8 @@ const docTemplate = `{
             ],
             "properties": {
                 "dispute_id": {
-                    "type": "integer"
+                    "type": "string",
+                    "example": "0"
                 },
                 "reason": {
                     "type": "string",
@@ -1602,7 +1606,8 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string",
+                    "example": "0"
                 },
                 "order_name": {
                     "type": "string"
@@ -1797,7 +1802,8 @@ const docTemplate = `{
                     "maxLength": 6
                 },
                 "recipient_id": {
-                    "type": "integer"
+                    "type": "string",
+                    "example": "0"
                 },
                 "recipient_username": {
                     "type": "string"

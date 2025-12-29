@@ -35,7 +35,7 @@ type TransactionListRequest struct {
 	ClientID      string     `json:"client_id" form:"client_id" binding:"omitempty"`
 	StartTime     *time.Time `json:"startTime" form:"startTime" binding:"omitempty"`
 	EndTime       *time.Time `json:"endTime" form:"endTime" binding:"omitempty,gtfield=StartTime"`
-	ID            *uint64    `json:"id" form:"id" binding:"omitempty"`
+	ID            *uint64    `json:"id,string" form:"id" binding:"omitempty"`
 	OrderName     string     `json:"order_name" form:"order_name" binding:"omitempty"`
 	PayerUsername string     `json:"payer_username" form:"payer_username" binding:"omitempty"`
 	PayeeUsername string     `json:"payee_username" form:"payee_username" binding:"omitempty"`
@@ -51,7 +51,7 @@ type TransactionListResponse struct {
 		AppHomepageURL string  `json:"app_homepage_url"`
 		AppDescription string  `json:"app_description"`
 		RedirectURI    string  `json:"redirect_uri"`
-		DisputeID      *uint64 `json:"dispute_id"`
+		DisputeID      *uint64 `json:"dispute_id,string"`
 		PayerUsername  string  `json:"payer_username"`
 		PayeeUsername  string  `json:"payee_username"`
 	} `json:"orders"`

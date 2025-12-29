@@ -94,7 +94,7 @@ func CreatePaymentLink(c *gin.Context) {
 
 // PaymentLinkDetail 支付链接详情
 type PaymentLinkDetail struct {
-	ID          uint64          `json:"id"`
+	ID          uint64          `json:"id,string"`
 	Token       string          `json:"token"`
 	Amount      decimal.Decimal `json:"amount"`
 	ProductName string          `json:"product_name"`
