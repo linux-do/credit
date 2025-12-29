@@ -461,24 +461,6 @@ export const searchData: SearchItem[] = [
     category: 'setting',
     keywords: ['settings', '设置', '安全', 'security', '隐私'],
   },
-
-  // ==================== 管理员 ====================
-  {
-    id: 'admin-system',
-    title: '系统配置',
-    description: '系统配置和管理',
-    url: '/admin/system',
-    category: 'admin',
-    keywords: ['admin', '管理', '系统', '配置', 'system'],
-  },
-  {
-    id: 'admin-user-pay',
-    title: '积分配置',
-    description: '管理用户支付等级和配置',
-    url: '/admin/user_pay',
-    category: 'admin',
-    keywords: ['admin', '管理', '积分', '配置', 'payment', 'config'],
-  },
 ]
 
 /**
