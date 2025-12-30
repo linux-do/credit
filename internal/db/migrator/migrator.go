@@ -40,6 +40,7 @@ func Migrate() {
 		&model.Order{},
 		&model.SystemConfig{},
 		&model.Dispute{},
+		&model.TradingLeaderboardRanking{},
 	); err != nil {
 		log.Fatalf("[PostgreSQL] auto migrate failed: %v\n", err)
 	}

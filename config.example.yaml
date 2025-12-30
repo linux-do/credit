@@ -107,6 +107,7 @@ scheduler:
   dispute_auto_refund_dispatch_interval_seconds: 3
   auto_refund_expired_disputes_task_cron: "0 0 * * *"
   sync_orders_to_clickhouse_task_cron: "10 0 * * *"
+  compute_leaderboard_rankings_task_cron: "*/5 * * * *" # 每5分钟计算排行榜快照
 
 # Worker
 worker:

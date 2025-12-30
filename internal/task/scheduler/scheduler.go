@@ -83,6 +83,18 @@ func StartScheduler() error {
 			return
 		}
 
+		// 排行榜快照计算任务
+		if config.Config.Scheduler.ComputeLeaderboardRankingsTaskCron != "" {
+			if _, err = scheduler.Register(
+				config.Config.Scheduler.ComputeLeaderboardRankingsTaskCron,
+				asynq.NewTask(task.ComputeLeaderboardRankingsTask, nil),
+				asynq.MaxRetry(3),
+				asynq.Unique(5*time.Minute),
+			); err != nil {
+				return
+			}
+		}
+
 		// 启动调度器
 		err = scheduler.Run()
 	})

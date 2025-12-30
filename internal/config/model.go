@@ -145,6 +145,7 @@ type schedulerConfig struct {
 	DisputeAutoRefundDispatchIntervalSeconds int    `mapstructure:"dispute_auto_refund_dispatch_interval_seconds"`
 	AutoRefundExpiredDisputesTaskCron        string `mapstructure:"auto_refund_expired_disputes_task_cron"`
 	SyncOrdersToClickHouseTaskCron           string `mapstructure:"sync_orders_to_clickhouse_task_cron"`
+	ComputeLeaderboardRankingsTaskCron       string `mapstructure:"compute_leaderboard_rankings_task_cron"`
 }
 
 // workerConfig 工作配置
