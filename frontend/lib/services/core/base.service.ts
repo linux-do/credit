@@ -1,16 +1,16 @@
-import apiClient from './api-client';
-import { ApiResponse } from './types';
-import { InternalAxiosRequestConfig } from 'axios';
+import apiClient from "./api-client";
+import { ApiResponse } from "./types";
+import { AxiosRequestConfig } from "axios";
 
 /**
  * 服务基类
  * 提供通用的 HTTP 方法封装
- * 
+ *
  * @example
  * ```typescript
  * class UserService extends BaseService {
  *   protected static readonly basePath = '/api/v1/users';
- *   
+ *
  *   static async getAll() {
  *     return this.get<User[]>('/');
  *   }
@@ -22,7 +22,7 @@ export class BaseService {
    * API 基础路径
    * 子类必须重写此属性
    */
-  protected static readonly basePath: string = '';
+  protected static readonly basePath: string = "";
 
   /**
    * 获取完整的 API 路径
@@ -30,7 +30,7 @@ export class BaseService {
    * @returns 完整路径
    */
   protected static getFullPath(path: string): string {
-    return `${ this.basePath }${ path }`;
+    return `${this.basePath}${path}`;
   }
 
   /**
@@ -44,12 +44,12 @@ export class BaseService {
   protected static async get<T>(
     path: string,
     params?: Record<string, unknown>,
-    config?: InternalAxiosRequestConfig,
+    config?: AxiosRequestConfig,
   ): Promise<T> {
-    const requestConfig: InternalAxiosRequestConfig = {
+    const requestConfig: AxiosRequestConfig = {
       ...config,
       params,
-    } as InternalAxiosRequestConfig;
+    } as AxiosRequestConfig;
     const response = await apiClient.get<ApiResponse<T>>(
       this.getFullPath(path),
       requestConfig,
@@ -68,7 +68,7 @@ export class BaseService {
   protected static async post<T>(
     path: string,
     data?: unknown,
-    config?: InternalAxiosRequestConfig,
+    config?: AxiosRequestConfig,
   ): Promise<T> {
     const response = await apiClient.post<ApiResponse<T>>(
       this.getFullPath(path),
@@ -89,7 +89,7 @@ export class BaseService {
   protected static async put<T>(
     path: string,
     data?: unknown,
-    config?: InternalAxiosRequestConfig,
+    config?: AxiosRequestConfig,
   ): Promise<T> {
     const response = await apiClient.put<ApiResponse<T>>(
       this.getFullPath(path),
@@ -110,7 +110,7 @@ export class BaseService {
   protected static async patch<T>(
     path: string,
     data?: unknown,
-    config?: InternalAxiosRequestConfig,
+    config?: AxiosRequestConfig,
   ): Promise<T> {
     const response = await apiClient.patch<ApiResponse<T>>(
       this.getFullPath(path),
@@ -131,12 +131,12 @@ export class BaseService {
   protected static async delete<T>(
     path: string,
     params?: Record<string, unknown>,
-    config?: InternalAxiosRequestConfig,
+    config?: AxiosRequestConfig,
   ): Promise<T> {
-    const requestConfig: InternalAxiosRequestConfig = {
+    const requestConfig: AxiosRequestConfig = {
       ...config,
       params,
-    } as InternalAxiosRequestConfig;
+    } as AxiosRequestConfig;
     const response = await apiClient.delete<ApiResponse<T>>(
       this.getFullPath(path),
       requestConfig,
@@ -150,18 +150,14 @@ export class BaseService {
    * @param url - 完整 URL
    * @param params - 查询参数
    * @returns 响应数据（不经过 response.data.data 解包）
-   * 
+   *
    * @remarks
    * 仅用于不遵循标准响应格式的特殊端点（如 /api.php）
    */
-  protected static async rawGet<T>(
-    url: string,
-    params?: unknown,
-  ): Promise<T> {
-    const response = await apiClient.get<T>(
-      url,
-      { params } as InternalAxiosRequestConfig,
-    );
+  protected static async rawGet<T>(url: string, params?: unknown): Promise<T> {
+    const response = await apiClient.get<T>(url, {
+      params,
+    } as AxiosRequestConfig);
     return response.data;
   }
 
@@ -171,16 +167,12 @@ export class BaseService {
    * @param url - 完整 URL
    * @param data - 请求数据
    * @returns 响应数据（不经过 response.data.data 解包）
-   * 
+   *
    * @remarks
    * 仅用于不遵循标准响应格式的特殊端点（如 /api.php）
    */
-  protected static async rawPost<T>(
-    url: string,
-    data?: unknown,
-  ): Promise<T> {
+  protected static async rawPost<T>(url: string, data?: unknown): Promise<T> {
     const response = await apiClient.post<T>(url, data);
     return response.data;
   }
 }
-

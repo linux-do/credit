@@ -1,10 +1,12 @@
 "use client";
 
-import { HeroSection } from "@/components/home/hero-section";
-import { StatsSection } from "@/components/home/stats-section";
-import { FeaturesSection } from "@/components/home/features-section";
-import { DeveloperSection } from "@/components/home/developer-section";
-import { FooterSection } from "@/components/home/footer-section";
+import {
+  HeroSection,
+  StatsSection,
+  FeaturesSection,
+  DeveloperSection,
+  FooterSection,
+} from "@/components/home";
 
 export default function HomePage() {
   return (
@@ -15,5 +17,5 @@ export default function HomePage() {
       <DeveloperSection />
       <FooterSection />
     </div>
-  )
+  );
 }
