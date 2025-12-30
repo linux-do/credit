@@ -89,7 +89,10 @@ export function LegalPageLayout({
     }).join("")
   }
 
-  const convertList = (list: HTMLOListElement | HTMLUListElement, indentLevel: number) => {
+  const convertList = (
+    list: HTMLOListElement | HTMLUListElement,
+    indentLevel: number
+  ): string => {
     const isOrdered = list.tagName.toLowerCase() === "ol"
     const items = Array.from(list.children).filter((child) => child.tagName.toLowerCase() === "li")
     return items.map((item, index) => {
@@ -117,7 +120,7 @@ export function LegalPageLayout({
     }).join("\n")
   }
 
-  const convertTable = (table: HTMLTableElement) => {
+  const convertTable = (table: HTMLTableElement): string => {
     const rows = Array.from(table.querySelectorAll("tr")).map((row) =>
       Array.from(row.querySelectorAll("th,td")).map((cell) => (cell.textContent || "").trim())
     )
@@ -130,7 +133,7 @@ export function LegalPageLayout({
     return [headerLine, separatorLine, ...bodyLines].join("\n")
   }
 
-  const convertBlockNode = (node: HTMLElement, indentLevel: number) => {
+  const convertBlockNode = (node: HTMLElement, indentLevel: number): string => {
     const tagName = node.tagName.toLowerCase()
     if (tagName === "h3") return `### ${node.textContent?.trim() || ""}`
     if (tagName === "h4") return `#### ${node.textContent?.trim() || ""}`
@@ -157,7 +160,7 @@ export function LegalPageLayout({
     return convertInlineNodes(Array.from(node.childNodes)).trim()
   }
 
-  const buildMarkdown = () => {
+  const buildMarkdown = (): string => {
     const contentRoot = contentRef.current
     if (!contentRoot) return ""
     const lines: string[] = []
