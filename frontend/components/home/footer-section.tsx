@@ -1,9 +1,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { Github, Twitter, Instagram, Linkedin, Send, LucideIcon } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Github, LucideIcon } from "lucide-react";
 
 export interface FooterSectionProps {
   className?: string;
@@ -31,19 +29,14 @@ export const FooterSection = React.memo(function FooterSection({ className }: Fo
               为社区开发者打造的积分处理与委托认证平台。简单、安全、高效，致力于连接全球价值，赋能每一位社区开发者。
             </p>
             <div className="flex gap-4 pt-2">
-              <SocialLink icon={Github} href="#" />
-              <SocialLink icon={Twitter} href="#" />
-              <SocialLink icon={Instagram} href="#" />
-              <SocialLink icon={Linkedin} href="#" />
+              <SocialLink icon={Github} href="https://github.com/linux-do/credit/" />
             </div>
           </div>
 
           <div className="lg:col-span-2 lg:col-start-6">
             <h3 className="font-semibold text-foreground mb-6">产品</h3>
             <ul className="space-y-4 text-sm text-muted-foreground">
-              <li><FooterLink href="#">功能特性</FooterLink></li>
-              <li><FooterLink href="#">定价方案</FooterLink></li>
-              <li><FooterLink href="#">更新日志</FooterLink></li>
+              <li><FooterLink href="https://github.com/linux-do/credit/commits/master/">更新日志</FooterLink></li>
               <li><FooterLink href="/docs/api">API 文档</FooterLink></li>
             </ul>
           </div>
@@ -58,24 +51,6 @@ export const FooterSection = React.memo(function FooterSection({ className }: Fo
             </ul>
           </div>
 
-          <div className="lg:col-span-3">
-            <h3 className="font-semibold text-foreground mb-6">订阅更新</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              订阅我们的 Newsletter，第一时间获取产品动态和技术干货。
-            </p>
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Input
-                  placeholder="you@example.com"
-                  className="bg-muted/50 border-input pr-10 h-10 rounded-lg focus-visible:ring-primary/20"
-                />
-              </div>
-              <Button size="icon" className="h-10 w-10 shrink-0 rounded-lg">
-                <Send className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-
         </div>
 
         <div className="pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
@@ -83,7 +58,6 @@ export const FooterSection = React.memo(function FooterSection({ className }: Fo
           <div className="flex gap-8">
             <Link href="/docs/privacy-policy" className="hover:text-foreground transition-colors">隐私政策</Link>
             <Link href="/docs/terms-of-service" className="hover:text-foreground transition-colors">服务条款</Link>
-            <Link href="#" className="hover:text-foreground transition-colors">Cookie设置</Link>
           </div>
         </div>
 
