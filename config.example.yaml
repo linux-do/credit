@@ -131,3 +131,7 @@ linuxDo:
 # OpenTelemetry
 otel:
   sampling_rate: 0.1 # 采样率 0.0-1.0
+
+# Leaderboard
+leaderboard:
+  cache_ttl_seconds: 30

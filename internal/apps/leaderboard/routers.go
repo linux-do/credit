@@ -107,12 +107,7 @@ func List(c *gin.Context) {
 // @Success 200 {object} util.ResponseAny
 // @Router /api/v1/leaderboard/me [get]
 func GetMyRank(c *gin.Context) {
-	user, ok := util.GetFromContext[*model.User](c, oauth.UserObjKey)
-	if !ok || user == nil {
-		c.JSON(http.StatusUnauthorized, util.Err("unauthorized"))
-		return
-	}
-
+	user, _ := util.GetFromContext[*model.User](c, oauth.UserObjKey)
 	ctx := c.Request.Context()
 	response, err := getUserRank(ctx, user.ID)
 	if err != nil {

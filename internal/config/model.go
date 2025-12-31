@@ -27,6 +27,7 @@ type configModel struct {
 	ClickHouse clickHouseConfig `mapstructure:"clickhouse"`
 	LinuxDo    linuxDoConfig    `mapstructure:"linuxdo"`
 	Otel       otelConfig       `mapstructure:"otel"`
+	Leaderboard leaderboardConfig `mapstructure:"leaderboard"`
 }
 
 // appConfig 应用基本配置
@@ -145,7 +146,6 @@ type schedulerConfig struct {
 	DisputeAutoRefundDispatchIntervalSeconds int    `mapstructure:"dispute_auto_refund_dispatch_interval_seconds"`
 	AutoRefundExpiredDisputesTaskCron        string `mapstructure:"auto_refund_expired_disputes_task_cron"`
 	SyncOrdersToClickHouseTaskCron           string `mapstructure:"sync_orders_to_clickhouse_task_cron"`
-	ComputeLeaderboardRankingsTaskCron       string `mapstructure:"compute_leaderboard_rankings_task_cron"`
 }
 
 // workerConfig 工作配置
@@ -176,4 +176,9 @@ type linuxDoConfig struct {
 // otelConfig OpenTelemetry 配置
 type otelConfig struct {
 	SamplingRate float64 `mapstructure:"sampling_rate"`
+}
+
+// leaderboardConfig 排行榜配置
+type leaderboardConfig struct {
+	CacheTTLSeconds int `mapstructure:"cache_ttl_seconds"`
 }

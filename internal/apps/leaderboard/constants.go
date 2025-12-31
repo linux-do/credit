@@ -16,13 +16,7 @@ limitations under the License.
 
 package leaderboard
 
-import (
-	"time"
-)
-
 const (
 	cacheKeyPrefix  = "leaderboard:v1:"
-	cacheTTL        = 30 * time.Second
 	defaultPageSize = 50
-	maxPageSize     = 50
 )

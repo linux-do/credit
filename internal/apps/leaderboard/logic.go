@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/linux-do/credit/internal/config"
 	"github.com/linux-do/credit/internal/db"
 	"github.com/linux-do/credit/internal/model"
 	"github.com/shopspring/decimal"
@@ -33,9 +34,6 @@ func getList(ctx context.Context, req *ListRequest) (*ListResponse, error) {
 	}
 	if req.PageSize <= 0 {
 		req.PageSize = defaultPageSize
-	}
-	if req.PageSize > maxPageSize {
-		req.PageSize = maxPageSize
 	}
 
 	// 1. 检查 Redis 缓存
@@ -59,7 +57,7 @@ func getList(ctx context.Context, req *ListRequest) (*ListResponse, error) {
 		Items:    items,
 	}
 
-	_ = setToCache(ctx, cacheKey, response, cacheTTL)
+	_ = setToCache(ctx, cacheKey, response, getCacheTTL())
 	return response, nil
 }
 
@@ -92,8 +90,16 @@ func getUserRank(ctx context.Context, userID uint64) (*UserRankResponse, error) 
 		},
 	}
 
-	_ = setUserToCache(ctx, cacheKey, response, cacheTTL)
+	_ = setUserToCache(ctx, cacheKey, response, getCacheTTL())
 	return response, nil
+}
+
+func getCacheTTL() time.Duration {
+	ttl := config.Config.Leaderboard.CacheTTLSeconds
+	if ttl <= 0 {
+		ttl = 30
+	}
+	return time.Duration(ttl) * time.Second
 }
 
 func getMetadata() *MetadataResponse {
