@@ -782,6 +782,75 @@ paths:
             $ref: '#/definitions/util.ResponseAny'
       tags:
       - health
+  /api/v1/leaderboard:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      summary: 获取排行榜列表
+      tags:
+      - leaderboard
+  /api/v1/leaderboard/me:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      summary: 获取当前用户排名
+      tags:
+      - leaderboard
+  /api/v1/leaderboard/metadata:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      summary: 获取排行榜元数据
+      tags:
+      - leaderboard
+  /api/v1/leaderboard/users/{id}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      summary: 获取指定用户排名
+      tags:
+      - leaderboard
   /api/v1/merchant/api-keys:
     get:
       produces:
