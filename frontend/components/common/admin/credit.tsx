@@ -274,6 +274,7 @@ export function UserPayConfigs() {
     daily_limit: config.daily_limit,
     fee_rate: config.fee_rate.toString(),
     score_rate: config.score_rate.toString(),
+    distribute_rate: config.distribute_rate.toString(),
   })
 
   const handleSave = async (config: UserPayConfig, editData: Partial<UserPayConfig>) => {
@@ -285,6 +286,7 @@ export function UserPayConfigs() {
       daily_limit: editData.daily_limit,
       fee_rate: editData.fee_rate?.toString() ?? config.fee_rate.toString(),
       score_rate: editData.score_rate?.toString() ?? config.score_rate.toString(),
+      distribute_rate: editData.distribute_rate?.toString() ?? config.distribute_rate.toString(),
     })
     await refetchUserPayConfigs()
   }

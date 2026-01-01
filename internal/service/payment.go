@@ -31,6 +31,58 @@ import (
 	"gorm.io/gorm"
 )
 
+// BalanceOperation 余额操作类型
+type BalanceOperation int
+
+const (
+	BalanceAdd BalanceOperation = iota
+	BalanceDeduct
+)
+
+// BalanceUpdateOptions 余额更新选项
+type BalanceUpdateOptions struct {
+	UserID       uint64
+	Amount       decimal.Decimal
+	Operation    BalanceOperation
+	ScoreChange  int64
+	TotalField   string // 累计字段：total_payment / total_receive / total_transfer
+	CheckBalance bool
+}
+
+// UpdateBalance 通用余额更新函数
+func UpdateBalance(tx *gorm.DB, opts BalanceUpdateOptions) error {
+	updates := make(map[string]interface{})
+
+	if opts.Operation == BalanceAdd {
+		updates["available_balance"] = gorm.Expr("available_balance + ?", opts.Amount)
+	} else {
+		updates["available_balance"] = gorm.Expr("available_balance - ?", opts.Amount)
+	}
+
+	if opts.TotalField != "" {
+		updates[opts.TotalField] = gorm.Expr(opts.TotalField+" + ?", opts.Amount)
+	}
+
+	if opts.ScoreChange != 0 {
+		updates["pay_score"] = gorm.Expr("pay_score + ?", opts.ScoreChange)
+	}
+
+	query := tx.Model(&model.User{}).Where("id = ?", opts.UserID)
+	if opts.CheckBalance {
+		query = query.Where("available_balance >= ?", opts.Amount)
+	}
+
+	result := query.UpdateColumns(updates)
+	if result.Error != nil {
+		return result.Error
+	}
+	if opts.CheckBalance && result.RowsAffected == 0 {
+		return errors.New(common.InsufficientBalance)
+	}
+
+	return nil
+}
+
 // CheckDailyLimit 检查用户每日支付限额
 // 返回 nil 表示未超限额，返回 error 表示超限或查询失败
 func CheckDailyLimit(tx *gorm.DB, userID uint64, amount decimal.Decimal, dailyLimit *int64) error {
@@ -45,12 +97,26 @@ func CheckDailyLimit(tx *gorm.DB, userID uint64, amount decimal.Decimal, dailyLi
 		return err
 	}
 
+	todayUsed, err := GetTodayUsedAmount(tx, userID)
+	if err != nil {
+		return err
+	}
+
+	if todayUsed.Add(amount).GreaterThan(decimal.NewFromInt(*dailyLimit)) {
+		return errors.New(common.DailyLimitExceeded)
+	}
+
+	return nil
+}
+
+// GetTodayUsedAmount 获取用户当日已使用的支付额度
+func GetTodayUsedAmount(db *gorm.DB, userID uint64) (decimal.Decimal, error) {
+	now := time.Now()
 	todayStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 	todayEnd := todayStart.Add(24 * time.Hour)
 
-	// 统计当日成功支付的订单总金额
-	var todayTotalAmount decimal.Decimal
-	if err := tx.Model(&model.Order{}).
+	var total decimal.Decimal
+	err := db.Model(&model.Order{}).
 		Where("payer_user_id = ? AND status = ? AND type IN ? AND trade_time >= ? AND trade_time < ?",
 			userID,
 			model.OrderStatusSuccess,
@@ -58,48 +124,9 @@ func CheckDailyLimit(tx *gorm.DB, userID uint64, amount decimal.Decimal, dailyLi
 			todayStart,
 			todayEnd).
 		Select("COALESCE(SUM(amount), 0)").
-		Scan(&todayTotalAmount).Error; err != nil {
-		return err
-	}
+		Scan(&total).Error
 
-	dailyLimitDecimal := decimal.NewFromInt(*dailyLimit)
-	if todayTotalAmount.Add(amount).GreaterThan(dailyLimitDecimal) {
-		return errors.New(common.DailyLimitExceeded)
-	}
-
-	return nil
-}
-
-// DeductUserBalance 扣减用户余额
-// 返回 nil 表示扣减成功，返回 error 表示余额不足或更新失败
-func DeductUserBalance(tx *gorm.DB, userID uint64, amount decimal.Decimal) error {
-	result := tx.Model(&model.User{}).
-		Where("id = ? AND available_balance >= ?", userID, amount).
-		UpdateColumns(map[string]interface{}{
-			"available_balance": gorm.Expr("available_balance - ?", amount),
-			"total_payment":     gorm.Expr("total_payment + ?", amount),
-			"pay_score":         gorm.Expr("pay_score + ?", amount.Round(0).IntPart()),
-		})
-
-	if result.Error != nil {
-		return result.Error
-	}
-	if result.RowsAffected == 0 {
-		return errors.New(common.InsufficientBalance)
-	}
-
-	return nil
-}
-
-// AddMerchantBalance 增加商户余额和积分
-func AddMerchantBalance(tx *gorm.DB, merchantUserID uint64, amount decimal.Decimal, scoreIncrease int64) error {
-	return tx.Model(&model.User{}).
-		Where("id = ?", merchantUserID).
-		UpdateColumns(map[string]interface{}{
-			"available_balance": gorm.Expr("available_balance + ?", amount),
-			"total_receive":     gorm.Expr("total_receive + ?", amount),
-			"pay_score":         gorm.Expr("pay_score + ?", scoreIncrease),
-		}).Error
+	return total, err
 }
 
 // CalculateFee 计算手续费和商户实收金额
@@ -109,28 +136,6 @@ func CalculateFee(amount decimal.Decimal, feeRate decimal.Decimal) (fee decimal.
 	merchantAmount = amount.Sub(fee)
 	feePercent = feeRate.Mul(decimal.NewFromInt(100)).IntPart()
 	return
-}
-
-// GetTodayUsedAmount 获取用户当日已使用的支付额度
-func GetTodayUsedAmount(db *gorm.DB, userID uint64) (decimal.Decimal, error) {
-	now := time.Now()
-	todayStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-	todayEnd := todayStart.Add(24 * time.Hour)
-
-	var todayTotalAmount decimal.Decimal
-	if err := db.Model(&model.Order{}).
-		Where("payer_user_id = ? AND status = ? AND type IN ? AND trade_time >= ? AND trade_time < ?",
-			userID,
-			model.OrderStatusSuccess,
-			[]model.OrderType{model.OrderTypePayment, model.OrderTypeOnline},
-			todayStart,
-			todayEnd).
-		Select("COALESCE(SUM(amount), 0)").
-		Scan(&todayTotalAmount).Error; err != nil {
-		return decimal.Zero, err
-	}
-
-	return todayTotalAmount, nil
 }
 
 // ValidateTestModePayment 验证测试模式下的支付权限

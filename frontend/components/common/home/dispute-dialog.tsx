@@ -36,10 +36,7 @@ export function DisputeDialog({ mode, open, onOpenChange }: DisputeDialogProps) 
   const [disputes, setDisputes] = useState<Order[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [total, setTotal] = useState(0)
 
-  const totalPages = Math.ceil(total / DISPUTE_PAGE_SIZE)
 
   const fetchDisputes = useCallback(async (page: number = 1) => {
     try {
@@ -58,25 +55,42 @@ export function DisputeDialog({ mode, open, onOpenChange }: DisputeDialogProps) 
         })
         filteredOrders = result.orders
       } else {
-        result = await TransactionService.getTransactions({
+        const paymentResult = await TransactionService.getTransactions({
           page,
-          page_size: DISPUTE_PAGE_SIZE,
+          page_size: Math.ceil(DISPUTE_PAGE_SIZE / 2),
           type: 'payment'
         })
 
-        filteredOrders = result.orders.filter((order: Order) =>
+        const onlineResult = await TransactionService.getTransactions({
+          page,
+          page_size: Math.ceil(DISPUTE_PAGE_SIZE / 2),
+          type: 'online'
+        })
+
+        const allOrders = [...paymentResult.orders, ...onlineResult.orders]
+        filteredOrders = allOrders.filter((order: Order) =>
           order.status === 'disputing' || order.status === 'refused' || order.status === 'refund'
         )
+
+        filteredOrders.sort((a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        )
+
+        const startIndex = (page - 1) * DISPUTE_PAGE_SIZE
+        filteredOrders = filteredOrders.slice(startIndex, startIndex + DISPUTE_PAGE_SIZE)
+
+        result = {
+          orders: filteredOrders,
+          total: allOrders.filter((order: Order) =>
+            order.status === 'disputing' || order.status === 'refused' || order.status === 'refund'
+          ).length,
+          page,
+          page_size: DISPUTE_PAGE_SIZE
+        }
       }
 
-      if (page === 1) {
-        setDisputes(filteredOrders)
-      } else {
-        setDisputes(prev => [...prev, ...filteredOrders])
-      }
-
-      setTotal(result.total)
-      setCurrentPage(page)
+      // 总是替换数据，不累加
+      setDisputes(filteredOrders)
     } catch (err) {
       const error = err as Error
       setError(error)
@@ -93,17 +107,9 @@ export function DisputeDialog({ mode, open, onOpenChange }: DisputeDialogProps) 
       fetchDisputes(1)
     } else {
       setDisputes([])
-      setCurrentPage(1)
-      setTotal(0)
       setError(null)
     }
   }, [open, fetchDisputes])
-
-  const handleLoadMore = () => {
-    if (currentPage < totalPages && !loading) {
-      fetchDisputes(currentPage + 1)
-    }
-  }
 
   const handleRetry = () => {
     fetchDisputes(1)
@@ -127,11 +133,7 @@ export function DisputeDialog({ mode, open, onOpenChange }: DisputeDialogProps) 
             loading={loading}
             error={error}
             transactions={disputes}
-            total={total}
-            currentPage={currentPage}
-            totalPages={totalPages}
             onRetry={handleRetry}
-            onLoadMore={handleLoadMore}
             emptyIcon={AlertTriangle}
             emptyDescription={mode === 'pending' ? '暂无待处理的争议' : '暂无您发起的争议'}
           />

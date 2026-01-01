@@ -261,13 +261,22 @@ export function ProfileMain() {
   }, [api])
 
   React.useEffect(() => {
-    if (user && api) {
+    if (!api || levelConfigs.length === 0 || !currentLevel) return
+
+    const scrollToCurrentLevel = () => {
       const currentLevelIndex = levelConfigs.findIndex(
         (config) => config.level === currentLevel.level
       )
-      api.scrollTo(currentLevelIndex, false)
+      if (currentLevelIndex >= 0) {
+        api.scrollTo(currentLevelIndex, true)
+      }
     }
-  }, [user, currentLevel.level, api, levelConfigs])
+    scrollToCurrentLevel()
+    api.on("reInit", scrollToCurrentLevel)
+    return () => {
+      api.off("reInit", scrollToCurrentLevel)
+    }
+  }, [api, currentLevel, levelConfigs])
 
   if (loading) {
     return (
@@ -320,7 +329,11 @@ export function ProfileMain() {
         <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-background to-transparent pointer-events-none z-10" />
         <CarouselContent className="-ml-4">
           {levelConfigs.map((config, index) => (
-            <CarouselItem key={config.level} className="pl-4 basis-[85%] sm:basis-[70%] md:basis-[65%] lg:basis-[50%] xl:basis-[40%] 2xl:basis-[35%]">
+            <CarouselItem 
+              key={config.level} 
+              className="pl-4 basis-[85%] sm:basis-[70%] md:basis-[65%] lg:basis-[50%] xl:basis-[40%] 2xl:basis-[35%] cursor-pointer"
+              onClick={() => api?.scrollTo(index)}
+            >
               <MembershipCard
                 config={config}
                 user={user}

@@ -22,8 +22,8 @@ interface MerchantContextType extends MerchantDataState {
     redirect_uri?: string
     notify_url: string
   }) => Promise<MerchantAPIKey>
-  updateAPIKey: (id: number, data: UpdateAPIKeyRequest) => Promise<void>
-  deleteAPIKey: (id: number) => Promise<void>
+  updateAPIKey: (id: string, data: UpdateAPIKeyRequest) => Promise<void>
+  deleteAPIKey: (id: string) => Promise<void>
   refresh: () => Promise<void>
 }
 
@@ -105,7 +105,7 @@ export function MerchantProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   /** 更新 API Key */
-  const updateAPIKey = useCallback(async (id: number, data: UpdateAPIKeyRequest): Promise<void> => {
+  const updateAPIKey = useCallback(async (id: string, data: UpdateAPIKeyRequest): Promise<void> => {
     await services.merchant.updateAPIKey(id, data)
 
     if (!isMountedRef.current) return
@@ -120,7 +120,7 @@ export function MerchantProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   /** 删除 API Key */
-  const deleteAPIKey = useCallback(async (id: number) => {
+  const deleteAPIKey = useCallback(async (id: string) => {
     await services.merchant.deleteAPIKey(id)
 
     if (!isMountedRef.current) return

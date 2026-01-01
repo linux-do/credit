@@ -43,7 +43,7 @@ export interface UpdateSystemConfigRequest {
  */
 export interface UserPayConfig {
   /** 配置ID */
-  id: number;
+  id: string;
   /** 积分等级 */
   level: PayLevel;
   /** 最低分数 */
@@ -56,6 +56,8 @@ export interface UserPayConfig {
   fee_rate: number | string;
   /** 积分费率（0-1之间的小数，最多2位小数） */
   score_rate: number | string;
+  /** 分发费率（0-1之间的小数，最多2位小数） */
+  distribute_rate: number | string;
   /** 创建时间 */
   created_at: string;
   /** 更新时间 */
@@ -78,6 +80,8 @@ export interface CreateUserPayConfigRequest {
   fee_rate: number | string;
   /** 积分费率（0-1之间的小数，最多2位小数） */
   score_rate: number | string;
+  /** 分发费率（0-1之间的小数，最多2位小数） */
+  distribute_rate: number | string;
 }
 
 /**
@@ -94,6 +98,8 @@ export interface UpdateUserPayConfigRequest {
   fee_rate: number | string;
   /** 积分费率（0-1之间的小数，最多2位小数） */
   score_rate: number | string;
+  /** 分发费率（0-1之间的小数，最多2位小数） */
+  distribute_rate: number | string;
 }
 
 // ==================== 任务管理 ====================
@@ -149,7 +155,7 @@ export interface DispatchTaskRequest {
   /** 结束时间（可选，仅部分任务支持） */
   end_time?: string;
   /** 用户 ID（可选，仅部分任务需要） */
-  user_id?: number;
+  user_id?: string;
 }
 
 // ==================== 用户管理 ====================
@@ -159,7 +165,7 @@ export interface DispatchTaskRequest {
  */
 export interface AdminUser {
   /** 用户 ID */
-  id: number;
+  id: string;
   /** 用户名 */
   username: string;
   /** 昵称 */

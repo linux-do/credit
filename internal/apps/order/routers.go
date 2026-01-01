@@ -30,12 +30,12 @@ import (
 type TransactionListRequest struct {
 	Page          int        `json:"page" form:"page" binding:"min=1"`
 	PageSize      int        `json:"page_size" form:"page_size" binding:"min=1,max=100"`
-	Type          string     `json:"type" form:"type" binding:"omitempty,oneof=receive payment transfer community online test red_envelope_send red_envelope_receive red_envelope_refund"`
+	Type          string     `json:"type" form:"type" binding:"omitempty,oneof=receive payment transfer community online test distribute red_envelope_send red_envelope_receive red_envelope_refund"`
 	Status        string     `json:"status" form:"status" binding:"omitempty,oneof=success pending failed expired disputing refund refused"`
 	ClientID      string     `json:"client_id" form:"client_id" binding:"omitempty"`
 	StartTime     *time.Time `json:"startTime" form:"startTime" binding:"omitempty"`
 	EndTime       *time.Time `json:"endTime" form:"endTime" binding:"omitempty,gtfield=StartTime"`
-	ID            *uint64    `json:"id" form:"id" binding:"omitempty"`
+	ID            *uint64    `json:"id,string" form:"id" binding:"omitempty"`
 	OrderName     string     `json:"order_name" form:"order_name" binding:"omitempty"`
 	PayerUsername string     `json:"payer_username" form:"payer_username" binding:"omitempty"`
 	PayeeUsername string     `json:"payee_username" form:"payee_username" binding:"omitempty"`
@@ -51,9 +51,11 @@ type TransactionListResponse struct {
 		AppHomepageURL string  `json:"app_homepage_url"`
 		AppDescription string  `json:"app_description"`
 		RedirectURI    string  `json:"redirect_uri"`
-		DisputeID      *uint64 `json:"dispute_id"`
+		DisputeID      *uint64 `json:"dispute_id,string"`
 		PayerUsername  string  `json:"payer_username"`
 		PayeeUsername  string  `json:"payee_username"`
+		PayerAvatarURL string  `json:"payer_avatar_url"`
+		PayeeAvatarURL string  `json:"payee_avatar_url"`
 	} `json:"orders"`
 }
 
@@ -74,7 +76,7 @@ func ListTransactions(c *gin.Context) {
 	user, _ := util.GetFromContext[*model.User](c, oauth.UserObjKey)
 
 	baseQuery := db.DB(c.Request.Context()).Model(&model.Order{}).
-		Select("orders.*, merchant_api_keys.app_name, merchant_api_keys.app_homepage_url, merchant_api_keys.app_description, merchant_api_keys.redirect_uri, disputes.id as dispute_id, payer_user.username as payer_username, payee_user.username as payee_username").
+		Select("orders.*, merchant_api_keys.app_name, merchant_api_keys.app_homepage_url, merchant_api_keys.app_description, merchant_api_keys.redirect_uri, disputes.id as dispute_id, payer_user.username as payer_username, payee_user.username as payee_username, payer_user.avatar_url as payer_avatar_url, payee_user.avatar_url as payee_avatar_url").
 		Joins("LEFT JOIN merchant_api_keys ON orders.client_id = merchant_api_keys.client_id").
 		Joins("LEFT JOIN disputes ON orders.id = disputes.order_id").
 		Joins("LEFT JOIN users as payer_user ON orders.payer_user_id = payer_user.id").
@@ -101,26 +103,26 @@ func ListTransactions(c *gin.Context) {
 			// red_envelope_refund 类型：查询当前用户的红包退款订单
 			baseQuery = baseQuery.Where("orders.type = ? AND orders.payee_user_id = ?", orderType, user.ID)
 		case model.OrderTypeOnline:
-				// online 类型：商家可查看自己 client_id 的所有订单，普通用户只能查看与自己相关的订单
-				if req.ClientID != "" {
-					clientIDHandled = true
-					var count int64
-					if err := db.DB(c.Request.Context()).Model(&model.MerchantAPIKey{}).
-						Where("client_id = ? AND user_id = ?", req.ClientID, user.ID).
-						Count(&count).Error; err != nil {
-						c.JSON(http.StatusInternalServerError, util.Err(err.Error()))
-						return
-					}
-					if count > 0 {
-						baseQuery = baseQuery.Where("orders.type = ? AND orders.client_id = ?", orderType, req.ClientID)
-					} else {
-						baseQuery = baseQuery.Where("orders.type = ? AND orders.client_id = ? AND (orders.payer_user_id = ? OR orders.payee_user_id = ?)", orderType, req.ClientID, user.ID, user.ID)
-					}
-				} else {
-					baseQuery = baseQuery.Where("orders.type = ? AND (orders.payer_user_id = ? OR orders.payee_user_id = ?)", orderType, user.ID, user.ID)
+			// online 类型：商家可查看自己 client_id 的所有订单，普通用户只能查看与自己相关的订单
+			if req.ClientID != "" {
+				clientIDHandled = true
+				var count int64
+				if err := db.DB(c.Request.Context()).Model(&model.MerchantAPIKey{}).
+					Where("client_id = ? AND user_id = ?", req.ClientID, user.ID).
+					Count(&count).Error; err != nil {
+					c.JSON(http.StatusInternalServerError, util.Err(err.Error()))
+					return
 				}
-		case model.OrderTypePayment, model.OrderTypeTransfer, model.OrderTypeTest:
-			// payment、transfer 类型：查询当前用户作为付款方的订单
+				if count > 0 {
+					baseQuery = baseQuery.Where("orders.type = ? AND orders.client_id = ?", orderType, req.ClientID)
+				} else {
+					baseQuery = baseQuery.Where("orders.type = ? AND orders.client_id = ? AND (orders.payer_user_id = ? OR orders.payee_user_id = ?)", orderType, req.ClientID, user.ID, user.ID)
+				}
+			} else {
+				baseQuery = baseQuery.Where("orders.type = ? AND (orders.payer_user_id = ? OR orders.payee_user_id = ?)", orderType, user.ID, user.ID)
+			}
+		case model.OrderTypePayment, model.OrderTypeTransfer, model.OrderTypeTest, model.OrderTypeDistribute:
+			// payment、transfer、test、distribute 类型：查询当前用户作为付款方的订单
 			baseQuery = baseQuery.Where("orders.type = ? AND orders.payer_user_id = ?", orderType, user.ID)
 		}
 	} else {

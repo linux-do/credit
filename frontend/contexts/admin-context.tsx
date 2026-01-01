@@ -15,8 +15,8 @@ export interface AdminContextState {
   userPayConfigsLoading: boolean
   userPayConfigsError: Error | null
   refetchUserPayConfigs: () => Promise<void>
-  updateUserPayConfig: (id: number, data: UpdateUserPayConfigRequest) => Promise<void>
-  deleteUserPayConfig: (id: number) => Promise<void>
+  updateUserPayConfig: (id: string, data: UpdateUserPayConfigRequest) => Promise<void>
+  deleteUserPayConfig: (id: string) => Promise<void>
 
   systemConfigs: SystemConfig[]
   systemConfigsLoading: boolean
@@ -80,7 +80,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
 
   /** 更新用户积分配置 */
-  const updateUserPayConfig = useCallback(async (id: number, data: UpdateUserPayConfigRequest) => {
+  const updateUserPayConfig = useCallback(async (id: string, data: UpdateUserPayConfigRequest) => {
     try {
       await services.admin.updateUserPayConfig(id, data)
       await refetchUserPayConfigs()
@@ -91,7 +91,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   }, [refetchUserPayConfigs])
 
   /** 删除用户积分配置 */
-  const deleteUserPayConfig = useCallback(async (id: number) => {
+  const deleteUserPayConfig = useCallback(async (id: string) => {
     await services.admin.deleteUserPayConfig(id)
     await refetchUserPayConfigs()
   }, [refetchUserPayConfigs])

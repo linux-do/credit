@@ -433,7 +433,7 @@ export function PayingNow({
   }
 
   return (
-    <div className={`flex-1 flex flex-col items-center justify-center p-6 relative overflow-hidden bg-white dark:bg-neutral-900 ${ forceMobile ? '' : 'md:p-8' }`}>
+    <div className={`flex-1 flex flex-col items-center justify-center p-6 relative overflow-hidden bg-white dark:bg-neutral-900 transition-colors duration-500 ${ forceMobile ? '' : 'md:p-8' }`}>
       <div className="w-full relative z-10 flex flex-col h-full justify-center">
         <div className="flex-1 flex flex-col justify-center">
           {renderContent()}

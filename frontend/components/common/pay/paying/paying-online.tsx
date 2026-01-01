@@ -121,7 +121,7 @@ export function PayingOnline() {
           redirect_uri: data.redirect_uri || "",
         },
         order: {
-          id: 0,
+          id: '0',
           order_no: `LINK-${ data.id }`,
           order_name: data.product_name,
           payer_username: user?.username || "",
@@ -144,7 +144,7 @@ export function PayingOnline() {
             ...currentUserConfig,
             fee_rate: String(currentUserConfig.fee_rate)
           } : {
-            id: 0,
+            id: '0',
             level: user?.pay_level ?? 0,
             min_score: 0,
             max_score: null,

@@ -19,10 +19,12 @@ interface TransactionContextState {
   error: Error | null
   lastParams: Partial<TransactionQueryParams>
   fetchTransactions: (params: Partial<TransactionQueryParams>) => Promise<void>
-  loadMore: () => Promise<void>
+  goToPage: (page: number) => Promise<void>
+  setPageSize: (size: number) => void
   refresh: () => Promise<void>
+  clearCacheAndRefresh: () => Promise<void>
   reset: () => void
-  updateOrderStatus: (orderId: number, updates: Partial<Pick<Order, 'status' | 'dispute_id'>>) => void
+  updateOrderStatus: (orderId: string, updates: Partial<Pick<Order, 'status' | 'dispute_id'>>) => void
 }
 
 const MAX_CACHE_SIZE = 50
@@ -97,12 +99,13 @@ export function TransactionProvider({ children, defaultParams = {} }: Transactio
     const requestId = ++latestRequestIdRef.current
 
     /** 生成缓存key */
-    const cacheKey = generateTransactionCacheKey(queryParams)
+    const cacheKey = generateTransactionCacheKey(queryParams as Parameters<typeof generateTransactionCacheKey>[0])
 
     const cached = cacheRef.current[cacheKey]
     const now = Date.now()
 
-    if (cached && (now - cached.timestamp) < CACHE_DURATION && queryParams.page === 1) {
+    /** 缓存所有页面，不仅仅第一页 */
+    if (cached && (now - cached.timestamp) < CACHE_DURATION) {
       if (requestId !== latestRequestIdRef.current) {
         return
       }
@@ -121,10 +124,8 @@ export function TransactionProvider({ children, defaultParams = {} }: Transactio
     /** 发起API请求 */
     setLoading(true)
     setError(null)
-    if (queryParams.page === 1) {
-      setTransactions([])
-      setTotal(0)
-    }
+    // 不清空 total，保持显示之前的总数
+    // setTransactions([]) - 也不清空，保持之前的数据直到新数据到达
 
     try {
       const result = await services.transaction.getTransactions(queryParams)
@@ -133,17 +134,16 @@ export function TransactionProvider({ children, defaultParams = {} }: Transactio
         return
       }
 
-      if (queryParams.page === 1) {
-        setTransactions(result.orders)
-        addToCache(cacheKey, {
-          data: result.orders,
-          total: result.total,
-          timestamp: now
-        })
-        cleanExpiredCache()
-      } else {
-        setTransactions(prev => [...prev, ...result.orders])
-      }
+      /** 总是替换数据，不累加 */
+      setTransactions(result.orders)
+
+      /** 缓存所有页的数据 */
+      addToCache(cacheKey, {
+        data: result.orders,
+        total: result.total,
+        timestamp: now
+      })
+      cleanExpiredCache()
 
       setTotal(result.total)
       setCurrentPage(queryParams.page)
@@ -167,31 +167,46 @@ export function TransactionProvider({ children, defaultParams = {} }: Transactio
     }
   }, [pageSize, addToCache, cleanExpiredCache])
 
-  /** 加载更多 */
-  const loadMore = useCallback(async () => {
+  /** 跳转到指定页 */
+  const goToPage = useCallback(async (page: number) => {
     if (loading) return
-
-    const nextPage = currentPage + 1
-    console.log('[TransactionContext] loadMore: nextPage =', nextPage)
     await fetchTransactions({
       ...lastParams,
-      page: nextPage,
+      page,
     })
-  }, [currentPage, fetchTransactions, lastParams, loading])
+  }, [fetchTransactions, lastParams, loading])
 
-  /** 刷新当前页 */
+  /** 设置分页大小 */
+  const setPageSizeHandler = useCallback((size: number) => {
+    setPageSize(size)
+    fetchTransactions({
+      ...lastParams,
+      page: 1,
+      page_size: size,
+    })
+  }, [fetchTransactions, lastParams])
+
   const refresh = useCallback(async () => {
-    const cacheKey = generateTransactionCacheKey({ ...lastParams, page: 1, page_size: pageSize })
+    const cacheKey = generateTransactionCacheKey({ ...lastParams, page: currentPage, page_size: pageSize } as Parameters<typeof generateTransactionCacheKey>[0])
     delete cacheRef.current[cacheKey]
 
     await fetchTransactions({
       ...lastParams,
+      page: currentPage,
+    })
+  }, [fetchTransactions, lastParams, pageSize, currentPage])
+
+  /** 清除所有缓存并刷新 */
+  const clearCacheAndRefresh = useCallback(async () => {
+    cacheRef.current = {}
+    await fetchTransactions({
+      ...lastParams,
       page: 1,
     })
-  }, [fetchTransactions, lastParams, pageSize])
+  }, [fetchTransactions, lastParams])
 
   /** 乐观更新订单状态 */
-  const updateOrderStatus = useCallback((orderId: number, updates: Partial<Pick<Order, 'status' | 'dispute_id'>>) => {
+  const updateOrderStatus = useCallback((orderId: string, updates: Partial<Pick<Order, 'status' | 'dispute_id'>>) => {
     setTransactions(prev =>
       prev.map(order =>
         order.id === orderId
@@ -225,8 +240,10 @@ export function TransactionProvider({ children, defaultParams = {} }: Transactio
     error,
     lastParams,
     fetchTransactions,
-    loadMore,
+    goToPage,
+    setPageSize: setPageSizeHandler,
     refresh,
+    clearCacheAndRefresh,
     reset,
     updateOrderStatus,
   }

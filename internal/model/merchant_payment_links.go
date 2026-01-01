@@ -25,8 +25,8 @@ import (
 )
 
 type MerchantPaymentLink struct {
-	ID               uint64          `json:"id" gorm:"primaryKey"`
-	MerchantAPIKeyID uint64          `json:"merchant_api_key_id" gorm:"not null;index"`
+	ID               uint64          `json:"id,string" gorm:"primaryKey"`
+	MerchantAPIKeyID uint64          `json:"merchant_api_key_id,string" gorm:"not null;index"`
 	Token            string          `json:"token" gorm:"size:64;uniqueIndex;not null"`
 	Amount           decimal.Decimal `json:"amount" gorm:"type:numeric(20,2);not null"`
 	ProductName      string          `json:"product_name" gorm:"size:30;not null"`

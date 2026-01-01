@@ -37,7 +37,7 @@ type ListDisputesRequest struct {
 	Page      int     `json:"page" form:"page" binding:"min=1"`
 	PageSize  int     `json:"page_size" form:"page_size" binding:"min=1,max=100"`
 	Status    string  `json:"status" form:"status" binding:"omitempty,oneof=disputing refund closed"`
-	DisputeID *uint64 `json:"dispute_id" form:"dispute_id" binding:"omitempty"`
+	DisputeID *uint64 `json:"dispute_id,string" form:"dispute_id" binding:"omitempty"`
 }
 
 // ListDisputesResponse 查询争议列表响应
@@ -159,7 +159,7 @@ func ListMerchantDisputes(c *gin.Context) {
 
 // CreateDisputeRequest 发起争议请求
 type CreateDisputeRequest struct {
-	OrderID uint64 `json:"order_id" binding:"required"`
+	OrderID uint64 `json:"order_id,string" binding:"required"`
 	Reason  string `json:"reason" binding:"required,max=100"`
 }
 
@@ -197,7 +197,7 @@ func CreateDispute(c *gin.Context) {
 		func(tx *gorm.DB) error {
 			var order model.Order
 			if err := tx.Clauses(clause.Locking{Strength: "UPDATE", Options: "NOWAIT"}).
-				Where("id = ? AND payer_user_id = ? AND status = ? AND type = ?", req.OrderID, user.ID, model.OrderStatusSuccess, model.OrderTypePayment).
+				Where("id = ? AND payer_user_id = ? AND status = ? AND type IN ?", req.OrderID, user.ID, model.OrderStatusSuccess, []model.OrderType{model.OrderTypePayment, model.OrderTypeOnline}).
 				First(&order).Error; err != nil {
 				if errors.Is(err, gorm.ErrRecordNotFound) {
 					return errors.New(OrderNotFoundForDispute)
@@ -242,7 +242,7 @@ func CreateDispute(c *gin.Context) {
 
 // RefundReviewRequest 退款审核请求
 type RefundReviewRequest struct {
-	DisputeID uint64 `json:"dispute_id" binding:"required"`
+	DisputeID uint64 `json:"dispute_id,string" binding:"required"`
 	Status    string `json:"status" binding:"required,oneof=refund closed"`
 	Reason    string `json:"reason" binding:"omitempty,max=100"`
 }
@@ -283,7 +283,7 @@ func RefundReview(c *gin.Context) {
 
 			var order model.Order
 			if err := tx.Clauses(clause.Locking{Strength: "UPDATE", Options: "NOWAIT"}).
-				Where("id = ? AND payee_user_id = ? AND status = ? AND type = ?", dispute.OrderID, merchantUser.ID, model.OrderStatusDisputing, model.OrderTypePayment).
+				Where("id = ? AND payee_user_id = ? AND status = ? AND type IN ?", dispute.OrderID, merchantUser.ID, model.OrderStatusDisputing, []model.OrderType{model.OrderTypePayment, model.OrderTypeOnline}).
 				First(&order).Error; err != nil {
 				if errors.Is(err, gorm.ErrRecordNotFound) {
 					return errors.New(NotOrderMerchant)
@@ -375,7 +375,7 @@ func RefundReview(c *gin.Context) {
 
 // CloseDisputeRequest 关闭争议请求
 type CloseDisputeRequest struct {
-	DisputeID uint64 `json:"dispute_id" binding:"required"`
+	DisputeID uint64 `json:"dispute_id,string" binding:"required"`
 }
 
 // CloseDispute 用户主动关闭争议（只能由发起者关闭）
@@ -408,7 +408,7 @@ func CloseDispute(c *gin.Context) {
 
 			var order model.Order
 			if err := tx.Clauses(clause.Locking{Strength: "UPDATE", Options: "NOWAIT"}).
-				Where("id = ? AND status = ? AND type = ?", dispute.OrderID, model.OrderStatusDisputing, model.OrderTypePayment).
+				Where("id = ? AND status = ? AND type IN ?", dispute.OrderID, model.OrderStatusDisputing, []model.OrderType{model.OrderTypePayment, model.OrderTypeOnline}).
 				First(&order).Error; err != nil {
 				if errors.Is(err, gorm.ErrRecordNotFound) {
 					return errors.New(OrderNotFoundForDispute)

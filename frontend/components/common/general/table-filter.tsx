@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Filter, CalendarIcon, X, Search } from "lucide-react"
+import { Filter, CalendarIcon, X, Search, ChevronLeft, ChevronRight, ChevronDown, Loader2 } from "lucide-react"
 import { zhCN } from "date-fns/locale"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -24,7 +24,8 @@ export const typeConfig: Record<OrderType, { label: string; color: string }> = {
   transfer: { label: '积分转移', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' },
   community: { label: '社区划转', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300' },
   online: { label: '在线活动', color: 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-300' },
-  test: { label: '测试', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300 font-bold' },
+  distribute: { label: '商户分发', color: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300' },
+  test: { label: '应用测试', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300 font-bold' },
   red_envelope_send: { label: '红包支出', color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' },
   red_envelope_receive: { label: '红包收入', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' }
 }
@@ -137,6 +138,17 @@ export interface TableFilterProps {
   // 其他选项
   showClearButton?: boolean
   onClearAll?: () => void
+
+  // 分页控制（可选）
+  enablePagination?: boolean
+  currentPage?: number
+  totalPages?: number
+  pageSize?: number
+  total?: number
+  onPageChange?: (page: number) => void
+  onPageSizeChange?: (size: number) => void
+  onRefresh?: () => void
+  loading?: boolean
 }
 
 /**
@@ -157,6 +169,15 @@ export function TableFilter({
   onSearch,
   showClearButton = true,
   onClearAll,
+  enablePagination = false,
+  currentPage = 1,
+  totalPages = 1,
+  pageSize = 20,
+  total = 0,
+  onPageChange,
+  onPageSizeChange,
+  onRefresh,
+  loading = false,
 }: TableFilterProps) {
   /* 通用切换筛选函数 */
   const handleToggle = <T extends string>(
@@ -186,7 +207,7 @@ export function TableFilter({
   const hasActiveFilters = selectedTypes.length > 0 || selectedStatuses.length > 0 || selectedTimeRange !== null || Object.values(searchValues).some(v => v)
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
       <div className="flex items-center gap-2 flex-wrap">
         {enabledFilters.search && (
           <SearchFilter
@@ -239,6 +260,74 @@ export function TableFilter({
           </>
         )}
       </div>
+
+      {enablePagination && onPageChange && onPageSizeChange && (
+        <Separator className="lg:hidden" />
+      )}
+
+      {enablePagination && onPageChange && onPageSizeChange && (
+        <div className="flex items-center gap-1.5 self-end lg:self-auto">
+          <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+            {total} 条记录
+          </span>
+          <div className="flex items-center border border-dashed rounded-md shadow-none">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-5.5 w-6 rounded-none rounded-l-md disabled:opacity-30"
+              onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+              disabled={currentPage <= 1 || loading}
+            >
+              <ChevronLeft className="size-3" />
+            </Button>
+            <span className="text-[10px] font-mono text-muted-foreground px-2 border-x border-dashed">
+              {currentPage}/{totalPages}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-5.5 w-6 rounded-none rounded-r-md disabled:opacity-30"
+              onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage >= totalPages || loading}
+            >
+              <ChevronRight className="size-3" />
+            </Button>
+          </div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-6 border-dashed text-[10px] px-2 font-mono shadow-none" disabled={loading}>
+                {pageSize}条/页
+                <ChevronDown className="size-3 opacity-50" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {[20, 50, 100].map(size => (
+                <DropdownMenuItem
+                  key={size}
+                  onClick={() => onPageSizeChange(size)}
+                  className={cn("font-mono text-xs", pageSize === size && "bg-accent")}
+                >
+                  {size}条/页
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {onRefresh && (
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-6 w-6 border-dashed shadow-none"
+              onClick={onRefresh}
+              disabled={loading}
+              title="刷新数据"
+            >
+              <Loader2 className={cn("size-3", loading && "animate-spin")} />
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   )
 }
@@ -419,7 +508,6 @@ function SearchFilter({
   const [localValues, setLocalValues] = React.useState<SearchValues>(values || {})
   const [isOpen, setIsOpen] = React.useState(false)
 
-  // 当外部 values 更新时，同步到本地
   React.useEffect(() => {
     setLocalValues(values || {})
   }, [values, isOpen])
@@ -457,7 +545,7 @@ function SearchFilter({
             hasSearchValues && "bg-primary/5 border-primary/20"
           )}
         >
-          <Search className="size-3 mr-1" />
+          <Search className="size-3" />
           搜索
           {hasSearchValues && (
             <>

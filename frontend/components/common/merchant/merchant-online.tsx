@@ -108,11 +108,7 @@ function MerchantOnlineContent({ apiKeys }: MerchantOnlineContentProps) {
     transactions,
     loading: loadingTransactions,
     error: transactionsError,
-    total,
-    currentPage,
-    totalPages,
     fetchTransactions,
-    loadMore,
     refresh
   } = useTransaction()
 
@@ -120,7 +116,7 @@ function MerchantOnlineContent({ apiKeys }: MerchantOnlineContentProps) {
   const apiKeyId = searchParams.get("apiKeyId")
 
   /* 处理集市应用切换 */
-  const handleMerchantSelect = useCallback((id: number) => {
+  const handleMerchantSelect = useCallback((id: string) => {
     const params = new URLSearchParams(searchParams.toString())
     params.set("apiKeyId", id.toString())
     router.push(`${ window.location.pathname }?${ params.toString() }`)
@@ -358,7 +354,7 @@ function MerchantOnlineContent({ apiKeys }: MerchantOnlineContentProps) {
       redirect_uri: "",
     },
     order: {
-      id: 0,
+      id: '0',
       order_no: previewLink ? `LINK-${ previewLink.id }` : "PREVIEW",
       order_name: isCreating ? (productName || "服务名称") : (previewLink?.product_name || "服务名称"),
       payer_username: "user",
@@ -379,7 +375,7 @@ function MerchantOnlineContent({ apiKeys }: MerchantOnlineContentProps) {
       ...currentUserConfig,
       fee_rate: String(currentUserConfig.fee_rate)
     } : {
-      id: 0,
+      id: '0',
       level: user?.pay_level ?? 0,
       min_score: 0,
       max_score: null,
@@ -502,11 +498,7 @@ function MerchantOnlineContent({ apiKeys }: MerchantOnlineContentProps) {
                   loading={loadingTransactions}
                   error={transactionsError}
                   transactions={transactions}
-                  total={total}
-                  currentPage={currentPage}
-                  totalPages={totalPages}
                   onRetry={refresh}
-                  onLoadMore={loadMore}
                   emptyDescription="暂无在线流转服务数据"
                 />
               </div>
@@ -584,8 +576,8 @@ function MerchantOnlineContent({ apiKeys }: MerchantOnlineContentProps) {
                       )}
                     </AnimatePresence>
 
-                    <div className={`h-full w-full overflow-y-auto custom-scrollbar flex items-center justify-center p-4 ${ previewTheme === 'dark' ? 'dark bg-zinc-900' : 'bg-white' }`}>
-                      <div className={`flex ${ previewDevice === 'mobile' ? 'flex-col' : 'flex-row' } w-full max-w-4xl backdrop-blur-2xl border rounded-3xl overflow-hidden shadow-2xl relative shrink-0 ${ previewTheme === 'dark' ? 'bg-card/70 border-border/50' : 'bg-white border-gray-200' }`}>
+                    <div className={`h-full w-full overflow-y-auto custom-scrollbar flex items-center justify-center p-4 transition-colors duration-500 ${ previewTheme === 'dark' ? 'dark bg-zinc-900' : 'bg-white' }`}>
+                      <div className={`flex ${ previewDevice === 'mobile' ? 'flex-col' : 'flex-row' } w-full max-w-4xl backdrop-blur-2xl border rounded-3xl overflow-hidden shadow-2xl relative shrink-0 transition-colors duration-500 ${ previewTheme === 'dark' ? 'bg-card/70 border-border/50' : 'bg-white border-gray-200' }`}>
                         <PayingInfo orderInfo={previewOrderInfo} loading={loading} forceMobile={previewDevice === 'mobile'} />
                         <PayingNow orderInfo={previewOrderInfo} paying={false} payKey="" currentStep="method" selectedMethod="alipay" isOpen={false} loading={false} onPayKeyChange={() => { }} onCurrentStepChange={() => { }} onSelectedMethodChange={() => { }} onIsOpenChange={() => { }} onPayOrder={() => { }} forceMobile={previewDevice === 'mobile'} />
                         <div className="absolute inset-0 z-50 bg-transparent cursor-default" />

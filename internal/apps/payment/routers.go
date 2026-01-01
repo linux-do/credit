@@ -65,7 +65,7 @@ type GetOrderResponse struct {
 
 // TransferRequest 转账请求
 type TransferRequest struct {
-	RecipientID       uint64          `json:"recipient_id" binding:"required"`
+	RecipientID       uint64          `json:"recipient_id,string" binding:"required"`
 	RecipientUsername string          `json:"recipient_username" binding:"required"`
 	Amount            decimal.Decimal `json:"amount" binding:"required"`
 	PayKey            string          `json:"pay_key" binding:"required,max=6"`
@@ -261,7 +261,7 @@ func RefundMerchantOrder(c *gin.Context) {
 	if err := db.DB(c.Request.Context()).Transaction(func(tx *gorm.DB) error {
 		var order model.Order
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
-			Where("id = ? AND client_id = ? AND status = ? AND amount = ?", req.TradeNo, req.ClientID, model.OrderStatusSuccess, req.Amount).
+			Where("id = ? AND client_id = ? AND status = ? AND amount = ? AND type IN ?", req.TradeNo, req.ClientID, model.OrderStatusSuccess, req.Amount, []model.OrderType{model.OrderTypePayment, model.OrderTypeOnline}).
 			First(&order).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return errors.New(OrderNotFound)
@@ -321,6 +321,131 @@ func RefundMerchantOrder(c *gin.Context) {
 		"code": 1,
 		"msg":  "退款成功",
 	})
+}
+
+// MerchantDistributeRequest 商户分发请求
+type MerchantDistributeRequest struct {
+	RecipientID       uint64          `json:"user_id" binding:"required"`
+	RecipientUsername string          `json:"username" binding:"required"`
+	Amount            decimal.Decimal `json:"amount" binding:"required"`
+	MerchantOrderNo   string          `json:"out_trade_no" binding:"max=64"`
+	Remark            string          `json:"remark" binding:"max=100"`
+}
+
+// MerchantDistribute 商户分发接口（商户向用户分发）
+// @Tags payment
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Basic Auth (base64(client_id:client_secret))"
+// @Param request body MerchantDistributeRequest true "分发请求"
+// @Success 200 {object} util.ResponseAny
+// @Router /pay/distribute [post]
+func MerchantDistribute(c *gin.Context) {
+	var req MerchantDistributeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, util.Err(err.Error()))
+		return
+	}
+
+	if err := util.ValidateAmount(req.Amount); err != nil {
+		c.JSON(http.StatusBadRequest, util.Err(err.Error()))
+		return
+	}
+
+	apiKey, _ := util.GetFromContext[*model.MerchantAPIKey](c, APIKeyObjKey)
+
+	var orderID uint64
+
+	if err := db.DB(c.Request.Context()).Transaction(func(tx *gorm.DB) error {
+		// 验证收款人是否存在且用户名匹配
+		var recipient model.User
+		if err := tx.Where("id = ? AND username = ?", req.RecipientID, req.RecipientUsername).First(&recipient).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return errors.New(RecipientNotFound)
+			}
+			return err
+		}
+
+		// 获取商户用户信息
+		var merchantUser model.User
+		if err := tx.Where("id = ? AND is_active = ?", apiKey.UserID, true).
+			First(&merchantUser).Error; err != nil {
+			return errors.New(MerchantInfoNotFound)
+		}
+
+		// 不能分发给自己
+		if recipient.ID == merchantUser.ID {
+			return errors.New(CannotTransferToSelf)
+		}
+
+		// 获取商户支付配置（用于计算分发费率和分数）
+		var merchantPayConfig model.UserPayConfig
+		if err := merchantPayConfig.GetByPayScore(tx, merchantUser.PayScore); err != nil {
+			return errors.New(PayConfigNotFound)
+		}
+
+		_, recipientAmount, distributePercent := service.CalculateFee(req.Amount, merchantPayConfig.DistributeRate)
+		merchantScore := req.Amount.Mul(merchantPayConfig.ScoreRate).Round(0).IntPart()
+
+		order := model.Order{
+			OrderName:       "商户分发",
+			ClientID:        apiKey.ClientID,
+			MerchantOrderNo: req.MerchantOrderNo,
+			PayerUserID:     merchantUser.ID,
+			PayeeUserID:     recipient.ID,
+			Amount:          req.Amount,
+			Status:          model.OrderStatusSuccess,
+			Type:            model.OrderTypeDistribute,
+			Remark:          req.Remark,
+			TradeTime:       time.Now(),
+			ExpiresAt:       time.Now().Add(24 * time.Hour),
+		}
+
+		distributeRemark := fmt.Sprintf("[系统]: 分发费率%d%%", distributePercent)
+		if order.Remark != "" {
+			order.Remark = order.Remark + " " + distributeRemark
+		} else {
+			order.Remark = distributeRemark
+		}
+
+		if err := tx.Create(&order).Error; err != nil {
+			return err
+		}
+		orderID = order.ID
+
+		// 扣减商户余额，同时增加平台分数
+		if err := service.UpdateBalance(tx, service.BalanceUpdateOptions{
+			UserID:       merchantUser.ID,
+			Amount:       req.Amount,
+			Operation:    service.BalanceDeduct,
+			ScoreChange:  merchantScore,
+			TotalField:   "total_payment",
+			CheckBalance: true,
+		}); err != nil {
+			return err
+		}
+
+		// 增加收款人余额（按分发费率计算后的金额）
+		if err := service.UpdateBalance(tx, service.BalanceUpdateOptions{
+			UserID:       recipient.ID,
+			Amount:       recipientAmount,
+			Operation:    service.BalanceAdd,
+			TotalField:   "total_receive",
+			CheckBalance: false,
+		}); err != nil {
+			return err
+		}
+
+		return nil
+	}); err != nil {
+		c.JSON(http.StatusBadRequest, util.Err(err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, util.OK(gin.H{
+		"trade_no":     strconv.FormatUint(orderID, 10),
+		"out_trade_no": req.MerchantOrderNo,
+	}))
 }
 
 // GetPaymentPageDetails 查询支付订单信息接口（用于收银台页面）
@@ -450,12 +575,26 @@ func PayMerchantOrder(c *gin.Context) {
 
 			// 非测试模式：扣减用户余额和增加商户余额
 			if !isTestMode {
-				if err := service.DeductUserBalance(tx, orderCtx.CurrentUser.ID, order.Amount); err != nil {
+				if err := service.UpdateBalance(tx, service.BalanceUpdateOptions{
+					UserID:       orderCtx.CurrentUser.ID,
+					Amount:       order.Amount,
+					Operation:    service.BalanceDeduct,
+					ScoreChange:  order.Amount.Round(0).IntPart(),
+					TotalField:   "total_payment",
+					CheckBalance: true,
+				}); err != nil {
 					return err
 				}
 
 				merchantScoreIncrease := order.Amount.Mul(orderCtx.MerchantPayConfig.ScoreRate).Round(0).IntPart()
-				if err := service.AddMerchantBalance(tx, orderCtx.MerchantUser.ID, merchantAmount, merchantScoreIncrease); err != nil {
+				if err := service.UpdateBalance(tx, service.BalanceUpdateOptions{
+					UserID:       orderCtx.MerchantUser.ID,
+					Amount:       merchantAmount,
+					Operation:    service.BalanceAdd,
+					ScoreChange:  merchantScoreIncrease,
+					TotalField:   "total_receive",
+					CheckBalance: false,
+				}); err != nil {
 					return err
 				}
 			}

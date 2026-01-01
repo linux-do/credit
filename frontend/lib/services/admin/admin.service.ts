@@ -190,7 +190,7 @@ export class AdminService extends BaseService {
    * console.log('手续费率:', config.fee_rate);
    * ```
    */
-  static async getUserPayConfig(id: number): Promise<UserPayConfig> {
+  static async getUserPayConfig(id: string): Promise<UserPayConfig> {
     return this.get<UserPayConfig>(`/user-pay-configs/${ id }`);
   }
 
@@ -220,7 +220,7 @@ export class AdminService extends BaseService {
    * - fee_rate 必须在 0-1 之间，最多2位小数
    */
   static async updateUserPayConfig(
-    id: number,
+    id: string,
     request: UpdateUserPayConfigRequest,
   ): Promise<void> {
     return this.put<void>(`/user-pay-configs/${ id }`, request);
@@ -239,7 +239,7 @@ export class AdminService extends BaseService {
    * await AdminService.deleteUserPayConfig(123);
    * ```
    */
-  static async deleteUserPayConfig(id: number): Promise<void> {
+  static async deleteUserPayConfig(id: string): Promise<void> {
     return this.delete<void>(`/user-pay-configs/${ id }`);
   }
 
@@ -362,7 +362,7 @@ export class AdminService extends BaseService {
    * - 不能禁用管理员用户
    */
   static async updateUserStatus(
-    id: number,
+    id: string,
     request: UpdateUserStatusRequest
   ): Promise<void> {
     return this.put<void>(`/users/${ id }/status`, request);

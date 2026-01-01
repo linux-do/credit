@@ -52,7 +52,7 @@ export function FireworksEffect() {
       const y = canvas.height
 
       const targetY = canvas.height * 0.2 + Math.random() * (canvas.height * 0.5)
-      const speed = 12 + Math.random() * 8
+      const speed = 8 + Math.random() * 5
 
       fireworks.push({
         x,
@@ -81,7 +81,7 @@ export function FireworksEffect() {
           vy: Math.sin(angle) * speed,
           alpha: 1,
           color: color,
-          decay: Math.random() * 0.015 + 0.01
+          decay: Math.random() * 0.01 + 0.005
         })
       }
       return particles
@@ -96,7 +96,7 @@ export function FireworksEffect() {
 
       ctx.globalCompositeOperation = "lighter"
 
-      if (Math.random() < 0.05) {
+      if (Math.random() < 0.04) {
         createFirework()
       }
 

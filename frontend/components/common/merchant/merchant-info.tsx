@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { MerchantDialog } from "@/components/common/merchant/merchant-dialog"
 import { TestModeToggle } from "@/components/common/merchant/merchant-test"
+import { DistributeDialog } from "@/components/common/merchant/merchant-distribute"
 import { formatDateTime } from "@/lib/utils"
 import { type UpdateAPIKeyRequest, type MerchantAPIKey } from "@/lib/services"
 
@@ -26,9 +27,9 @@ interface MerchantInfoProps {
   /** 更新回调 */
   onUpdate?: (updatedKey: MerchantAPIKey) => void
   /** 删除回调 */
-  onDelete: (id: number) => void
+  onDelete: (id: string) => void
   /** 更新 API Key */
-  updateAPIKey?: (id: number, data: UpdateAPIKeyRequest) => Promise<void>
+  updateAPIKey?: (id: string, data: UpdateAPIKeyRequest) => Promise<void>
 }
 
 /**
@@ -220,6 +221,8 @@ export function MerchantInfo({ apiKey, onUpdate, onDelete, updateAPIKey }: Merch
             }
           />
 
+          <DistributeDialog />
+
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="outline" className="text-xs text-destructive h-8 border-dashed border-destructive/50 hover:bg-destructive/5 w-full">
@@ -248,13 +251,11 @@ export function MerchantInfo({ apiKey, onUpdate, onDelete, updateAPIKey }: Merch
             </AlertDialogContent>
           </AlertDialog>
 
-          <div className="col-span-2">
-            <TestModeToggle
-              apiKey={apiKey}
-              onUpdate={onUpdate}
-              updateAPIKey={updateAPIKey}
-            />
-          </div>
+          <TestModeToggle
+            apiKey={apiKey}
+            onUpdate={onUpdate}
+            updateAPIKey={updateAPIKey}
+          />
         </div>
       </div>
     </div>

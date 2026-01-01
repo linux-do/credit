@@ -6,9 +6,9 @@ interface MerchantSelectorProps {
   /** API Keys 列表 */
   apiKeys: MerchantAPIKey[]
   /** 选中的 API Key */
-  selectedKeyId: number | null
+  selectedKeyId: string | null
   /** 选择回调 */
-  onSelect: (id: number) => void
+  onSelect: (id: string) => void
   /** 是否正在加载 */
   loading?: boolean
 }
@@ -25,8 +25,8 @@ export function MerchantSelector({
 }: MerchantSelectorProps) {
   return (
     <Select
-      value={selectedKeyId?.toString()}
-      onValueChange={(value) => onSelect(Number(value))}
+      value={selectedKeyId || ''}
+      onValueChange={(value) => onSelect(value)}
       disabled={loading || apiKeys.length === 0}
     >
       <SelectTrigger className="w-fit h-8 text-xs" size="sm">
@@ -36,7 +36,7 @@ export function MerchantSelector({
         {apiKeys.map((apiKey) => (
           <SelectItem
             key={apiKey.id}
-            value={apiKey.id.toString()}
+            value={apiKey.id}
             title={apiKey.app_description ? `${ apiKey.app_name } - ${ apiKey.app_description }` : apiKey.app_name}
           >
             <div className="flex items-center gap-2 text-xs">

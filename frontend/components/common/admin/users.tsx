@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Sheet, SheetTitle, SheetContent } from "@/components/ui/sheet"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Layers, Search, UserX, UserCheck, Eye, Wallet, CreditCard, ShieldCheck, Filter, X, ChevronDown, ChevronLeft, ChevronRight, Users, RefreshCcw } from "lucide-react"
+import { Layers, Search, UserX, UserCheck, Eye, Wallet, CreditCard, ShieldCheck, Filter, X, ChevronDown, ChevronLeft, ChevronRight, Users, Loader2 } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 import { AdminUser, AdminService, DispatchTaskRequest } from "@/lib/services"
@@ -41,7 +41,7 @@ export function UsersManager() {
 
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
-  const [updatingUserId, setUpdatingUserId] = useState<number | null>(null)
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null)
 
   useEffect(() => {
     fetchUsers()
@@ -83,39 +83,54 @@ export function UsersManager() {
   const totalPages = Math.ceil(total / pageSize)
 
   const renderFilterBar = () => (
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
       <div className="flex items-center gap-2 flex-wrap">
-        <div className="relative">
-          <Button
-            variant="outline"
-            size="sm"
-            className={cn(
-              "h-6 border-dashed text-[10px] font-medium shadow-none focus-visible:ring-0 px-2",
-              searchUsername && "bg-primary/5 border-primary/20"
-            )}
-            onClick={() => document.getElementById('user-search-input')?.focus()}
-          >
-            <Search className="size-3 mr-1" />
-            <input
-              id="user-search-input"
-              className="bg-transparent border-none outline-none w-20 sm:w-32 placeholder:text-muted-foreground"
-              placeholder="搜索用户..."
-              value={searchUsername}
-              onChange={(e) => setSearchUsername(e.target.value)}
-            />
-            {searchUsername && (
-              <>
-                <Separator orientation="vertical" className="mx-1 h-3" />
-                <Badge
-                  variant="secondary"
-                  className="text-[10px] h-3 px-1 rounded-full bg-primary text-primary-foreground pointer-events-none"
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className={cn(
+                "h-5 border-dashed text-[10px] font-medium shadow-none focus-visible:ring-0",
+                searchUsername && "bg-primary/5 border-primary/20"
+              )}
+            >
+              <Search className="size-3 mr-1" />
+              搜索
+              {searchUsername && (
+                <>
+                  <Separator orientation="vertical" className="mx-1" />
+                  <Badge
+                    variant="secondary"
+                    className="text-[10px] h-3 px-1 rounded-full bg-primary text-primary-foreground"
+                  >
+                    !
+                  </Badge>
+                </>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-[200px] p-3" align="start">
+            <div className="space-y-2">
+              <input
+                className="w-full h-8 px-2 text-xs border border-dashed rounded-md outline-none focus:border-primary bg-background"
+                placeholder="输入用户名搜索..."
+                value={searchUsername}
+                onChange={(e) => setSearchUsername(e.target.value)}
+              />
+              {searchUsername && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full h-6 text-xs"
+                  onClick={() => setSearchUsername("")}
                 >
-                  !
-                </Badge>
-              </>
-            )}
-          </Button>
-        </div>
+                  清除
+                </Button>
+              )}
+            </div>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -123,11 +138,11 @@ export function UsersManager() {
               variant="outline"
               size="sm"
               className={cn(
-                "h-6 border-dashed text-[10px] font-medium shadow-none focus-visible:ring-0",
+                "h-5 border-dashed text-[10px] font-medium shadow-none focus-visible:ring-0",
                 statusFilter !== 'all' && "bg-primary/5 border-primary/20"
               )}
             >
-              <Filter className="size-3 mr-1" />
+              <Filter className="size-3" />
               状态
               {statusFilter !== 'all' && (
                 <>
@@ -142,67 +157,87 @@ export function UsersManager() {
               )}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
+          <DropdownMenuContent className="w-[120px]" align="start">
             <DropdownMenuItem
-              className={cn("text-xs", statusFilter === 'all' && "bg-accent")}
-              onClick={() => setStatusFilter('all')}
+              onSelect={(e) => { e.preventDefault(); setStatusFilter('all') }}
             >
-              全部状态
+              <div className={cn(
+                "mr-2 flex size-3 items-center justify-center rounded-sm border border-primary",
+                statusFilter === 'all'
+                  ? "bg-primary text-primary-foreground"
+                  : "opacity-50"
+              )} />
+              <span className="text-xs">全部状态</span>
             </DropdownMenuItem>
             <DropdownMenuItem
-              className={cn("text-xs h-6", statusFilter === 'active' && "bg-accent")}
-              onClick={() => setStatusFilter('active')}
+              onSelect={(e) => { e.preventDefault(); setStatusFilter('active') }}
             >
-              <div className="w-2 h-2 rounded-full bg-green-500 mr-2" />
-              正常
+              <div className={cn(
+                "mr-2 flex size-3 items-center justify-center rounded-sm border border-primary",
+                statusFilter === 'active'
+                  ? "bg-primary text-primary-foreground"
+                  : "opacity-50"
+              )} />
+              <span className="text-xs">正常</span>
             </DropdownMenuItem>
             <DropdownMenuItem
-              className={cn("text-xs h-6 mt-1", statusFilter === 'inactive' && "bg-accent")}
-              onClick={() => setStatusFilter('inactive')}
+              onSelect={(e) => { e.preventDefault(); setStatusFilter('inactive') }}
             >
-              <div className="w-2 h-2 rounded-full bg-red-500 mr-2" />
-              禁用
+              <div className={cn(
+                "mr-2 flex size-3 items-center justify-center rounded-sm border border-primary",
+                statusFilter === 'inactive'
+                  ? "bg-primary text-primary-foreground"
+                  : "opacity-50"
+              )} />
+              <span className="text-xs">禁用</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
         {(searchUsername || statusFilter !== 'all') && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setSearchUsername("")
-              setStatusFilter('all')
-            }}
-            className="h-6 px-2 lg:px-3 text-[11px] font-medium text-muted-foreground hover:text-foreground"
-          >
-            <X className="size-3 mr-1" />
-            清空
-          </Button>
+          <>
+            <Separator orientation="vertical" className="h-6 hidden sm:block" />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSearchUsername("")
+                setStatusFilter('all')
+              }}
+              className="h-5 px-2 lg:px-3 text-[11px] font-medium text-muted-foreground hover:text-foreground"
+            >
+              <X className="size-3" />
+              清空筛选
+            </Button>
+          </>
         )}
       </div>
 
-      <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1 mr-1">
-          <span className="text-[10px] text-muted-foreground mr-1">共 {total} 条</span>
+      <Separator className="lg:hidden" />
+
+      <div className="flex items-center gap-1.5 self-end lg:self-auto">
+        <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+          {total} 条记录
+        </span>
+        <div className="flex items-center border border-dashed rounded-md shadow-none">
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon"
-            className="h-6 w-6 disabled:opacity-30 border-dashed shadow-none"
+            className="h-5.5 w-6 rounded-none rounded-l-md disabled:opacity-30"
             onClick={() => setPage(Math.max(1, page - 1))}
-            disabled={page <= 1}
+            disabled={page <= 1 || loading}
           >
             <ChevronLeft className="size-3" />
           </Button>
-          <span className="text-[10px] font-mono text-muted-foreground mx-1">
-            {page} / {totalPages}
+          <span className="text-[10px] font-mono text-muted-foreground px-2 border-x border-dashed">
+            {page}/{totalPages}
           </span>
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon"
-            className="h-6 w-6 disabled:opacity-30 border-dashed shadow-none"
+            className="h-5.5 w-6 rounded-none rounded-r-md disabled:opacity-30"
             onClick={() => setPage(Math.min(totalPages, page + 1))}
-            disabled={page >= totalPages}
+            disabled={page >= totalPages || loading}
           >
             <ChevronRight className="size-3" />
           </Button>
@@ -210,8 +245,8 @@ export function UsersManager() {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="h-6 border-dashed text-[10px] px-2 font-mono shadow-none">
-              {pageSize} 条/页
+            <Button variant="outline" size="sm" className="h-6 border-dashed text-[10px] px-2 font-mono shadow-none" disabled={loading}>
+              {pageSize}条/页
               <ChevronDown className="size-3 opacity-50" />
             </Button>
           </DropdownMenuTrigger>
@@ -220,13 +255,24 @@ export function UsersManager() {
               <DropdownMenuItem
                 key={size}
                 onClick={() => setPageSize(size)}
-                className={cn("font-mono text-xs mb-1", pageSize === size && "bg-accent")}
+                className={cn("font-mono text-xs", pageSize === size && "bg-accent")}
               >
-                {size} 条/页
+                {size}条/页
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-6 w-6 border-dashed shadow-none"
+          onClick={() => fetchUsers(true)}
+          disabled={loading}
+          title="刷新数据"
+        >
+          <Loader2 className={cn("size-3", loading && "animate-spin")} />
+        </Button>
       </div>
     </div>
   )
@@ -359,7 +405,7 @@ export function UsersManager() {
                               onClick={() => handleUpdateCredits(user)}
                               disabled={updatingUserId === user.id}
                             >
-                              <RefreshCcw className={cn("size-3", updatingUserId === user.id && "animate-spin")} />
+                              <Loader2 className={cn("size-3", updatingUserId === user.id && "animate-spin")} />
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent side="top" className="text-xs">

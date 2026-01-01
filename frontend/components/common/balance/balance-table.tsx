@@ -118,14 +118,10 @@ export function BalanceTable() {
 const TransactionList = React.memo(function TransactionList({ type }: { type?: OrderType }) {
   const {
     transactions,
-    total,
-    currentPage,
-    totalPages,
     loading,
     error,
     lastParams,
     fetchTransactions,
-    loadMore,
   } = useTransaction()
 
   /** 当积分余额活动类型变化时重新加载数据 */
@@ -144,11 +140,7 @@ const TransactionList = React.memo(function TransactionList({ type }: { type?: O
       loading={loading}
       error={error}
       transactions={transactions}
-      total={total}
-      currentPage={currentPage}
-      totalPages={totalPages}
       onRetry={() => fetchTransactions({ page: 1 })}
-      onLoadMore={loadMore}
     />
   )
 })

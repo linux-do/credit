@@ -72,7 +72,7 @@ export function MerchantData({ apiKey }: MerchantDataProps) {
  */
 function MerchantDataContent({ apiKey }: MerchantDataProps) {
   const router = useRouter()
-  const { transactions, total, currentPage, totalPages, loading, error, fetchTransactions, loadMore } = useTransaction()
+  const { transactions, total, currentPage, totalPages, pageSize, loading, error, fetchTransactions, goToPage, setPageSize: setPageSizeHandler } = useTransaction()
 
   const [selectedTypes, setSelectedTypes] = React.useState<OrderType[]>([])
   const [selectedStatuses, setSelectedStatuses] = React.useState<OrderStatus[]>([])
@@ -101,7 +101,7 @@ function MerchantDataContent({ apiKey }: MerchantDataProps) {
         return formatLocalDate(endDate)
       })() : undefined,
       client_id: apiKey.client_id,
-      id: selectedSearch.id ? parseInt(selectedSearch.id) : undefined,
+      id: selectedSearch.id || undefined,
       order_name: selectedSearch.order_name || undefined,
       payer_username: selectedSearch.payer_username || undefined,
       payee_username: selectedSearch.payee_username || undefined,
@@ -167,17 +167,21 @@ function MerchantDataContent({ apiKey }: MerchantDataProps) {
             onSearch={setSelectedSearch}
             searchValues={selectedSearch}
             onClearAll={clearAllFilters}
+            enablePagination={true}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            total={total}
+            onPageChange={goToPage}
+            onPageSizeChange={setPageSizeHandler}
+            loading={loading}
           />
 
           <TransactionTableList
             loading={loading}
             error={error}
             transactions={transactions}
-            total={total}
-            currentPage={currentPage}
-            totalPages={totalPages}
             onRetry={() => fetchTransactions({ page: 1, client_id: apiKey.client_id })}
-            onLoadMore={loadMore}
             emptyDescription="未发现积分活动记录"
           />
         </div>

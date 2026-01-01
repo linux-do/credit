@@ -24,7 +24,7 @@ interface MerchantDialogProps {
   /** 自定义创建函数 */
   createAPIKey?: (data: CreateAPIKeyRequest) => Promise<MerchantAPIKey>
   /** 更新函数 */
-  updateAPIKey?: (id: number, data: UpdateAPIKeyRequest) => Promise<void>
+  updateAPIKey?: (id: string, data: UpdateAPIKeyRequest) => Promise<void>
 }
 
 /**

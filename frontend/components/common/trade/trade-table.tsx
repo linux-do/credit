@@ -47,10 +47,13 @@ function TransactionList({ initialType }: { initialType?: OrderType }) {
     total,
     currentPage,
     totalPages,
+    pageSize,
     loading,
     error,
     fetchTransactions,
-    loadMore,
+    goToPage,
+    setPageSize: setPageSizeHandler,
+    clearCacheAndRefresh,
   } = useTransaction()
 
   const [selectedTypes, setSelectedTypes] = React.useState<OrderType[]>(initialType ? [initialType] : [])
@@ -71,7 +74,7 @@ function TransactionList({ initialType }: { initialType?: OrderType }) {
     /* 重新获取数据 */
     fetchTransactions({
       page: 1,
-      page_size: 20,
+      page_size: pageSize,
       type: initialType,
       startTime: formatLocalDate(from),
       endTime: formatLocalDate(tomorrow),
@@ -82,7 +85,7 @@ function TransactionList({ initialType }: { initialType?: OrderType }) {
   React.useEffect(() => {
     const params: TransactionQueryParams = {
       page: 1,
-      page_size: 20,
+      page_size: pageSize,
       type: selectedTypes.length > 0 ? selectedTypes[0] : undefined,
       status: selectedStatuses.length > 0 ? selectedStatuses[0] : undefined,
       startTime: dateRange ? formatLocalDate(dateRange.from) : undefined,
@@ -91,14 +94,14 @@ function TransactionList({ initialType }: { initialType?: OrderType }) {
         endDate.setDate(endDate.getDate() + 1)
         return formatLocalDate(endDate)
       })() : undefined,
-      id: selectedSearch.id ? parseInt(selectedSearch.id) : undefined,
+      id: selectedSearch.id || undefined,
       order_name: selectedSearch.order_name || undefined,
       payer_username: selectedSearch.payer_username || undefined,
       payee_username: selectedSearch.payee_username || undefined,
     }
 
     fetchTransactions(params)
-  }, [fetchTransactions, dateRange, selectedTypes, selectedStatuses, selectedSearch])
+  }, [fetchTransactions, dateRange, selectedTypes, selectedStatuses, selectedSearch, pageSize])
 
   /* 当initialType改变时，更新筛选状态 */
   React.useEffect(() => {
@@ -129,17 +132,22 @@ function TransactionList({ initialType }: { initialType?: OrderType }) {
         onSearch={setSelectedSearch}
         searchValues={selectedSearch}
         onClearAll={clearAllFilters}
+        enablePagination={true}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        pageSize={pageSize}
+        total={total}
+        onPageChange={goToPage}
+        onPageSizeChange={setPageSizeHandler}
+        onRefresh={clearCacheAndRefresh}
+        loading={loading}
       />
 
       <TransactionTableList
         loading={loading}
         error={error}
         transactions={transactions}
-        total={total}
-        currentPage={currentPage}
-        totalPages={totalPages}
         onRetry={() => fetchTransactions({ page: 1 })}
-        onLoadMore={loadMore}
       />
     </div>
   )

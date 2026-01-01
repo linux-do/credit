@@ -30,21 +30,23 @@ import (
 
 // CreateUserPayConfigRequest 创建支付配置请求
 type CreateUserPayConfigRequest struct {
-	Level      model.PayLevel  `json:"level"`
-	MinScore   int64           `json:"min_score" binding:"min=0"`
-	MaxScore   *int64          `json:"max_score" binding:"omitempty,gtfield=MinScore"`
-	DailyLimit *int64          `json:"daily_limit"`
-	FeeRate    decimal.Decimal `json:"fee_rate" binding:"required"`
-	ScoreRate  decimal.Decimal `json:"score_rate" binding:"required"`
+	Level          model.PayLevel  `json:"level"`
+	MinScore       int64           `json:"min_score" binding:"min=0"`
+	MaxScore       *int64          `json:"max_score" binding:"omitempty,gtfield=MinScore"`
+	DailyLimit     *int64          `json:"daily_limit"`
+	FeeRate        decimal.Decimal `json:"fee_rate" binding:"required"`
+	ScoreRate      decimal.Decimal `json:"score_rate" binding:"required"`
+	DistributeRate decimal.Decimal `json:"distribute_rate" binding:"required"`
 }
 
 // UpdateUserPayConfigRequest 更新支付配置请求
 type UpdateUserPayConfigRequest struct {
-	MinScore   int64           `json:"min_score" binding:"min=0"`
-	MaxScore   *int64          `json:"max_score" binding:"omitempty,gtfield=MinScore"`
-	DailyLimit *int64          `json:"daily_limit"`
-	FeeRate    decimal.Decimal `json:"fee_rate" binding:"required"`
-	ScoreRate  decimal.Decimal `json:"score_rate" binding:"required"`
+	MinScore       int64           `json:"min_score" binding:"min=0"`
+	MaxScore       *int64          `json:"max_score" binding:"omitempty,gtfield=MinScore"`
+	DailyLimit     *int64          `json:"daily_limit"`
+	FeeRate        decimal.Decimal `json:"fee_rate" binding:"required"`
+	ScoreRate      decimal.Decimal `json:"score_rate" binding:"required"`
+	DistributeRate decimal.Decimal `json:"distribute_rate" binding:"required"`
 }
 
 // CreateUserPayConfig 创建支付配置
@@ -62,7 +64,7 @@ func CreateUserPayConfig(c *gin.Context) {
 	}
 
 	// 验证费率和积分倍率
-	if err := util.ValidateRates(req.FeeRate, req.ScoreRate); err != nil {
+	if err := util.ValidateRates(req.FeeRate, req.ScoreRate, req.DistributeRate); err != nil {
 		c.JSON(http.StatusBadRequest, util.Err(err.Error()))
 		return
 	}
@@ -78,12 +80,13 @@ func CreateUserPayConfig(c *gin.Context) {
 	}
 
 	config := model.UserPayConfig{
-		Level:      req.Level,
-		MinScore:   req.MinScore,
-		MaxScore:   req.MaxScore,
-		DailyLimit: req.DailyLimit,
-		FeeRate:    req.FeeRate,
-		ScoreRate:  req.ScoreRate,
+		Level:          req.Level,
+		MinScore:       req.MinScore,
+		MaxScore:       req.MaxScore,
+		DailyLimit:     req.DailyLimit,
+		FeeRate:        req.FeeRate,
+		ScoreRate:      req.ScoreRate,
+		DistributeRate: req.DistributeRate,
 	}
 
 	if err := db.DB(c.Request.Context()).Create(&config).Error; err != nil {
@@ -167,11 +170,12 @@ func UpdateUserPayConfig(c *gin.Context) {
 	if err := db.DB(c.Request.Context()).
 		Model(&config).
 		Updates(map[string]interface{}{
-			"min_score":   req.MinScore,
-			"max_score":   req.MaxScore,
-			"fee_rate":    req.FeeRate,
-			"score_rate":  req.ScoreRate,
-			"daily_limit": req.DailyLimit,
+			"min_score":       req.MinScore,
+			"max_score":       req.MaxScore,
+			"fee_rate":        req.FeeRate,
+			"score_rate":      req.ScoreRate,
+			"daily_limit":     req.DailyLimit,
+			"distribute_rate": req.DistributeRate,
 		}).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, util.Err(err.Error()))
 		return

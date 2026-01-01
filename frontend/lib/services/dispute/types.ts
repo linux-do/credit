@@ -8,9 +8,9 @@ export type DisputeStatus = 'disputing' | 'refund' | 'closed';
  */
 export interface Dispute {
   /** 争议 ID */
-  id: number;
+  id: string;
   /** 订单 ID */
-  order_id: number;
+  order_id: string;
   /** 发起者用户 ID */
   initiator_user_id: number;
   /** 争议原因 */
@@ -52,7 +52,7 @@ export interface ListDisputesRequest {
   /** 状态筛选（可选） */
   status?: DisputeStatus;
   /** 争议 ID（可选） */
-  dispute_id?: number;
+  dispute_id?: string;
 }
 
 /**
@@ -74,7 +74,7 @@ export interface ListDisputesResponse {
  */
 export interface RefundReviewRequest {
   /** 争议 ID */
-  dispute_id: number;
+  dispute_id: string;
   /** 审核结果 */
   status: 'refund' | 'closed';
   /** 拒绝原因（status 为 closed 时必填，最大 100 字符） */
@@ -86,7 +86,7 @@ export interface RefundReviewRequest {
  */
 export interface CloseDisputeRequest {
   /** 争议 ID */
-  dispute_id: number;
+  dispute_id: string;
 }
 
 /**
@@ -94,7 +94,7 @@ export interface CloseDisputeRequest {
  */
 export interface CreateDisputeRequest {
   /** 订单 ID */
-  order_id: number;
+  order_id: string;
   /** 争议原因（最大 100 字符） */
   reason: string;
 }

@@ -41,7 +41,7 @@ export const DecorationThemes: Record<string, AvatarDecorationTheme> = {
 }
 
 /* 可选值: 'christmas', 'newyear', 'none' */
-export const CURRENT_THEME_KEY: string = "none"
+export const CURRENT_THEME_KEY: string = "newyear"
 
 export const getCurrentTheme = (): AvatarDecorationTheme => {
   return DecorationThemes[CURRENT_THEME_KEY] || DecorationThemes.none

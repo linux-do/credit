@@ -47,6 +47,7 @@ const PAGE_COMPONENTS: Record<TabValue, React.ComponentType> = {
   transfer: Transfer,
   community: Community,
   online: Online,
+  distribute: () => null,
   test: () => null,
   red_envelope_send: RedEnvelope,
   red_envelope_receive: RedEnvelope,

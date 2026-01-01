@@ -180,7 +180,7 @@ export function TaskManager() {
       }
 
       if (targetTask?.type === 'user_gamification') {
-        if (userId) params.user_id = parseInt(userId)
+        if (userId) params.user_id = userId
       }
 
       await AdminService.dispatchTask(params)

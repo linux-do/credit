@@ -15,7 +15,7 @@ export interface FooterSectionProps {
  */
 export const FooterSection = React.memo(function FooterSection({ className }: FooterSectionProps) {
   return (
-    <footer className={cn("relative z-10 w-full bg-transparent border-t border-white/10 mt-0 backdrop-blur-sm", className)}>
+    <footer className={cn("relative z-10 w-full bg-transparent border-t border-white/10 mt-0 backdrop-blur-sm snap-start", className)}>
       <div className="container mx-auto max-w-7xl px-6 py-20 lg:py-32">
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-8 mb-20">

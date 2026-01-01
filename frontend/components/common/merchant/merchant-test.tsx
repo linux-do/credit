@@ -25,7 +25,7 @@ interface TestModeToggleProps {
   /** 更新回调 */
   onUpdate?: (updatedKey: MerchantAPIKey) => void
   /** 更新 API Key */
-  updateAPIKey?: (id: number, data: UpdateAPIKeyRequest) => Promise<void>
+  updateAPIKey?: (id: string, data: UpdateAPIKeyRequest) => Promise<void>
 }
 
 /**
@@ -96,7 +96,7 @@ export function TestModeToggle({ apiKey, onUpdate, updateAPIKey }: TestModeToggl
           ) : (
             <PowerOff className="size-3 mr-1" />
           )}
-          {apiKey.test_mode ? "关闭测试模式" : "开启测试模式"}
+          {apiKey.test_mode ? "关闭测试" : "开启测试"}
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>

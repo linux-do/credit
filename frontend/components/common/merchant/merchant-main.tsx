@@ -20,7 +20,7 @@ import { useMerchant } from "@/contexts/merchant-context"
  */
 export function MerchantMain() {
   const { apiKeys, loading, error, loadAPIKeys, createAPIKey, updateAPIKey, deleteAPIKey } = useMerchant()
-  const [selectedKeyId, setSelectedKeyId] = useState<number | null>(null)
+  const [selectedKeyId, setSelectedKeyId] = useState<string | null>(null)
 
   const selectedKey = apiKeys.find(key => key.id === selectedKeyId) || null
 
@@ -42,7 +42,7 @@ export function MerchantMain() {
   }
 
   /* 删除成功回调 */
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     try {
       await deleteAPIKey(id)
       toast.success('删除成功')

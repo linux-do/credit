@@ -113,6 +113,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   } = currentTheme
 
   const [showEffect, setShowEffect] = React.useState(false)
+  const [userMenuOpen, setUserMenuOpen] = React.useState(false)
+  const userMenuLastToggle = React.useRef(0)
+
+  const handleUserMenuOpenChange = React.useCallback((open: boolean) => {
+    const now = Date.now()
+    if (now - userMenuLastToggle.current < 65) return
+    userMenuLastToggle.current = now
+    setUserMenuOpen(open)
+  }, [])
 
   const handleCloseSidebar = React.useCallback(() => {
     if (isMobile) {
@@ -155,7 +164,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </Button>
 
         <SidebarHeader className="py-4 md:-ml-2">
-          <DropdownMenu>
+          <DropdownMenu open={userMenuOpen} onOpenChange={handleUserMenuOpenChange}>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"

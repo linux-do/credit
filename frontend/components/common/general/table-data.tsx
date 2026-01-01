@@ -1,12 +1,10 @@
 import * as React from "react"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { typeConfig, statusConfig } from "@/components/common/general/table-filter"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
-import { Spinner } from "@/components/ui/spinner"
 import { ErrorInline } from "@/components/layout/error"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { EmptyStateWithBorder } from "@/components/layout/empty"
@@ -75,7 +73,10 @@ export const TransactionDataTable = React.memo(function TransactionDataTable({
               <TableHead className="sticky right-0 whitespace-nowrap text-center bg-background shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] w-[150px] z-40">操作</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody className="animate-in fade-in duration-200">
+          <TableBody
+            key={transactions[0]?.id}
+            className="animate-in fade-in duration-200 [will-change:transform,opacity]"
+          >
             {paddingTop > 0 && (
               <tr style={{ height: `${ paddingTop }px` }}>
                 <td colSpan={13} />
@@ -165,14 +166,14 @@ const TransactionTableRow = React.memo(React.forwardRef<HTMLTableRowElement, {
               <TooltipTrigger asChild>
                 <div className="flex items-center cursor-pointer gap-1 justify-center">
                   <Avatar className="h-4 w-4">
-                    <AvatarImage src={undefined} />
+                    <AvatarImage src={order.payer_avatar_url || undefined} />
                     <AvatarFallback className="text-[9px] bg-primary text-primary-foreground">
                       {order.payer_username.substring(0, 1).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div className="text-xs font-bold">⭢</div>
                   <Avatar className="h-4 w-4">
-                    <AvatarImage src={undefined} />
+                    <AvatarImage src={order.payee_avatar_url || undefined} />
                     <AvatarFallback className="text-[9px] bg-primary text-primary-foreground">
                       {order.payee_username.substring(0, 1).toUpperCase()}
                     </AvatarFallback>
@@ -228,18 +229,18 @@ const TransactionTableRow = React.memo(React.forwardRef<HTMLTableRowElement, {
       `}>
         <OrderDetailDialog order={order} />
 
-        {/* 场景1：付款方对成功的订单发起争议 */}
-        {order.type === 'payment' && order.status === 'success' && (
+        {/* 场景1：付款方对成功的订单发起争议 (支持 payment 和 online 类型) */}
+        {(order.type === 'payment' || order.type === 'online') && order.status === 'success' && (
           <CreateDisputeDialog order={order} />
         )}
 
-        {/* 场景2：付款方取消正在进行的争议 */}
-        {order.type === 'payment' && order.status === 'disputing' && (
+        {/* 场景2：付款方取消正在进行的争议 (支持 payment 和 online 类型) */}
+        {(order.type === 'payment' || order.type === 'online') && order.status === 'disputing' && (
           <CancelDisputeDialog order={order} />
         )}
 
-        {/* 场景3：付款方查看被拒绝的争议记录 */}
-        {order.type === 'payment' && order.status === 'refused' && (
+        {/* 场景3：付款方查看被拒绝的争议记录 (支持 payment 和 online 类型) */}
+        {(order.type === 'payment' || order.type === 'online') && order.status === 'refused' && (
           <ViewDisputeHistoryDialog order={order} />
         )}
 
@@ -256,28 +257,20 @@ interface TransactionTableListProps {
   loading: boolean
   error: Error | null
   transactions: Order[]
-  total: number
-  currentPage: number
-  totalPages: number
   onRetry: () => void
-  onLoadMore: () => void
   emptyIcon?: LucideIcon
   emptyDescription?: string
 }
 
 /**
  * 交易列表容器组件
- * 统一处理加载、错误、空状态和分页加载
+ * 统一处理加载、错误、空状态
  */
 export const TransactionTableList = React.memo(function TransactionTableList({
   loading,
   error,
   transactions,
-  total,
-  currentPage,
-  totalPages,
   onRetry,
-  onLoadMore,
   emptyIcon = Layers,
   emptyDescription = "未发现积分活动"
 }: TransactionTableListProps) {
@@ -311,21 +304,7 @@ export const TransactionTableList = React.memo(function TransactionTableList({
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <TransactionDataTable transactions={transactions} />
-
-      {currentPage < totalPages && (
-        <Button
-          variant="outline"
-          onClick={onLoadMore}
-          disabled={loading}
-          className="w-full text-xs border-dashed shadow-none"
-        >
-          {loading ? (<><Spinner className="size-4" />正在加载</>) : (`加载更多 (${ transactions.length }/${ total })`)}
-        </Button>
-      )}
-
-    </div>
+    <TransactionDataTable transactions={transactions} />
   )
 })
 
