@@ -290,7 +290,21 @@ function IncomeStatsCard() {
     try {
       setLoading(true)
       const data = await DashboardService.getDailyStats(days)
-      setStats(data)
+      //setStats(data)
+      const newStats: DailyStatsItem[] = []
+      data.forEach((stat, i) => {
+        let income = parseFloat(stat.income || "0");
+        if (income < 0) {
+          income = 0;
+        }
+        newStats[i] = {
+          date: stat.date,
+          income: String(income),
+          expense: stat.expense
+        }
+  });
+
+  setStats(newStats);
     } catch (error) {
       console.error('Failed to fetch daily stats:', error)
     } finally {
@@ -389,7 +403,22 @@ function ExpenseStatsCard() {
     try {
       setLoading(true)
       const data = await DashboardService.getDailyStats(days)
-      setStats(data)
+      //setStats(data)
+      const newStats: DailyStatsItem[] = []
+      data.forEach((stat, i) => {
+        let income = parseFloat(stat.income || '0');
+        let expense = parseFloat(stat.expense || '0');
+        if (income < 0) {
+          expense = expense - income;
+          income = 0;
+        } 
+        newStats[i] = {
+          date: stat.date,
+          income: String(income),
+          expense: String(expense),
+        }
+      })
+      setStats(newStats);
     } catch (error) {
       console.error('Failed to fetch daily stats:', error)
     } finally {
