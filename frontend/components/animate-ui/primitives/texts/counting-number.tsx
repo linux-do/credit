@@ -98,7 +98,7 @@ function CountingNumber({
       }
     });
     return () => unsubscribe();
-  }, [springVal, decimals, padStart, number, decimalSeparator, localRef]);
+  }, [springVal, decimals, padStart, number, decimalSeparator, localRef, thousandSeparator]);
 
   const finalIntLength = Math.floor(Math.abs(number)).toString().length;
 
