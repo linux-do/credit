@@ -92,6 +92,11 @@ func initSystemConfigs() {
 			Value:       "30",
 			Description: "新用户保护期天数，期内积分下降不扣分",
 		},
+		{
+			Key:         model.ConfigKeyLeaderboardCacheTTLSeconds,
+			Value:       "30",
+			Description: "排行榜缓存过期时间（秒）",
+		},
 	}
 
 	if err := tx.Create(&defaultConfigs).Error; err != nil {

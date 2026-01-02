@@ -36,6 +36,7 @@ const (
 	ConfigKeyDisputeTimeWindowHours     = "dispute_time_window_hours"     // 商家争议时间窗口（小时）
 	ConfigKeyNewUserInitialCredit       = "new_user_initial_credit"       // 新用户注册初始积分
 	ConfigKeyNewUserProtectionDays      = "new_user_protection_days"      // 新用户保护期天数（期内不扣分）
+	ConfigKeyLeaderboardCacheTTLSeconds = "leaderboard_cache_ttl_seconds" // 排行榜缓存过期时间（秒）
 )
 
 const (
