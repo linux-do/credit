@@ -1315,6 +1315,129 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/redenvelope/claim": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "redenvelope"
+                ],
+                "parameters": [
+                    {
+                        "description": "领取红包请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/redenvelope.ClaimRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/util.ResponseAny"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/redenvelope/create": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "redenvelope"
+                ],
+                "parameters": [
+                    {
+                        "description": "创建红包请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/redenvelope.CreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/util.ResponseAny"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/redenvelope/list": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "redenvelope"
+                ],
+                "parameters": [
+                    {
+                        "description": "列表请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/redenvelope.ListRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/util.ResponseAny"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/redenvelope/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "redenvelope"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "红包ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/util.ResponseAny"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/user/pay-key": {
             "put": {
                 "consumes": [
@@ -1624,6 +1747,17 @@ const docTemplate = `{
                 "PayLevelPremium"
             ]
         },
+        "model.RedEnvelopeType": {
+            "type": "string",
+            "enum": [
+                "fixed",
+                "random"
+            ],
+            "x-enum-varnames": [
+                "RedEnvelopeTypeFixed",
+                "RedEnvelopeTypeRandom"
+            ]
+        },
         "oauth.CallbackRequest": {
             "type": "object",
             "properties": {
@@ -1690,7 +1824,10 @@ const docTemplate = `{
                         "community",
                         "online",
                         "test",
-                        "distribute"
+                        "distribute",
+                        "red_envelope_send",
+                        "red_envelope_receive",
+                        "red_envelope_refund"
                     ]
                 }
             }
@@ -1878,6 +2015,80 @@ const docTemplate = `{
                 "remark": {
                     "type": "string",
                     "maxLength": 100
+                }
+            }
+        },
+        "redenvelope.ClaimRequest": {
+            "type": "object",
+            "required": [
+                "id"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "example": "0"
+                }
+            }
+        },
+        "redenvelope.CreateRequest": {
+            "type": "object",
+            "required": [
+                "pay_key",
+                "total_amount",
+                "total_count",
+                "type"
+            ],
+            "properties": {
+                "greeting": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "pay_key": {
+                    "type": "string",
+                    "maxLength": 10
+                },
+                "total_amount": {
+                    "type": "number"
+                },
+                "total_count": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "type": {
+                    "enum": [
+                        "fixed",
+                        "random"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.RedEnvelopeType"
+                        }
+                    ]
+                }
+            }
+        },
+        "redenvelope.ListRequest": {
+            "type": "object",
+            "required": [
+                "page",
+                "page_size"
+            ],
+            "properties": {
+                "page": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "page_size": {
+                    "type": "integer",
+                    "maximum": 100,
+                    "minimum": 1
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "sent",
+                        "received"
+                    ]
                 }
             }
         },

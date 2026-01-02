@@ -41,21 +41,31 @@ type dailyAmountResult struct {
 // queryDailyAmounts 查询每日金额
 // isIncome: true=收入(payee), false=支出(payer)
 func queryDailyAmounts(ctx context.Context, userID uint64, isIncome bool, startDate, endDate time.Time) (map[string]decimal.Decimal, error) {
-	var userIDField string
-	if isIncome {
-		userIDField = "payee_user_id"
-	} else {
-		userIDField = "payer_user_id"
-	}
-
 	var results []dailyAmountResult
-	err := db.DB(ctx).Model(&model.Order{}).
-		Select("DATE_TRUNC('day', created_at) as date, SUM(amount) as amount").
-		Where(userIDField+" = ?", userID).
-		Where("status = ?", model.OrderStatusSuccess).
-		Where("created_at >= ? AND created_at < ?", startDate, endDate).
-		Group("DATE_TRUNC('day', created_at)").
-		Scan(&results).Error
+	var err error
+
+	if isIncome {
+		// 收入查询：payee_user_id = user
+		// 包括：普通收款、红包领取(red_envelope_receive)、红包退款(red_envelope_refund)
+		err = db.DB(ctx).Model(&model.Order{}).
+			Select("DATE_TRUNC('day', created_at) as date, SUM(amount) as amount").
+			Where("payee_user_id = ?", userID).
+			Where("status = ?", model.OrderStatusSuccess).
+			Where("created_at >= ? AND created_at < ?", startDate, endDate).
+			Group("DATE_TRUNC('day', created_at)").
+			Scan(&results).Error
+	} else {
+		// 支出查询：payer_user_id = user，但排除 red_envelope_receive
+		// red_envelope_receive 的 payer_user_id 是红包创建者，但创建者的支出已在 red_envelope_send 时计算
+		err = db.DB(ctx).Model(&model.Order{}).
+			Select("DATE_TRUNC('day', created_at) as date, SUM(amount) as amount").
+			Where("payer_user_id = ?", userID).
+			Where("status = ?", model.OrderStatusSuccess).
+			Where("type != ?", model.OrderTypeRedEnvelopeReceive).
+			Where("created_at >= ? AND created_at < ?", startDate, endDate).
+			Group("DATE_TRUNC('day', created_at)").
+			Scan(&results).Error
+	}
 
 	if err != nil {
 		return nil, err

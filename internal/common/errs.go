@@ -17,18 +17,21 @@ limitations under the License.
 package common
 
 const (
-	BannedAccount               = "账号已被封禁"
-	AmountMustBeGreaterThanZero = "金额必须大于0"
-	AmountDecimalPlacesExceeded = "金额小数位数不能超过2位"
-	RateMustBeBetweenZeroAndOne = "比率必须在 0 到 1 之间"
-	RateDecimalPlacesExceeded   = "比率小数位数不能超过2位"
-	InsufficientBalance         = "余额不足"
-	DailyLimitExceeded          = "已超过每日限额"
-	PayKeyIncorrect             = "支付密钥错误"
-	CannotPaySelf               = "不能给自己付款"
-	TestModeCannotProcessOrder  = "测试模式下无法处理订单"
-	TestModeOrderRemark         = "[测试模式] 此订单为测试订单，未实际扣款"
-	UnAuthorized                = "未登录"
+	BannedAccount                 = "账号已被封禁"
+	AmountMustBeGreaterThanZero   = "金额必须大于0"
+	AmountDecimalPlacesExceeded   = "金额小数位数不能超过2位"
+	RateMustBeBetweenZeroAndOne   = "比率必须在 0 到 1 之间"
+	RateDecimalPlacesExceeded     = "比率小数位数不能超过2位"
+	InsufficientBalance           = "余额不足"
+	DailyLimitExceeded            = "已超过每日限额"
+	PayKeyIncorrect               = "支付密钥错误"
+	CannotPaySelf                 = "不能给自己付款"
+	TestModeCannotProcessOrder    = "测试模式下无法处理订单"
+	TestModeOrderRemark           = "[测试模式] 此订单为测试订单，未实际扣款"
+	UnAuthorized                  = "未登录"
+	RedEnvelopeDisabled           = "红包功能未启用"
+	RedEnvelopeAmountExceeded     = "红包金额超过单个红包最大限额"
+	RedEnvelopeDailyLimitExceeded = "今日发红包数量已达上限"
 )
 
 const (

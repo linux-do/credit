@@ -5,6 +5,9 @@ import { useState } from "react"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
 import {
   InputOTP,
@@ -54,13 +57,13 @@ export function PasswordDialog({
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="text-center">{title}</DialogTitle>
+          <DialogDescription className="text-center">
+            {description}
+          </DialogDescription>
+        </DialogHeader>
         <div className="flex flex-col items-center space-y-6">
-          <div className="text-center">
-            <h2 className="text-lg font-semibold">{title}</h2>
-            <p className="text-sm text-muted-foreground mt-2">
-              {description}
-            </p>
-          </div>
 
           <InputOTP
             maxLength={6}

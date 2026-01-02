@@ -133,7 +133,7 @@
 }
 
 @theme inline {
-  /* 
+  /*
    * Aurora 动画配置
    */
   --animate-aurora: aurora 120s linear infinite;
@@ -150,5 +150,28 @@
         350% 50%,
         350% 50%;
     }
+  }
+
+  /*
+   * 红包动画配置
+   */
+  --animate-redenvelope-shake: redenvelope-shake 0.5s ease-in-out;
+  --animate-redenvelope-glow: redenvelope-glow 2s ease-in-out infinite;
+  --animate-gold-particle: gold-particle 1s ease-out forwards;
+
+  @keyframes redenvelope-shake {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-5deg); }
+    75% { transform: rotate(5deg); }
+  }
+
+  @keyframes redenvelope-glow {
+    0%, 100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.3); }
+    50% { box-shadow: 0 0 40px rgba(255, 215, 0, 0.6); }
+  }
+
+  @keyframes gold-particle {
+    0% { transform: translateY(0) scale(1); opacity: 1; }
+    100% { transform: translateY(-100px) scale(0); opacity: 0; }
   }
 }

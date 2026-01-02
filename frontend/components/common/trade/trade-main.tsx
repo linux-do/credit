@@ -9,7 +9,9 @@ import { Receive } from "@/components/common/trade/receive"
 import { TradeTable } from "@/components/common/trade/trade-table"
 import { Transfer } from "@/components/common/trade/transfer"
 import { Online } from "@/components/common/trade/online"
+import { RedEnvelope } from "@/components/common/trade/red-envelope"
 import { TransactionProvider } from "@/contexts/transaction-context"
+import services from "@/lib/services"
 import type { OrderType } from "@/lib/services"
 
 /** 标签触发器样式 */
@@ -35,7 +37,8 @@ const TAB_TRIGGER_STYLES =
   "transition-colors " +
   "flex-none"
 
-type TabValue = OrderType | 'all'
+/** 标签值类型 */
+type TabValue = OrderType | 'all' | 'redenvelope'
 
 /** 页面组件映射表 */
 const PAGE_COMPONENTS: Record<TabValue, React.ComponentType> = {
@@ -46,6 +49,9 @@ const PAGE_COMPONENTS: Record<TabValue, React.ComponentType> = {
   online: Online,
   distribute: () => null,
   test: () => null,
+  red_envelope_send: RedEnvelope,
+  red_envelope_receive: RedEnvelope,
+  redenvelope: RedEnvelope,
   all: AllActivity,
 }
 
@@ -60,6 +66,15 @@ export function TradeMain() {
 
   React.useEffect(() => {
     setMounted(true)
+  }, [])
+
+  const [redEnvelopeEnabled, setRedEnvelopeEnabled] = React.useState(0)
+
+  React.useEffect(() => {
+    // 从公共配置中获取红包功能状态
+    services.config.getPublicConfig()
+      .then(res => setRedEnvelopeEnabled(res.red_envelope_enabled))
+      .catch(() => setRedEnvelopeEnabled(0))
   }, [])
 
   /* 获取活动类型 */
@@ -103,6 +118,9 @@ export function TradeMain() {
               <TabsTrigger value="transfer" className={TAB_TRIGGER_STYLES}>积分转移</TabsTrigger>
               <TabsTrigger value="community" className={TAB_TRIGGER_STYLES}>社区划转</TabsTrigger>
               <TabsTrigger value="online" className={TAB_TRIGGER_STYLES}>在线流转</TabsTrigger>
+              {redEnvelopeEnabled === 1 && (
+                <TabsTrigger value="redenvelope" className={TAB_TRIGGER_STYLES}>红包</TabsTrigger>
+              )}
               <TabsTrigger value="all" className={TAB_TRIGGER_STYLES}>所有活动</TabsTrigger>
             </TabsList>
           </div>
@@ -110,10 +128,12 @@ export function TradeMain() {
           <div className="pt-2 space-y-8">
             {renderPageContent()}
 
-            <div className="space-y-4">
-              <h2 className="font-semibold">活动记录</h2>
-              <TradeTable type={getOrderType(activeTab)} />
-            </div>
+            {activeTab !== 'redenvelope' && (
+              <div className="space-y-4">
+                <h2 className="font-semibold">活动记录</h2>
+                <TradeTable type={getOrderType(activeTab)} />
+              </div>
+            )}
           </div>
         </Tabs>
       </div>

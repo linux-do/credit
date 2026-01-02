@@ -146,6 +146,14 @@ definitions:
     - PayLevelBasic
     - PayLevelStandard
     - PayLevelPremium
+  model.RedEnvelopeType:
+    enum:
+    - fixed
+    - random
+    type: string
+    x-enum-varnames:
+    - RedEnvelopeTypeFixed
+    - RedEnvelopeTypeRandom
   oauth.CallbackRequest:
     properties:
       code:
@@ -196,6 +204,9 @@ definitions:
         - online
         - test
         - distribute
+        - red_envelope_send
+        - red_envelope_receive
+        - red_envelope_refund
         type: string
     type: object
   payment.CreateOrderRequest:
@@ -329,6 +340,57 @@ definitions:
     - pay_key
     - recipient_id
     - recipient_username
+    type: object
+  redenvelope.ClaimRequest:
+    properties:
+      id:
+        example: "0"
+        type: string
+    required:
+    - id
+    type: object
+  redenvelope.CreateRequest:
+    properties:
+      greeting:
+        maxLength: 100
+        type: string
+      pay_key:
+        maxLength: 10
+        type: string
+      total_amount:
+        type: number
+      total_count:
+        minimum: 1
+        type: integer
+      type:
+        allOf:
+        - $ref: '#/definitions/model.RedEnvelopeType'
+        enum:
+        - fixed
+        - random
+    required:
+    - pay_key
+    - total_amount
+    - total_count
+    - type
+    type: object
+  redenvelope.ListRequest:
+    properties:
+      page:
+        minimum: 1
+        type: integer
+      page_size:
+        maximum: 100
+        minimum: 1
+        type: integer
+      type:
+        enum:
+        - sent
+        - received
+        type: string
+    required:
+    - page
+    - page_size
     type: object
   system_config.CreateSystemConfigRequest:
     properties:
@@ -1260,6 +1322,83 @@ paths:
             $ref: '#/definitions/util.ResponseAny'
       tags:
       - payment
+  /api/v1/redenvelope/{id}:
+    get:
+      parameters:
+      - description: 红包ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - redenvelope
+  /api/v1/redenvelope/claim:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 领取红包请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/redenvelope.ClaimRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - redenvelope
+  /api/v1/redenvelope/create:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 创建红包请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/redenvelope.CreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - redenvelope
+  /api/v1/redenvelope/list:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 列表请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/redenvelope.ListRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - redenvelope
   /api/v1/user/pay-key:
     put:
       consumes:

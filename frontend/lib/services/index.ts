@@ -28,6 +28,7 @@ import { UserService } from './user';
 import { DisputeService } from './dispute';
 import { ConfigService } from './config';
 import { DashboardService } from './dashboard';
+import { RedEnvelopeService } from './redenvelope';
 
 /**
  * 服务对象
@@ -53,6 +54,8 @@ const services = {
   config: ConfigService,
   /** 仪表板服务 */
   dashboard: DashboardService,
+  /** 红包服务 */
+  redEnvelope: RedEnvelopeService,
 } as const;
 
 export default services;
@@ -179,4 +182,19 @@ export type {
   GetTopCustomersRequest,
 } from './dashboard';
 
+// 红包服务
+export { RedEnvelopeService } from './redenvelope';
+export type {
+  RedEnvelopeType,
+  RedEnvelopeStatus,
+  RedEnvelope,
+  RedEnvelopeClaim,
+  CreateRedEnvelopeRequest,
+  CreateRedEnvelopeResponse,
+  ClaimRedEnvelopeRequest,
+  ClaimRedEnvelopeResponse,
+  RedEnvelopeDetailResponse,
+  RedEnvelopeListParams,
+  RedEnvelopeListResponse,
+} from './redenvelope';
 

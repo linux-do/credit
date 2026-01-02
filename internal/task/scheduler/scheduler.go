@@ -83,6 +83,15 @@ func StartScheduler() error {
 			return
 		}
 
+		// 红包过期退款任务
+		if _, err = scheduler.Register(
+			config.Config.Scheduler.RefundExpiredRedEnvelopesTaskCron,
+			asynq.NewTask(task.RefundExpiredRedEnvelopesTask, nil),
+			asynq.Unique(23*time.Hour),
+		); err != nil {
+			return
+		}
+
 		// 启动调度器
 		err = scheduler.Run()
 	})
