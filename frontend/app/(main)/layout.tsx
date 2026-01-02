@@ -2,6 +2,7 @@
 
 import { motion } from "motion/react"
 import { usePathname } from "next/navigation"
+import { useState } from "react"
 import { AppSidebar } from "@/components/layout/sidebar"
 import { SiteHeader } from "@/components/layout/header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
@@ -16,6 +17,7 @@ export default function MainLayout({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
+  const [isFullWidth, setIsFullWidth] = useState(false)
 
   return (
     <UserProvider>
@@ -30,9 +32,9 @@ export default function MainLayout({
         >
           <AppSidebar />
           <SidebarInset className="flex flex-col min-w-0 h-screen">
-            <SiteHeader />
+            <SiteHeader isFullWidth={isFullWidth} onToggleFullWidth={setIsFullWidth} />
             <div className="flex flex-1 flex-col bg-background overflow-y-auto overflow-x-hidden min-w-0 hide-scrollbar">
-              <div className="w-full max-w-[1320px] mx-auto px-12 min-w-0">
+              <div className={`w-full mx-auto px-12 min-w-0 ${!isFullWidth ? "max-w-[1320px]" : ""}`}>
                 <motion.div
                   key={pathname}
                   initial={{ opacity: 0 }}
