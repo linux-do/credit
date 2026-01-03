@@ -175,7 +175,7 @@ sign=$(echo -n "\${payload}\${SECRET}" | md5)  # 输出小写`}
         <ul className="list-disc pl-4 md:pl-5 space-y-2 mb-6">
           <li><strong>方法：</strong>GET <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">/api.php</code></li>
           <li><strong>认证：</strong><code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">pid</code> + <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">key</code></li>
-          <li><strong>说明：</strong><code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">trade_no</code> 必填；<code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">out_trade_no</code> 可选；<code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">act</code> 可传 <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">order</code>，后端不强校验。</li>
+          <li><strong>说明：</strong><code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">out_trade_no</code> 必填；<code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">act</code> 可传 <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">order</code>，后端不强校验。</li>
         </ul>
 
         <DocsTable>
@@ -203,13 +203,8 @@ sign=$(echo -n "\${payload}\${SECRET}" | md5)  # 输出小写`}
               <DocsTableCell>Client Secret</DocsTableCell>
             </DocsTableRow>
             <DocsTableRow>
-              <DocsTableCell className="font-mono text-xs">trade_no</DocsTableCell>
-              <DocsTableCell>是</DocsTableCell>
-              <DocsTableCell>编号</DocsTableCell>
-            </DocsTableRow>
-            <DocsTableRow>
               <DocsTableCell className="font-mono text-xs">out_trade_no</DocsTableCell>
-              <DocsTableCell>否</DocsTableCell>
+              <DocsTableCell>是</DocsTableCell>
               <DocsTableCell>业务单号</DocsTableCell>
             </DocsTableRow>
           </DocsTableBody>

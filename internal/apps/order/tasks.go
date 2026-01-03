@@ -26,6 +26,7 @@ import (
 	"github.com/linux-do/credit/internal/db"
 	"github.com/linux-do/credit/internal/logger"
 	"github.com/linux-do/credit/internal/model"
+	"github.com/linux-do/credit/internal/util"
 )
 
 // HandleSyncOrdersToClickHouse 同步订单数据
@@ -106,7 +107,7 @@ func batchInsertToClickHouse(ctx context.Context, orders []model.Order) error {
 		if err := batch.Append(
 			order.ID,
 			order.OrderName,
-			order.MerchantOrderNo,
+			util.DerefString(order.MerchantOrderNo),
 			order.ClientID,
 			order.PayerUserID,
 			order.PayeeUserID,

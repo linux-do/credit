@@ -32,7 +32,7 @@ import (
 // CreateOrderRequest 商户创建订单统一请求
 type CreateOrderRequest struct {
 	OrderName       string          `json:"order_name" binding:"required,max=64"`
-	MerchantOrderNo string          `json:"merchant_order_no"`
+	MerchantOrderNo *string         `json:"merchant_order_no" binding:"omitempty,min=1,max=64"`
 	Amount          decimal.Decimal `json:"amount" binding:"required"`
 	Remark          string          `json:"remark" binding:"max=100"`
 	PaymentType     string          `json:"payment_type"`
@@ -42,7 +42,7 @@ type CreateOrderRequest struct {
 type EPayRequest struct {
 	ClientID        string          `form:"pid" binding:"required"`
 	OrderName       string          `form:"name" binding:"required,max=64"`
-	MerchantOrderNo string          `form:"out_trade_no" binding:"required"`
+	MerchantOrderNo *string         `form:"out_trade_no" binding:"required,min=1,max=64"`
 	Amount          decimal.Decimal `form:"money" binding:"required"`
 	NotifyURL       string          `form:"notify_url"`
 	ReturnURL       string          `form:"return_url"`
