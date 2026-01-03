@@ -39,19 +39,16 @@ const docTemplate = `{
                         "required": true
                     },
                     {
+                        "maxLength": 64,
+                        "minLength": 1,
                         "type": "string",
                         "name": "out_trade_no",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "pid",
                         "in": "query",
                         "required": true
                     },
                     {
-                        "type": "integer",
-                        "name": "trade_no",
+                        "type": "string",
+                        "name": "pid",
                         "in": "query",
                         "required": true
                     }
@@ -1706,7 +1703,9 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "merchant_order_no": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 64,
+                    "minLength": 1
                 },
                 "order_name": {
                     "type": "string",
@@ -1734,7 +1733,8 @@ const docTemplate = `{
                 },
                 "out_trade_no": {
                     "type": "string",
-                    "maxLength": 64
+                    "maxLength": 64,
+                    "minLength": 1
                 },
                 "remark": {
                     "type": "string",

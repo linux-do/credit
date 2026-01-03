@@ -206,7 +206,7 @@ func VerifySignature(c *gin.Context, apiKey *model.MerchantAPIKey) (*CreateOrder
 	params := map[string]string{
 		"pid":          req.ClientID,
 		"type":         req.PayType,
-		"out_trade_no": req.MerchantOrderNo,
+		"out_trade_no": util.DerefString(req.MerchantOrderNo),
 		"notify_url":   req.NotifyURL,
 		"return_url":   req.ReturnURL,
 		"name":         req.OrderName,

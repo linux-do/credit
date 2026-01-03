@@ -69,7 +69,7 @@ func HandleMerchantPaymentNotify(ctx context.Context, t *asynq.Task) error {
 	callbackParams := map[string]string{
 		"pid":          payload.ClientID,
 		"trade_no":     strconv.FormatUint(order.ID, 10),
-		"out_trade_no": order.MerchantOrderNo,
+		"out_trade_no": util.DerefString(order.MerchantOrderNo),
 		"type":         common.PayTypeEPay,
 		"name":         order.OrderName,
 		"money":        order.Amount.Truncate(2).StringFixed(2),

@@ -74,11 +74,10 @@ type TransferRequest struct {
 
 // QueryOrderRequest 商户查询订单请求
 type QueryOrderRequest struct {
-	Act             string `form:"act" json:"act"`
-	ClientID        string `form:"pid" json:"pid" binding:"required"`
-	ClientSecret    string `form:"key" json:"key" binding:"required"`
-	MerchantOrderNo string `form:"out_trade_no" json:"out_trade_no"`
-	TradeNo         uint64 `form:"trade_no" json:"trade_no" binding:"required"`
+	Act             string  `form:"act" json:"act"`
+	ClientID        string  `form:"pid" json:"pid" binding:"required"`
+	ClientSecret    string  `form:"key" json:"key" binding:"required"`
+	MerchantOrderNo *string `form:"out_trade_no" json:"out_trade_no" binding:"required,min=1,max=64"`
 }
 
 // RefundOrderRequest 商户退款请求
@@ -198,7 +197,7 @@ func QueryMerchantOrder(c *gin.Context) {
 	}
 
 	var order model.Order
-	if err := db.DB(c.Request.Context()).Where("id = ? AND client_id = ?", req.TradeNo, req.ClientID).First(&order).Error; err != nil {
+	if err := db.DB(c.Request.Context()).Where("client_id = ? AND merchant_order_no = ?", req.ClientID, req.MerchantOrderNo).First(&order).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"code": -1, "msg": OrderNotFound})
 			return
@@ -328,7 +327,7 @@ type MerchantDistributeRequest struct {
 	RecipientID       uint64          `json:"user_id" binding:"required"`
 	RecipientUsername string          `json:"username" binding:"required"`
 	Amount            decimal.Decimal `json:"amount" binding:"required"`
-	MerchantOrderNo   string          `json:"out_trade_no" binding:"max=64"`
+	MerchantOrderNo   *string         `json:"out_trade_no" binding:"omitempty,min=1,max=64"`
 	Remark            string          `json:"remark" binding:"max=100"`
 }
 

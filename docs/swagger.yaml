@@ -203,6 +203,8 @@ definitions:
       amount:
         type: number
       merchant_order_no:
+        maxLength: 64
+        minLength: 1
         type: string
       order_name:
         maxLength: 64
@@ -222,6 +224,7 @@ definitions:
         type: number
       out_trade_no:
         maxLength: 64
+        minLength: 1
         type: string
       remark:
         maxLength: 100
@@ -449,16 +452,15 @@ paths:
         required: true
         type: string
       - in: query
+        maxLength: 64
+        minLength: 1
         name: out_trade_no
+        required: true
         type: string
       - in: query
         name: pid
         required: true
         type: string
-      - in: query
-        name: trade_no
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
