@@ -1,32 +1,45 @@
-import * as React from "react"
-import { motion, AnimatePresence } from "motion/react"
-import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Send } from "@/components/animate-ui/icons/send"
-import { Check } from "@/components/animate-ui/icons/check"
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/animate-ui/primitives/radix/collapsible"
-import { AlertCircle, CreditCard, ArrowLeft, ShieldCheck, Lock } from "lucide-react"
+import * as React from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Send } from "@/components/animate-ui/icons/send";
+import { Check } from "@/components/animate-ui/icons/check";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/animate-ui/primitives/radix/collapsible";
+import {
+  AlertCircle,
+  CreditCard,
+  ArrowLeft,
+  ShieldCheck,
+  Lock,
+} from "lucide-react";
 
-import type { GetMerchantOrderResponse } from "@/lib/services"
-import { useUser } from "@/contexts/user-context"
+import type { GetMerchantOrderResponse } from "@/lib/services";
+import { useUser } from "@/contexts/user-context";
 
-
-type PaymentStep = typeof PAYMENT_STEPS[keyof typeof PAYMENT_STEPS]
+type PaymentStep = (typeof PAYMENT_STEPS)[keyof typeof PAYMENT_STEPS];
 
 const PAYMENT_METHODS = {
-  LINUX_DO_PAY: 'linux-do-pay'
-} as const
+  LINUX_DO_PAY: "linux-do-pay",
+} as const;
 
 const PAYMENT_STEPS = {
-  METHOD: 'method' as const,
-  Credit: 'pay' as const
-} as const
+  METHOD: "method" as const,
+  Credit: "pay" as const,
+} as const;
 
 const ORDER_STATUSES = {
-  SUCCESS: 'success',
-  PENDING: 'pending'
-} as const
+  SUCCESS: "success",
+  PENDING: "pending",
+} as const;
 
 /**
  * 加载中骨架组件
@@ -58,7 +71,7 @@ function LoadingSkeleton() {
 
       <Skeleton className="h-10 w-full rounded-full bg-muted/50" />
     </div>
-  )
+  );
 }
 
 /**
@@ -66,21 +79,21 @@ function LoadingSkeleton() {
  * 显示认证成功状态
  */
 function SuccessState() {
-  const [countdown, setCountdown] = React.useState(5)
+  const [countdown, setCountdown] = React.useState(5);
 
   React.useEffect(() => {
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
-          clearInterval(timer)
-          return 0
+          clearInterval(timer);
+          return 0;
         }
-        return prev - 1
-      })
-    }, 1000)
+        return prev - 1;
+      });
+    }, 1000);
 
-    return () => clearInterval(timer)
-  }, [])
+    return () => clearInterval(timer);
+  }, []);
 
   return (
     <motion.div
@@ -90,7 +103,7 @@ function SuccessState() {
         duration: 0.6,
         ease: "easeOut",
         type: "spring",
-        stiffness: 100
+        stiffness: 100,
       }}
       className="text-center py-10"
     >
@@ -103,15 +116,11 @@ function SuccessState() {
             delay: 0.2,
             duration: 0.5,
             type: "spring",
-            stiffness: 200
+            stiffness: 200,
           }}
           className="relative w-10 h-10 bg-green-500 rounded-full flex items-center justify-center "
         >
-          <Check
-            className="size-6 text-white"
-            animate={true}
-            loop={false}
-          />
+          <Check className="size-6 text-white" animate={true} loop={false} />
         </motion.div>
       </div>
 
@@ -129,10 +138,11 @@ function SuccessState() {
         transition={{ delay: 0.6, duration: 0.4 }}
         className="text-muted-foreground text-sm"
       >
-        认证已安全完成，{countdown > 0 ? `${ countdown }秒后自动跳转...` : '正在跳转...'}
+        认证已安全完成，
+        {countdown > 0 ? `${countdown}秒后自动跳转...` : "正在跳转..."}
       </motion.p>
     </motion.div>
-  )
+  );
 }
 
 /**
@@ -146,17 +156,17 @@ function MethodSelectionStep({
   onSelectedMethodChange,
   onIsOpenChange,
   onCurrentStepChange,
-  forceMobile = false
+  forceMobile = false,
 }: {
-  orderInfo: GetMerchantOrderResponse
-  selectedMethod: string
-  isOpen: boolean
-  onSelectedMethodChange: (method: string) => void
-  onIsOpenChange: (isOpen: boolean) => void
-  onCurrentStepChange: (step: PaymentStep) => void
-  forceMobile?: boolean
+  orderInfo: GetMerchantOrderResponse;
+  selectedMethod: string;
+  isOpen: boolean;
+  onSelectedMethodChange: (method: string) => void;
+  onIsOpenChange: (isOpen: boolean) => void;
+  onCurrentStepChange: (step: PaymentStep) => void;
+  forceMobile?: boolean;
 }) {
-  const { user } = useUser()
+  const { user } = useUser();
 
   return (
     <motion.div
@@ -167,45 +177,64 @@ function MethodSelectionStep({
       transition={{ duration: 0.3 }}
       className="space-y-6 w-full max-w-xs mx-auto"
     >
-      <div className={`space-y-2 text-center ${ forceMobile ? '' : 'md:text-left' }`}>
-        <h2 className="text-xl font-bold text-foreground tracking-tight">选择认证平台</h2>
-        <p className="text-xs text-muted-foreground">请选择您想要使用的服务认证平台</p>
+      <div
+        className={`space-y-2 text-center ${forceMobile ? "" : "md:text-left"}`}
+      >
+        <h2 className="text-xl font-bold text-foreground tracking-tight">
+          选择认证平台
+        </h2>
+        <p className="text-xs text-muted-foreground">
+          请选择您想要使用的服务认证平台
+        </p>
       </div>
 
       <div className="space-y-3">
         <Collapsible open={isOpen} onOpenChange={onIsOpenChange}>
           <CollapsibleTrigger asChild>
             <div
-              className={`group cursor-pointer rounded-xl p-2.5 transition-all duration-300 border backdrop-blur-sm ${ selectedMethod === PAYMENT_METHODS.LINUX_DO_PAY
-                ? 'border-primary/50 bg-primary/5'
-                : 'border-border/50 bg-card hover:bg-muted/50 hover:border-border'
-                }`}
+              className={`group cursor-pointer rounded-xl p-2.5 transition-all duration-300 border backdrop-blur-sm ${
+                selectedMethod === PAYMENT_METHODS.LINUX_DO_PAY
+                  ? "border-primary/50 bg-primary/5"
+                  : "border-border/50 bg-card hover:bg-muted/50 hover:border-border"
+              }`}
               onClick={() => {
                 if (selectedMethod === PAYMENT_METHODS.LINUX_DO_PAY) {
-                  onSelectedMethodChange('')
-                  onIsOpenChange(false)
+                  onSelectedMethodChange("");
+                  onIsOpenChange(false);
                 } else {
-                  onSelectedMethodChange(PAYMENT_METHODS.LINUX_DO_PAY)
-                  onIsOpenChange(true)
+                  onSelectedMethodChange(PAYMENT_METHODS.LINUX_DO_PAY);
+                  onIsOpenChange(true);
                 }
               }}
             >
               <div className="flex items-center gap-2.5">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300 ${ selectedMethod === PAYMENT_METHODS.LINUX_DO_PAY
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-muted-foreground group-hover:bg-muted/80'
-                  }`}>
+                <div
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300 ${
+                    selectedMethod === PAYMENT_METHODS.LINUX_DO_PAY
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground group-hover:bg-muted/80"
+                  }`}
+                >
                   <CreditCard className="size-4" />
                 </div>
                 <div className="flex-1 text-left">
-                  <div className="font-bold text-xs text-foreground">LINUX DO Credit</div>
-                  <div className="text-[9px] text-muted-foreground mt-0.5">即时安全认证</div>
+                  <div className="font-bold text-xs text-foreground">
+                    LINUX DO Credit
+                  </div>
+                  <div className="text-[9px] text-muted-foreground mt-0.5">
+                    即时安全认证
+                  </div>
                 </div>
-                <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all duration-300 ${ selectedMethod === PAYMENT_METHODS.LINUX_DO_PAY
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'border-border'
-                  }`}>
-                  {selectedMethod === PAYMENT_METHODS.LINUX_DO_PAY && <Check className="size-3" />}
+                <div
+                  className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all duration-300 ${
+                    selectedMethod === PAYMENT_METHODS.LINUX_DO_PAY
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border"
+                  }`}
+                >
+                  {selectedMethod === PAYMENT_METHODS.LINUX_DO_PAY && (
+                    <Check className="size-3" />
+                  )}
                 </div>
               </div>
             </div>
@@ -215,7 +244,7 @@ function MethodSelectionStep({
             <CollapsibleContent>
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
+                animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
                 className="pt-3 px-1"
               >
@@ -225,7 +254,9 @@ function MethodSelectionStep({
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[10px] opacity-70">消费方账户</span>
-                    <span className="font-medium text-foreground">{orderInfo.order.payer_username || user?.username}</span>
+                    <span className="font-medium text-foreground">
+                      {orderInfo.order.payer_username || user?.username}
+                    </span>
                   </div>
                 </div>
                 <Button
@@ -240,7 +271,7 @@ function MethodSelectionStep({
         </Collapsible>
       </div>
     </motion.div>
-  )
+  );
 }
 
 /**
@@ -253,14 +284,14 @@ function PaymentStep({
   paying,
   onPayKeyChange,
   onCurrentStepChange,
-  onPayOrder
+  onPayOrder,
 }: {
-  orderInfo: GetMerchantOrderResponse
-  payKey: string
-  paying: boolean
-  onPayKeyChange: (value: string) => void
-  onCurrentStepChange: (step: PaymentStep) => void
-  onPayOrder: () => void
+  orderInfo: GetMerchantOrderResponse;
+  payKey: string;
+  paying: boolean;
+  onPayKeyChange: (value: string) => void;
+  onCurrentStepChange: (step: PaymentStep) => void;
+  onPayOrder: () => void;
 }) {
   return (
     <motion.div
@@ -280,7 +311,9 @@ function PaymentStep({
         >
           <ArrowLeft className="size-3.5 mr-1" /> 返回
         </Button>
-        <h2 className="text-xl font-bold text-foreground tracking-tight">身份验证</h2>
+        <h2 className="text-xl font-bold text-foreground tracking-tight">
+          身份验证
+        </h2>
         <p className="text-xs text-muted-foreground">请输入您的6位安全密码</p>
       </div>
 
@@ -290,8 +323,8 @@ function PaymentStep({
           value={payKey}
           onChange={onPayKeyChange}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && payKey.length === 6 && !paying) {
-              onPayOrder()
+            if (e.key === "Enter" && payKey.length === 6 && !paying) {
+              onPayOrder();
             }
           }}
         >
@@ -314,14 +347,20 @@ function PaymentStep({
       >
         {paying ? (
           <span className="flex items-center gap-2">
-            <Send className="size-4" animate={true} loop={true} loopDelay={2000} /> 处理中...
+            <Send
+              className="size-4"
+              animate={true}
+              loop={true}
+              loopDelay={2000}
+            />{" "}
+            处理中...
           </span>
         ) : (
-          `消耗 LDC ${ (parseFloat(orderInfo.order.amount)).toFixed(2) }`
+          `消耗 LDC ${parseFloat(orderInfo.order.amount).toFixed(2)}`
         )}
       </Button>
     </motion.div>
-  )
+  );
 }
 
 /**
@@ -335,9 +374,11 @@ function ErrorState({ status }: { status: string }) {
         <AlertCircle className="size-6 text-red-500" />
       </div>
       <h3 className="text-lg font-bold text-foreground mb-1">认证出现问题</h3>
-      <p className="text-muted-foreground text-sm">状态：<span className="font-medium text-foreground">{status}</span></p>
+      <p className="text-muted-foreground text-sm">
+        状态：<span className="font-medium text-foreground">{status}</span>
+      </p>
     </div>
-  )
+  );
 }
 
 /**
@@ -354,23 +395,23 @@ function Footer({ loading }: { loading?: boolean }) {
       <ShieldCheck className="size-3 text-green-500" />
       <span>由 LINUX DO Credit 提供安全认证</span>
     </div>
-  )
+  );
 }
 
 interface PayingNowProps {
-  orderInfo: GetMerchantOrderResponse | null
-  paying: boolean
-  payKey: string
-  currentStep: PaymentStep
-  selectedMethod: string
-  isOpen: boolean
-  loading?: boolean
-  onPayKeyChange: (value: string) => void
-  onCurrentStepChange: (step: PaymentStep) => void
-  onSelectedMethodChange: (method: string) => void
-  onIsOpenChange: (isOpen: boolean) => void
-  onPayOrder: () => void
-  forceMobile?: boolean
+  orderInfo: GetMerchantOrderResponse | null;
+  paying: boolean;
+  payKey: string;
+  currentStep: PaymentStep;
+  selectedMethod: string;
+  isOpen: boolean;
+  loading?: boolean;
+  onPayKeyChange: (value: string) => void;
+  onCurrentStepChange: (step: PaymentStep) => void;
+  onSelectedMethodChange: (method: string) => void;
+  onIsOpenChange: (isOpen: boolean) => void;
+  onPayOrder: () => void;
+  forceMobile?: boolean;
 }
 
 /**
@@ -390,16 +431,16 @@ export function PayingNow({
   onSelectedMethodChange,
   onIsOpenChange,
   onPayOrder,
-  forceMobile = false
+  forceMobile = false,
 }: PayingNowProps) {
   const renderContent = () => {
-    if (loading) return <LoadingSkeleton />
+    if (loading) return <LoadingSkeleton />;
 
-    if (!orderInfo) return null
+    if (!orderInfo) return null;
 
     switch (orderInfo.order.status) {
       case ORDER_STATUSES.SUCCESS:
-        return <SuccessState />
+        return <SuccessState />;
 
       case ORDER_STATUSES.PENDING:
         return (
@@ -425,15 +466,17 @@ export function PayingNow({
               />
             )}
           </AnimatePresence>
-        )
+        );
 
       default:
-        return <ErrorState status={orderInfo.order.status} />
+        return <ErrorState status={orderInfo.order.status} />;
     }
-  }
+  };
 
   return (
-    <div className={`flex-1 flex flex-col items-center justify-center p-6 relative overflow-hidden bg-white dark:bg-neutral-900 transition-colors duration-500 ${ forceMobile ? '' : 'md:p-8' }`}>
+    <div
+      className={`flex-1 flex flex-col items-center justify-center p-6 relative overflow-hidden bg-white dark:bg-neutral-900 transition-colors duration-500 ${forceMobile ? "" : "md:p-8"}`}
+    >
       <div className="w-full relative z-10 flex flex-col h-full justify-center">
         <div className="flex-1 flex flex-col justify-center">
           {renderContent()}
@@ -441,5 +484,5 @@ export function PayingNow({
         <Footer loading={loading} />
       </div>
     </div>
-  )
+  );
 }

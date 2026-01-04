@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { TransactionProvider } from "@/contexts/transaction-context"
+import * as React from "react";
+import { TransactionProvider } from "@/contexts/transaction-context";
 
-import { DataPanel } from "@/components/common/home/data-panel"
-import { OverviewPanel } from "@/components/common/home/overview-panel"
+import { DataPanel } from "@/components/common/home/data-panel";
+import { OverviewPanel } from "@/components/common/home/overview-panel";
 
 export function HomeMain() {
   return (
@@ -21,5 +21,5 @@ export function HomeMain() {
         </div>
       </div>
     </TransactionProvider>
-  )
+  );
 }

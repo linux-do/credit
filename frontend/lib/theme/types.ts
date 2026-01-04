@@ -7,8 +7,8 @@
  * 包含明亮和暗色两种模式的 CSS 变量映射
  */
 export interface ThemeColors {
-  light: Record<string, string>
-  dark: Record<string, string>
+  light: Record<string, string>;
+  dark: Record<string, string>;
 }
 
 /**
@@ -16,11 +16,11 @@ export interface ThemeColors {
  */
 export interface Theme {
   /** 主题唯一标识符（CSS 文件名） */
-  id: string
+  id: string;
   /** 主题显示名称 */
-  name: string
+  name: string;
   /** 主题颜色配置 */
-  colors: ThemeColors
+  colors: ThemeColors;
 }
 
 /**
@@ -28,7 +28,7 @@ export interface Theme {
  */
 export interface ThemeConfig {
   /** CSS 样式文件所在目录 */
-  styleDir: string
+  styleDir: string;
   /** 主题 ID 在 localStorage 中的存储键名 */
-  storageKey: string
+  storageKey: string;
 }

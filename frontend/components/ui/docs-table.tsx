@@ -1,5 +1,5 @@
-import * as React from "react"
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import { cn } from "@/lib/utils";
 
 const DocsTable = React.forwardRef<
   HTMLTableElement,
@@ -12,28 +12,31 @@ const DocsTable = React.forwardRef<
       {...props}
     />
   </div>
-))
-DocsTable.displayName = "DocsTable"
+));
+DocsTable.displayName = "DocsTable";
 
 const DocsTableHeader = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
 >(({ className, ...props }, ref) => (
-  <thead ref={ref} className={cn("bg-muted/50 text-muted-foreground font-medium border-b border-border/50", className)} {...props} />
-))
-DocsTableHeader.displayName = "DocsTableHeader"
+  <thead
+    ref={ref}
+    className={cn(
+      "bg-muted/50 text-muted-foreground font-medium border-b border-border/50",
+      className
+    )}
+    {...props}
+  />
+));
+DocsTableHeader.displayName = "DocsTableHeader";
 
 const DocsTableBody = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
 >(({ className, ...props }, ref) => (
-  <tbody
-    ref={ref}
-    className={cn("bg-background", className)}
-    {...props}
-  />
-))
-DocsTableBody.displayName = "DocsTableBody"
+  <tbody ref={ref} className={cn("bg-background", className)} {...props} />
+));
+DocsTableBody.displayName = "DocsTableBody";
 
 const DocsTableRow = React.forwardRef<
   HTMLTableRowElement,
@@ -41,11 +44,14 @@ const DocsTableRow = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <tr
     ref={ref}
-    className={cn("transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted border-b border-border/50 last:border-0", className)}
+    className={cn(
+      "transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted border-b border-border/50 last:border-0",
+      className
+    )}
     {...props}
   />
-))
-DocsTableRow.displayName = "DocsTableRow"
+));
+DocsTableRow.displayName = "DocsTableRow";
 
 const DocsTableHead = React.forwardRef<
   HTMLTableCellElement,
@@ -59,8 +65,8 @@ const DocsTableHead = React.forwardRef<
     )}
     {...props}
   />
-))
-DocsTableHead.displayName = "DocsTableHead"
+));
+DocsTableHead.displayName = "DocsTableHead";
 
 const DocsTableCell = React.forwardRef<
   HTMLTableCellElement,
@@ -68,11 +74,14 @@ const DocsTableCell = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <td
     ref={ref}
-    className={cn("pl-6 pr-4 py-2 align-middle [&:has([role=checkbox])]:pr-0 first:pl-6 last:pr-6", className)}
+    className={cn(
+      "pl-6 pr-4 py-2 align-middle [&:has([role=checkbox])]:pr-0 first:pl-6 last:pr-6",
+      className
+    )}
     {...props}
   />
-))
-DocsTableCell.displayName = "DocsTableCell"
+));
+DocsTableCell.displayName = "DocsTableCell";
 
 export {
   DocsTable,
@@ -81,4 +90,4 @@ export {
   DocsTableHead,
   DocsTableRow,
   DocsTableCell,
-}
+};

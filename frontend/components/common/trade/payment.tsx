@@ -1,8 +1,8 @@
-import * as React from "react"
+import * as React from "react";
 
 /**
  * 积分消耗组件
- * 
+ *
  * 显示积分消耗功能和规则
  */
 export function Payment() {
@@ -20,5 +20,5 @@ export function Payment() {
         </div>
       </div>
     </div>
-  )
+  );
 }

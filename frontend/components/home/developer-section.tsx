@@ -12,7 +12,9 @@ export interface DeveloperSectionProps {
 /**
  * Developer Section - 开发者体验展示
  */
-export const DeveloperSection = React.memo(function DeveloperSection({ className }: DeveloperSectionProps) {
+export const DeveloperSection = React.memo(function DeveloperSection({
+  className,
+}: DeveloperSectionProps) {
   const [copied, setCopied] = React.useState(false);
 
   const onCopy = () => {
@@ -21,14 +23,18 @@ export const DeveloperSection = React.memo(function DeveloperSection({ className
   };
 
   return (
-    <section className={cn("relative z-10 w-full min-h-screen flex items-center justify-center px-6 overflow-hidden", className)}>
+    <section
+      className={cn(
+        "relative z-10 w-full min-h-screen flex items-center justify-center px-6 overflow-hidden",
+        className
+      )}
+    >
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute inset-0 [mask-image:linear-gradient(to_bottom,transparent,black_20%,black_80%,transparent)]">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] max-w-[90vw] max-h-[90vh] bg-purple-500/10 rounded-full blur-[120px]" />
         </div>
       </div>
       <div className="container mx-auto max-w-7xl grid lg:grid-cols-2 gap-12 lg:gap-20 items-center relative z-10">
-
         <motion.div
           initial={{ opacity: 0, x: -30 }}
           whileInView={{ opacity: 1, x: 0 }}
@@ -52,17 +58,35 @@ export const DeveloperSection = React.memo(function DeveloperSection({ className
 
             <div className="p-6 overflow-x-auto relative group">
               <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-neutral-400 hover:text-white" onClick={onCopy}>
-                  {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-neutral-400 hover:text-white"
+                  onClick={onCopy}
+                >
+                  {copied ? (
+                    <Check className="w-4 h-4" />
+                  ) : (
+                    <Copy className="w-4 h-4" />
+                  )}
                 </Button>
               </div>
               <pre className="text-sm font-mono text-neutral-300 leading-relaxed">
                 <code className="block">
-                  <span className="text-purple-400">curl</span> <span className="text-green-400">https://credit.linux.do/epay/submit.php</span> \{'\n'}
-                  {'  '}-u <span className="text-yellow-400">sk_live_...:</span> \{'\n'}
-                  {'  '}-d <span className="text-blue-400">amount</span>=<span className="text-orange-400">1000</span> \{'\n'}
-                  {'  '}-d <span className="text-blue-400">currency</span>=<span className="text-green-400">&quot;cny&quot;</span> \{'\n'}
-                  {'  '}-d <span className="text-blue-400">description</span>=<span className="text-green-400">&quot;Pro Plan&quot;</span>
+                  <span className="text-purple-400">curl</span>{" "}
+                  <span className="text-green-400">
+                    https://credit.linux.do/epay/submit.php
+                  </span>{" "}
+                  \{"\n"}
+                  {"  "}-u <span className="text-yellow-400">sk_live_...:</span>{" "}
+                  \{"\n"}
+                  {"  "}-d <span className="text-blue-400">amount</span>=
+                  <span className="text-orange-400">1000</span> \{"\n"}
+                  {"  "}-d <span className="text-blue-400">currency</span>=
+                  <span className="text-green-400">&quot;cny&quot;</span> \
+                  {"\n"}
+                  {"  "}-d <span className="text-blue-400">description</span>=
+                  <span className="text-green-400">&quot;Pro Plan&quot;</span>
                 </code>
               </pre>
             </div>
@@ -79,11 +103,13 @@ export const DeveloperSection = React.memo(function DeveloperSection({ className
             transition={{ duration: 0.8 }}
           >
             <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-foreground leading-[1.1] mb-6">
-              简单直接，<br />
+              简单直接，
+              <br />
               开发者快速集成
             </h2>
             <p className="text-muted-foreground text-lg leading-relaxed mb-8">
-              标准化的 RESTful API 接口，清晰的错误提示，完善的调试工具。无论您使用什么编程语言，只需几行代码，即可完成积分服务功能接入。
+              标准化的 RESTful API
+              接口，清晰的错误提示，完善的调试工具。无论您使用什么编程语言，只需几行代码，即可完成积分服务功能接入。
             </p>
 
             <ul className="space-y-4 mb-8">
@@ -91,9 +117,12 @@ export const DeveloperSection = React.memo(function DeveloperSection({ className
                 "RESTful API 接口，语义清晰",
                 "完善的 Webhook 回调通知",
                 "简单调试，开发测试零成本",
-                "完善的文档和示例代码"
+                "完善的文档和示例代码",
               ].map((item, i) => (
-                <li key={i} className="flex items-center gap-3 text-sm text-foreground/80">
+                <li
+                  key={i}
+                  className="flex items-center gap-3 text-sm text-foreground/80"
+                >
                   <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                     <Check className="w-3.5 h-3.5" />
                   </div>
@@ -104,13 +133,19 @@ export const DeveloperSection = React.memo(function DeveloperSection({ className
 
             <div className="flex flex-wrap gap-4">
               <Link href="/docs/api">
-                <Button variant="secondary" className="rounded-full text-xs hover:bg-muted-foreground/10">
+                <Button
+                  variant="secondary"
+                  className="rounded-full text-xs hover:bg-muted-foreground/10"
+                >
                   <Book className="w-3 h-3" />
                   API 文档
                 </Button>
               </Link>
               <Link href="/merchant">
-                <Button variant="default" className="rounded-full text-xs hover:bg-primary/70">
+                <Button
+                  variant="default"
+                  className="rounded-full text-xs hover:bg-primary/70"
+                >
                   <Key className="w-3 h-3" />
                   获取 API Key
                 </Button>
@@ -118,7 +153,6 @@ export const DeveloperSection = React.memo(function DeveloperSection({ className
             </div>
           </motion.div>
         </div>
-
       </div>
     </section>
   );

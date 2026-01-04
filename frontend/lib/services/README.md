@@ -71,14 +71,13 @@ graph TB
     ApiClient -->|读取| CoreConfig
 
     ApiClient ==>|HTTP 请求| Backend
-    
+
     style UI fill:#e1f5ff
     style Services fill:#fff9e6
     style BaseLayer fill:#f0f0f0
     style Core fill:#e8f5e9
     style Backend fill:#ffebee
 ```
-
 
 ---
 
@@ -142,24 +141,32 @@ lib/services/
 **职责**：为所有业务服务提供统一的 HTTP 方法封装
 
 **关键设计**：
+
 ```typescript
 export class BaseService {
-  protected static readonly basePath: string = '';
+  protected static readonly basePath: string = "";
 
   // 标准 RESTful 方法
-  protected static async get<T>(path: string, params?: Record<string, unknown>): Promise<T>
-  protected static async post<T>(path: string, data?: unknown): Promise<T>
-  protected static async put<T>(path: string, data?: unknown): Promise<T>
-  protected static async patch<T>(path: string, data?: unknown): Promise<T>
-  protected static async delete<T>(path: string, params?: Record<string, unknown>): Promise<T>
-  
+  protected static async get<T>(
+    path: string,
+    params?: Record<string, unknown>
+  ): Promise<T>;
+  protected static async post<T>(path: string, data?: unknown): Promise<T>;
+  protected static async put<T>(path: string, data?: unknown): Promise<T>;
+  protected static async patch<T>(path: string, data?: unknown): Promise<T>;
+  protected static async delete<T>(
+    path: string,
+    params?: Record<string, unknown>
+  ): Promise<T>;
+
   // 特殊端点支持（不遵循标准响应格式）
-  protected static async rawGet<T>(url: string, params?: unknown): Promise<T>
-  protected static async rawPost<T>(url: string, data?: unknown): Promise<T>
+  protected static async rawGet<T>(url: string, params?: unknown): Promise<T>;
+  protected static async rawPost<T>(url: string, data?: unknown): Promise<T>;
 }
 ```
 
 **设计优势**：
+
 - ✅ 子类只需设置 `basePath`，无需重复实现 HTTP 逻辑
 - ✅ 统一的响应解包（`response.data.data`）
 - ✅ 类型安全的泛型设计
@@ -174,24 +181,27 @@ export class BaseService {
 **核心功能**：
 
 #### 请求拦截器
+
 - 自动添加 Cancel Token（支持请求取消）
 - 请求去重（避免重复请求）
 
 #### 响应拦截器
+
 - **401 自动重定向** - 未授权时自动跳转登录页
 - **错误分类** - 将 HTTP 状态码映射为具体错误类型
 - **统一响应格式** - 解析 `ApiResponse<T>` 结构
 
 #### 错误处理映射
-| HTTP 状态码 | 错误类型 | 说明 |
-|------------|---------|------|
-| 400 | `ValidationError` | 参数验证失败 |
-| 401 | 自动重定向 | 跳转到登录页 |
-| 403 | `ForbiddenError` | 权限不足 |
-| 404 | `NotFoundError` | 资源不存在 |
-| 5xx | `ServerError` | 服务器错误 |
-| 超时 | `TimeoutError` | 请求超时 |
-| 网络 | `NetworkError` | 网络连接失败 |
+
+| HTTP 状态码 | 错误类型          | 说明         |
+| ----------- | ----------------- | ------------ |
+| 400         | `ValidationError` | 参数验证失败 |
+| 401         | 自动重定向        | 跳转到登录页 |
+| 403         | `ForbiddenError`  | 权限不足     |
+| 404         | `NotFoundError`   | 资源不存在   |
+| 5xx         | `ServerError`     | 服务器错误   |
+| 超时        | `TimeoutError`    | 请求超时     |
+| 网络        | `NetworkError`    | 网络连接失败 |
 
 ---
 
@@ -209,6 +219,7 @@ ApiErrorBase (基类)
 ```
 
 **设计优势**：
+
 - 支持 `instanceof` 类型判断
 - 携带详细错误信息（`error_code`、`details`）
 - 便于前端精确处理不同错误场景
@@ -220,49 +231,52 @@ ApiErrorBase (基类)
 ### 1. 服务类规范
 
 #### 必须遵循
+
 ```typescript
 export class SomeService extends BaseService {
   // 1. 必须继承 BaseService
   // 2. basePath 必须是 protected static readonly
-  protected static readonly basePath = '/api/v1/resource';
-  
+  protected static readonly basePath = "/api/v1/resource";
+
   // 3. 方法必须是 static async
   // 4. 返回类型必须明确（禁止 any）
   static async getAll(): Promise<Resource[]> {
-    return this.get<Resource[]>('/');
+    return this.get<Resource[]>("/");
   }
-  
+
   // 5. 参数类型必须明确定义在 types.ts
   static async create(request: CreateResourceRequest): Promise<Resource> {
-    return this.post<Resource>('/', request);
+    return this.post<Resource>("/", request);
   }
 }
 ```
 
 #### 方法命名规范
-| 操作 | 命名 | 示例 |
-|------|------|------|
-| 获取列表 | `list*` 或 `getAll` | `listAPIKeys()` |
-| 获取单个 | `get*` 或 `getById` | `getAPIKey(id)` |
-| 创建 | `create*` | `createAPIKey(request)` |
-| 更新 | `update*` | `updateAPIKey(id, request)` |
-| 删除 | `delete*` | `deleteAPIKey(id)` |
-| 特殊操作 | 动词开头 | `payMerchantOrder()` |
+
+| 操作     | 命名                | 示例                        |
+| -------- | ------------------- | --------------------------- |
+| 获取列表 | `list*` 或 `getAll` | `listAPIKeys()`             |
+| 获取单个 | `get*` 或 `getById` | `getAPIKey(id)`             |
+| 创建     | `create*`           | `createAPIKey(request)`     |
+| 更新     | `update*`           | `updateAPIKey(id, request)` |
+| 删除     | `delete*`           | `deleteAPIKey(id)`          |
+| 特殊操作 | 动词开头            | `payMerchantOrder()`        |
 
 #### 方法排序规范
+
 ```typescript
 export class SomeService extends BaseService {
-  protected static readonly basePath = '/api/v1/resource';
-  
+  protected static readonly basePath = "/api/v1/resource";
+
   // 1. CRUD 操作（按 Create → Read → Update → Delete）
-  static async create() { }
-  static async list() { }
-  static async get() { }
-  static async update() { }
-  static async delete() { }
-  
+  static async create() {}
+  static async list() {}
+  static async get() {}
+  static async update() {}
+  static async delete() {}
+
   // 2. 其他业务方法（按业务逻辑分组）
-  static async someAction() { }
+  static async someAction() {}
 }
 ```
 
@@ -271,9 +285,10 @@ export class SomeService extends BaseService {
 ### 2. 类型定义规范
 
 #### types.ts 文件结构
+
 ```typescript
 // 1. 类型别名（Type Aliases）
-export type ResourceStatus = 'active' | 'inactive' | 'pending';
+export type ResourceStatus = "active" | "inactive" | "pending";
 
 // 2. 枚举（Enums） - 使用 const enum 提升性能
 export const enum ResourceLevel {
@@ -309,6 +324,7 @@ export interface CreateResourceRequest {
 ```
 
 #### 注释规范
+
 - ✅ 所有 interface 必须有 JSDoc 描述
 - ✅ 所有字段必须有行内注释
 - ✅ 包含约束信息（长度、范围、格式等）
@@ -319,35 +335,37 @@ export interface CreateResourceRequest {
 ### 3. JSDoc 注释规范
 
 **标准模板**：
-```typescript
+
+````typescript
 /**
  * [一句话描述方法功能]
- * 
+ *
  * @param paramName - 参数说明
  * @returns 返回值说明
  * @throws {ErrorType} 错误条件说明
- * 
+ *
  * @example
  * ```typescript
  * // 使用示例
  * const result = await Service.method({ param: 'value' });
  * ```
- * 
+ *
  * @remarks [可选]
  * - 业务规则或注意事项
  */
-```
+````
 
 **示例**：
-```typescript
+
+````typescript
 /**
  * 创建商户 API Key
- * 
+ *
  * @param request - API Key 配置
  * @returns 创建的 API Key 信息
  * @throws {UnauthorizedError} 当未登录时
  * @throws {ValidationError} 当参数验证失败时
- * 
+ *
  * @example
  * ```typescript
  * const apiKey = await MerchantService.createAPIKey({
@@ -355,55 +373,54 @@ export interface CreateResourceRequest {
  *   app_homepage_url: 'https://example.com'
  * });
  * ```
- * 
+ *
  * @remarks
  * - app_name 最大 20 字符
  * - 需要登录权限
  */
 static async createAPIKey(request: CreateAPIKeyRequest): Promise<MerchantAPIKey>
-```
+````
 
 ---
 
 ### 4. 模块 index.ts 规范
 
 **标准格式**：
-```typescript
+
+````typescript
 /**
  * [模块名] 服务模块
- * 
+ *
  * @description
  * 提供 [业务领域] 相关的功能，包括：
  * - 功能点1
  * - 功能点2
  * - 功能点3
- * 
+ *
  * @example
  * ```typescript
  * import { ServiceName } from '@/lib/services';
- * 
+ *
  * // 使用示例（展示最常用的1-2个方法）
  * const result = await ServiceName.commonMethod();
  * ```
- * 
+ *
  * @remarks [可选]
  * - 特殊说明（如权限要求等）
  */
 
-export { ServiceName } from './service-name.service';
-export type * from './types';
+export { ServiceName } from "./service-name.service";
+export type * from "./types";
 // 或明确导出
-export type {
-  Type1,
-  Type2,
-} from './types';
-```
+export type { Type1, Type2 } from "./types";
+````
 
 ---
 
 ## 创建新服务指南
 
 ### Step 1: 创建目录和文件
+
 ```bash
 mkdir lib/services/resource
 touch lib/services/resource/types.ts
@@ -412,6 +429,7 @@ touch lib/services/resource/index.ts
 ```
 
 ### Step 2: 定义类型（types.ts）
+
 ```typescript
 export interface Resource {
   id: number;
@@ -424,50 +442,53 @@ export interface CreateResourceRequest {
 ```
 
 ### Step 3: 实现服务（resource.service.ts）
+
 ```typescript
-import { BaseService } from '../core/base.service';
-import type { Resource, CreateResourceRequest } from './types';
+import { BaseService } from "../core/base.service";
+import type { Resource, CreateResourceRequest } from "./types";
 
 export class ResourceService extends BaseService {
-  protected static readonly basePath = '/api/v1/resources';
+  protected static readonly basePath = "/api/v1/resources";
 
   static async list(): Promise<Resource[]> {
-    return this.get<Resource[]>('/');
+    return this.get<Resource[]>("/");
   }
 
   static async create(request: CreateResourceRequest): Promise<Resource> {
-    return this.post<Resource>('/', request);
+    return this.post<Resource>("/", request);
   }
 }
 ```
 
 ### Step 4: 导出模块（index.ts）
+
 ```typescript
 /**
  * 资源服务模块
- * 
+ *
  * @description
  * 提供资源管理相关的功能，包括：
  * - 资源列表查询
  * - 资源创建
  */
 
-export { ResourceService } from './resource.service';
-export type * from './types';
+export { ResourceService } from "./resource.service";
+export type * from "./types";
 ```
 
 ### Step 5: 注册到统一入口（services/index.ts）
+
 ```typescript
-import { ResourceService } from './resource';
+import { ResourceService } from "./resource";
 
 const services = {
   // ... existing services
-  resource: ResourceService,  // 新增
+  resource: ResourceService, // 新增
 };
 
 export default services;
-export { ResourceService } from './resource';
-export type * from './resource';
+export { ResourceService } from "./resource";
+export type * from "./resource";
 ```
 
 ---
@@ -475,23 +496,23 @@ export type * from './resource';
 ## 使用示例
 
 ```typescript
-import services from '@/lib/services';
+import services from "@/lib/services";
 
 // 调用服务
 const user = await services.auth.getUserInfo();
 const transactions = await services.transaction.getTransactions({
   page: 1,
-  page_size: 20
+  page_size: 20,
 });
 
 // 错误处理
-import { UnauthorizedError, ValidationError } from '@/lib/services';
+import { UnauthorizedError, ValidationError } from "@/lib/services";
 
 try {
   await services.merchant.createAPIKey(request);
 } catch (error) {
   if (error instanceof UnauthorizedError) {
-    router.push('/login');
+    router.push("/login");
   } else if (error instanceof ValidationError) {
     toast.error(error.message);
   }
@@ -503,12 +524,14 @@ try {
 ## 注意事项
 
 ### 禁止事项
+
 - ❌ 使用 `any` 类型
 - ❌ 直接使用 `apiClient`（除非在 `BaseService` 内部）
 - ❌ 绕过 BaseService 实现 HTTP 请求
 - ❌ 在业务组件中直接导入 axios
 
 ### 必须遵循
+
 - ✅ 所有服务继承 `BaseService`
 - ✅ 使用 `protected static readonly basePath`
 - ✅ 方法必须有完整的 JSDoc 注释

@@ -1,11 +1,11 @@
-import { useState } from "react"
-import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
-import { Spinner } from "@/components/ui/spinner"
-import { ErrorInline } from "@/components/layout/error"
-import { EmptyStateWithBorder } from "@/components/layout/empty"
-import { LoadingStateWithBorder } from "@/components/layout/loading"
-import { ListRestart, Layers, LucideIcon, Trash2 } from "lucide-react"
+import { useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { ErrorInline } from "@/components/layout/error";
+import { EmptyStateWithBorder } from "@/components/layout/empty";
+import { LoadingStateWithBorder } from "@/components/layout/loading";
+import { ListRestart, Layers, LucideIcon, Trash2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,47 +15,52 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
-
+} from "@/components/ui/alert-dialog";
+import {
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "@/components/ui/table";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 interface ManagePageProps<T> {
-  title: string
-  data: T[]
-  loading: boolean
-  error: Error | null
-  onReload: () => void
+  title: string;
+  data: T[];
+  loading: boolean;
+  error: Error | null;
+  onReload: () => void;
 
   /** 获取初始编辑数据 */
-  getInitialEditData: (item: T) => Partial<T>
-  onSave: (item: T, editData: Partial<T>) => Promise<void>
-  onDelete: (item: T) => Promise<void>
+  getInitialEditData: (item: T) => Partial<T>;
+  onSave: (item: T, editData: Partial<T>) => Promise<void>;
+  onDelete: (item: T) => Promise<void>;
 
   /** 渲染表格 (Config-Driven) */
   columns: {
-    header: string
-    cell: (item: T) => React.ReactNode
-    width?: string
-    align?: 'left' | 'center' | 'right'
-    className?: string
-  }[]
+    header: string;
+    cell: (item: T) => React.ReactNode;
+    width?: string;
+    align?: "left" | "center" | "right";
+    className?: string;
+  }[];
 
   /** 渲染详情 */
   renderDetail: (props: {
-    selected: T | null
-    hovered: T | null
-    editData: Partial<T>
-    onEditDataChange: (field: keyof T, value: T[keyof T]) => void
-    onSave: () => void
-    saving: boolean
-  }) => React.ReactNode
+    selected: T | null;
+    hovered: T | null;
+    editData: Partial<T>;
+    onEditDataChange: (field: keyof T, value: T[keyof T]) => void;
+    onSave: () => void;
+    saving: boolean;
+  }) => React.ReactNode;
 
   /** 空状态图标 */
-  emptyIcon?: LucideIcon
-  emptyDescription?: string
-  loadingDescription?: string
-  getId: (item: T) => string | number
+  emptyIcon?: LucideIcon;
+  emptyDescription?: string;
+  loadingDescription?: string;
+  getId: (item: T) => string | number;
 }
 
 export function ManagePage<T>({
@@ -72,82 +77,82 @@ export function ManagePage<T>({
   emptyIcon = Layers,
   emptyDescription = "暂无数据",
   loadingDescription = "加载中",
-  getId
+  getId,
 }: ManagePageProps<T>) {
   /** 悬停状态 */
-  const [hoveredItem, setHoveredItem] = useState<T | null>(null)
-  const [selectedItem, setSelectedItem] = useState<T | null>(null)
-  const [editData, setEditData] = useState<Partial<T>>({})
-  const [saving, setSaving] = useState(false)
-  const [deletingItem, setDeletingItem] = useState<T | null>(null)
+  const [hoveredItem, setHoveredItem] = useState<T | null>(null);
+  const [selectedItem, setSelectedItem] = useState<T | null>(null);
+  const [editData, setEditData] = useState<Partial<T>>({});
+  const [saving, setSaving] = useState(false);
+  const [deletingItem, setDeletingItem] = useState<T | null>(null);
 
   /** 悬停处理 */
   const handleHover = (item: T | null) => {
-    setHoveredItem(item)
-  }
+    setHoveredItem(item);
+  };
 
   /** 选择处理 */
   const handleSelect = (item: T) => {
-    const itemId = getId(item)
-    const selectedId = selectedItem ? getId(selectedItem) : null
+    const itemId = getId(item);
+    const selectedId = selectedItem ? getId(selectedItem) : null;
 
     if (itemId === selectedId) {
-      setSelectedItem(null)
-      setEditData({})
+      setSelectedItem(null);
+      setEditData({});
     } else {
-      setSelectedItem(item)
-      setEditData(getInitialEditData(item))
+      setSelectedItem(item);
+      setEditData(getInitialEditData(item));
     }
-    setHoveredItem(null)
-  }
+    setHoveredItem(null);
+  };
 
   /** 编辑数据处理 */
   const handleEditDataChange = (field: keyof T, value: T[keyof T]) => {
-    setEditData(prev => ({
+    setEditData((prev) => ({
       ...prev,
-      [field]: value
-    }))
-  }
+      [field]: value,
+    }));
+  };
 
   /** 保存处理 */
   const handleSave = async () => {
-    if (!selectedItem) return
+    if (!selectedItem) return;
 
     try {
-      setSaving(true)
-      await onSave(selectedItem, editData)
-      toast.success('保存成功')
+      setSaving(true);
+      await onSave(selectedItem, editData);
+      toast.success("保存成功");
     } catch (error) {
-      toast.error('保存失败', {
-        description: error instanceof Error ? error.message : '未知错误'
-      })
+      toast.error("保存失败", {
+        description: error instanceof Error ? error.message : "未知错误",
+      });
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   /** 删除处理 */
   const handleDeleteClick = (item: T) => {
-    setDeletingItem(item)
-  }
+    setDeletingItem(item);
+  };
 
   const handleConfirmDelete = async () => {
-    if (!deletingItem) return
+    if (!deletingItem) return;
     try {
-      await onDelete(deletingItem)
-      toast.success('删除成功')
-      setDeletingItem(null)
+      await onDelete(deletingItem);
+      toast.success("删除成功");
+      setDeletingItem(null);
       // 如果删除的是当前选中的项，清除选中状态
       if (selectedItem && getId(selectedItem) === getId(deletingItem)) {
-        setSelectedItem(null)
-        setEditData({})
+        setSelectedItem(null);
+        setEditData({});
       }
     } catch (error) {
-      toast.error('删除失败', {
-        description: error instanceof Error ? error.message : '未知错误'
-      })
+      toast.error("删除失败", {
+        description: error instanceof Error ? error.message : "未知错误",
+      });
     }
-  }
+  };
 
   /** 渲染内容 */
   const renderContent = () => {
@@ -157,7 +162,7 @@ export function ManagePage<T>({
           icon={ListRestart}
           description={loadingDescription}
         />
-      )
+      );
     }
 
     if (error) {
@@ -169,16 +174,13 @@ export function ManagePage<T>({
             className="justify-center"
           />
         </div>
-      )
+      );
     }
 
     if (!data || data.length === 0) {
       return (
-        <EmptyStateWithBorder
-          icon={emptyIcon}
-          description={emptyDescription}
-        />
-      )
+        <EmptyStateWithBorder icon={emptyIcon} description={emptyDescription} />
+      );
     }
 
     return (
@@ -192,10 +194,8 @@ export function ManagePage<T>({
         onDelete={handleDeleteClick}
         getId={getId}
       />
-    )
-  }
-
-
+    );
+  };
 
   return (
     <div className="py-6">
@@ -218,12 +218,15 @@ export function ManagePage<T>({
             editData,
             onEditDataChange: handleEditDataChange,
             onSave: handleSave,
-            saving
+            saving,
           })}
         </div>
       </div>
 
-      <AlertDialog open={!!deletingItem} onOpenChange={(open) => !open && setDeletingItem(null)}>
+      <AlertDialog
+        open={!!deletingItem}
+        onOpenChange={(open) => !open && setDeletingItem(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>确认删除?</AlertDialogTitle>
@@ -233,24 +236,27 @@ export function ManagePage<T>({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>取消</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete} className="bg-red-600 hover:bg-red-700">
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
               确认删除
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  )
+  );
 }
 
 /** 详情面板 props */
 interface ManageDetailPanelProps {
-  title?: string
-  isEmpty: boolean
-  emptyDescription?: string
-  onSave?: () => void
-  saving?: boolean
-  children: React.ReactNode
+  title?: string;
+  isEmpty: boolean;
+  emptyDescription?: string;
+  onSave?: () => void;
+  saving?: boolean;
+  children: React.ReactNode;
 }
 
 /** 详情面板 */
@@ -260,18 +266,15 @@ export function ManageDetailPanel({
   emptyDescription = "请选择配置查看详情",
   onSave,
   saving = false,
-  children
+  children,
 }: ManageDetailPanelProps) {
   if (isEmpty) {
     return (
       <div className="space-y-4">
         <div className="font-semibold mb-4">{title}</div>
-        <EmptyStateWithBorder
-          icon={Layers}
-          description={emptyDescription}
-        />
+        <EmptyStateWithBorder icon={Layers} description={emptyDescription} />
       </div>
-    )
+    );
   }
 
   return (
@@ -286,14 +289,20 @@ export function ManageDetailPanel({
               size="sm"
               className="px-3 h-7 text-xs"
             >
-              {saving ? (<><Spinner /> 更新中</>) : '更新'}
+              {saving ? (
+                <>
+                  <Spinner /> 更新中
+                </>
+              ) : (
+                "更新"
+              )}
             </Button>
           )}
         </div>
         {children}
       </div>
     </div>
-  )
+  );
 }
 
 /** 表格面板 */
@@ -305,22 +314,22 @@ export function ManageTable<T>({
   onSelect,
   onHover,
   onDelete,
-  getId
+  getId,
 }: {
-  data: T[]
+  data: T[];
   columns: {
-    header: string
-    cell: (item: T) => React.ReactNode
-    width?: string
-    align?: 'left' | 'center' | 'right'
-    className?: string
-  }[]
-  selected: T | null
-  hovered: T | null
-  onSelect: (item: T) => void
-  onHover: (item: T | null) => void
-  onDelete: (item: T) => void
-  getId: (item: T) => string | number
+    header: string;
+    cell: (item: T) => React.ReactNode;
+    width?: string;
+    align?: "left" | "center" | "right";
+    className?: string;
+  }[];
+  selected: T | null;
+  hovered: T | null;
+  onSelect: (item: T) => void;
+  onHover: (item: T | null) => void;
+  onDelete: (item: T) => void;
+  getId: (item: T) => string | number;
 }) {
   return (
     <div className="border border-dashed shadow-none rounded-lg overflow-hidden">
@@ -332,29 +341,32 @@ export function ManageTable<T>({
                 {columns.map((col, index) => (
                   <TableHead
                     key={index}
-                    className={`whitespace-nowrap ${ col.width ? `w-[${ col.width }]` : '' } ${ col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : '' } ${ col.className || '' }`}
+                    className={`whitespace-nowrap ${col.width ? `w-[${col.width}]` : ""} ${col.align === "center" ? "text-center" : col.align === "right" ? "text-right" : ""} ${col.className || ""}`}
                   >
                     {col.header}
                   </TableHead>
                 ))}
-                <TableHead className="whitespace-nowrap text-center w-[120px]">操作</TableHead>
+                <TableHead className="whitespace-nowrap text-center w-[120px]">
+                  操作
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className="animate-in fade-in duration-200">
               {data.map((item) => {
-                const id = getId(item)
-                const isSelected = selected && getId(selected) === id
-                const isHovered = hovered && getId(hovered) === id
+                const id = getId(item);
+                const isSelected = selected && getId(selected) === id;
+                const isHovered = hovered && getId(hovered) === id;
 
                 return (
                   <TableRow
                     key={id}
-                    className={`border-b border-dashed cursor-pointer transition-colors ${ isSelected
-                      ? 'bg-primary/5 hover:bg-primary/10'
-                      : isHovered
-                        ? 'bg-gray-100 hover:bg-muted/50'
-                        : 'hover:bg-gray-100'
-                      }`}
+                    className={`border-b border-dashed cursor-pointer transition-colors ${
+                      isSelected
+                        ? "bg-primary/5 hover:bg-primary/10"
+                        : isHovered
+                          ? "bg-gray-100 hover:bg-muted/50"
+                          : "hover:bg-gray-100"
+                    }`}
                     onMouseEnter={() => onHover(item)}
                     onMouseLeave={() => onHover(null)}
                     onClick={() => onSelect(item)}
@@ -362,7 +374,7 @@ export function ManageTable<T>({
                     {columns.map((col, index) => (
                       <TableCell
                         key={index}
-                        className={`text-xs py-1 ${ col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : '' } ${ col.className || '' }`}
+                        className={`text-xs py-1 ${col.align === "center" ? "text-center" : col.align === "right" ? "text-right" : ""} ${col.className || ""}`}
                       >
                         {col.cell(item)}
                       </TableCell>
@@ -373,15 +385,15 @@ export function ManageTable<T>({
                         size="icon"
                         className="h-6 w-6 text-muted-foreground hover:text-red-600 hover:bg-red-50"
                         onClick={(e) => {
-                          e.stopPropagation()
-                          onDelete(item)
+                          e.stopPropagation();
+                          onDelete(item);
                         }}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </TableCell>
                   </TableRow>
-                )
+                );
               })}
             </TableBody>
           </table>
@@ -389,5 +401,5 @@ export function ManageTable<T>({
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
     </div>
-  )
+  );
 }

@@ -1,9 +1,9 @@
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 /**
  * 积分流转服务组件
- * 
+ *
  * 显示积分流转服务功能和管理入口
  */
 export function Online() {
@@ -11,7 +11,9 @@ export function Online() {
     <div className="space-y-4">
       <div className="bg-muted/50 rounded-lg px-6 py-8">
         <div className="max-w-2xl">
-          <h2 className="text-2xl font-bold mb-4 text-foreground">在线积分流转</h2>
+          <h2 className="text-2xl font-bold mb-4 text-foreground">
+            在线积分流转
+          </h2>
           <p className="text-muted-foreground mb-6 leading-relaxed">
             创建和管理您的在线积分流转服务，无需编写代码即可快速开启个人服务。
           </p>
@@ -23,5 +25,5 @@ export function Online() {
         </div>
       </div>
     </div>
-  )
+  );
 }

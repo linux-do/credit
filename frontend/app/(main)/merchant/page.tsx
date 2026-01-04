@@ -1,5 +1,5 @@
-import { MerchantMain } from "@/components/common/merchant/merchant-main"
+import { MerchantMain } from "@/components/common/merchant/merchant-main";
 
 export default function MerchantPage() {
-  return <MerchantMain />
+  return <MerchantMain />;
 }

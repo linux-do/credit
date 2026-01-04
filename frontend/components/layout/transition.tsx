@@ -1,10 +1,9 @@
-import { motion } from "motion/react"
-
+import { motion } from "motion/react";
 
 /**
  * 页面过渡组件
  * 用于统一显示页面过渡效果
- * 
+ *
  * @example
  * ```tsx
  * <PageTransition>
@@ -26,5 +25,5 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
     >
       {children}
     </motion.div>
-  )
+  );
 }

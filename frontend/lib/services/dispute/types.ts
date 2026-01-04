@@ -1,7 +1,7 @@
 /**
  * 争议状态
  */
-export type DisputeStatus = 'disputing' | 'refund' | 'closed';
+export type DisputeStatus = "disputing" | "refund" | "closed";
 
 /**
  * 争议信息
@@ -76,7 +76,7 @@ export interface RefundReviewRequest {
   /** 争议 ID */
   dispute_id: string;
   /** 审核结果 */
-  status: 'refund' | 'closed';
+  status: "refund" | "closed";
   /** 拒绝原因（status 为 closed 时必填，最大 100 字符） */
   reason?: string;
 }

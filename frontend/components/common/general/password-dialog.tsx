@@ -1,34 +1,34 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useState } from "react"
+import * as React from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
-} from "@/components/ui/input-otp"
-import { Button } from "@/components/ui/button"
-import { Spinner } from "@/components/ui/spinner"
+} from "@/components/ui/input-otp";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 
 interface PasswordDialogProps {
-  isOpen: boolean
-  onOpenChange: (open: boolean) => void
-  onConfirm: (password: string) => void
-  loading?: boolean
-  title?: string
-  description?: string
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: (password: string) => void;
+  loading?: boolean;
+  title?: string;
+  description?: string;
 }
 
 /**
  * 密码输入对话框
- * 
+ *
  * 用于敏感操作前的二次确认
  */
 export function PasswordDialog({
@@ -37,22 +37,22 @@ export function PasswordDialog({
   onConfirm,
   loading = false,
   title = "请输入密码",
-  description = "为了您的账户安全，请输入6位认证密码进行验证"
+  description = "为了您的账户安全，请输入6位认证密码进行验证",
 }: PasswordDialogProps) {
-  const [password, setPassword] = useState("")
+  const [password, setPassword] = useState("");
 
   const handleConfirm = () => {
     if (password.length === 6) {
-      onConfirm(password)
+      onConfirm(password);
     }
-  }
+  };
 
   /* 当对话框关闭时重置密码*/
   React.useEffect(() => {
     if (!isOpen) {
-      setPassword("")
+      setPassword("");
     }
-  }, [isOpen])
+  }, [isOpen]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -64,15 +64,14 @@ export function PasswordDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col items-center space-y-6">
-
           <InputOTP
             maxLength={6}
             value={password}
             onChange={setPassword}
             disabled={loading}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && password.length === 6 && !loading) {
-                handleConfirm()
+              if (e.key === "Enter" && password.length === 6 && !loading) {
+                handleConfirm();
               }
             }}
           >
@@ -104,5 +103,5 @@ export function PasswordDialog({
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

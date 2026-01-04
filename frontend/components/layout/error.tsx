@@ -1,45 +1,44 @@
-import * as React from "react"
-import { AlertCircle } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import * as React from "react";
+import { AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-import { cn } from "@/lib/utils"
-
+import { cn } from "@/lib/utils";
 
 /**
  * 错误展示组件属性
  * 用于统一显示加载失败、请求失败等错误状态
  */
 export interface ErrorDisplayProps {
-  title?: string
-  message?: string
-  error?: Error | null
-  onRetry?: () => void
-  retryText?: string
-  icon?: React.ComponentType<{ className?: string }>
-  className?: string
-  showStack?: boolean
+  title?: string;
+  message?: string;
+  error?: Error | null;
+  onRetry?: () => void;
+  retryText?: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  className?: string;
+  showStack?: boolean;
 }
 
 /**
  * 错误展示组件
  * 用于统一显示加载失败、请求失败等错误状态
- * 
+ *
  * @example
  * ```tsx
  * // 基础用法
- * <ErrorDisplay 
- *   title="加载失败" 
- *   message="无法获取数据，请稍后重试" 
+ * <ErrorDisplay
+ *   title="加载失败"
+ *   message="无法获取数据，请稍后重试"
  * />
- * 
+ *
  * // 带重试按钮
- * <ErrorDisplay 
+ * <ErrorDisplay
  *   error={error}
- *   onRetry={() => refetch()} 
+ *   onRetry={() => refetch()}
  * />
- * 
+ *
  * // 自定义样式
- * <ErrorDisplay 
+ * <ErrorDisplay
  *   title="网络错误"
  *   message="请检查您的网络连接"
  *   className="min-h-[400px]"
@@ -58,29 +57,32 @@ export function ErrorDisplay({
   className,
   showStack = false,
 }: ErrorDisplayProps) {
-  const errorMessage = message || error?.message || "发生未知错误，请稍后重试"
+  const errorMessage = message || error?.message || "发生未知错误，请稍后重试";
 
   return (
-    <div className={cn("flex flex-col items-center justify-center py-12 text-center", className)}>
+    <div
+      className={cn(
+        "flex flex-col items-center justify-center py-12 text-center",
+        className
+      )}
+    >
       <div className="size-12 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center mb-4">
         <Icon className="size-6 text-red-600 dark:text-red-400" />
       </div>
 
       <h3 className="text-lg font-semibold mb-2">{title}</h3>
 
-      <p className="text-sm text-muted-foreground max-w-md mb-4">{errorMessage}</p>
+      <p className="text-sm text-muted-foreground max-w-md mb-4">
+        {errorMessage}
+      </p>
 
       {onRetry && (
-        <Button
-          onClick={onRetry}
-          variant="outline"
-          className="mt-2"
-        >
+        <Button onClick={onRetry} variant="outline" className="mt-2">
           {retryText}
         </Button>
       )}
 
-      {showStack && error?.stack && process.env.NODE_ENV === 'development' && (
+      {showStack && error?.stack && process.env.NODE_ENV === "development" && (
         <details className="mt-6 text-left max-w-2xl w-full">
           <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">
             查看详细错误信息
@@ -91,19 +93,19 @@ export function ErrorDisplay({
         </details>
       )}
     </div>
-  )
+  );
 }
 
 /**
  * 区域级错误组件
  * 适合在较小的区域显示错误
- * 
+ *
  * @example
  * ```tsx
- * <ErrorInline 
- *   message="发生错误" 
- *   error={error} 
- *   onRetry={() => refetch()} 
+ * <ErrorInline
+ *   message="发生错误"
+ *   error={error}
+ *   onRetry={() => refetch()}
  * />
  * ```
  */
@@ -112,11 +114,16 @@ export function ErrorInline({
   error,
   onRetry,
   className,
-}: Omit<ErrorDisplayProps, 'title' | 'icon' | 'showStack'>) {
-  const errorMessage = message || error?.message || "发生未知错误"
+}: Omit<ErrorDisplayProps, "title" | "icon" | "showStack">) {
+  const errorMessage = message || error?.message || "发生未知错误";
 
   return (
-    <div className={cn("flex items-center gap-2 text-sm text-red-600 dark:text-red-400", className)}>
+    <div
+      className={cn(
+        "flex items-center gap-2 text-sm text-red-600 dark:text-red-400",
+        className
+      )}
+    >
       <AlertCircle className="size-3 shrink-0 text-destructive" />
       <span className="flex-1 text-xs">{errorMessage}</span>
       {onRetry && (
@@ -130,20 +137,20 @@ export function ErrorInline({
         </Button>
       )}
     </div>
-  )
+  );
 }
 
 /**
  * 页面级错误组件
  * 适合作为页面主要内容的错误状态
- * 
+ *
  * @example
  * ```tsx
- * <ErrorPage 
- *   title="加载失败" 
- *   message="无法获取数据，请稍后重试" 
- *   error={error} 
- *   onRetry={() => refetch()} 
+ * <ErrorPage
+ *   title="加载失败"
+ *   message="无法获取数据，请稍后重试"
+ *   error={error}
+ *   onRetry={() => refetch()}
  * />
  * ```
  */
@@ -152,8 +159,8 @@ export function ErrorPage(props: ErrorDisplayProps) {
     <div className="flex items-center justify-center min-h-[calc(100vh-8rem)]">
       <ErrorDisplay
         {...props}
-        showStack={props.showStack ?? process.env.NODE_ENV === 'development'}
+        showStack={props.showStack ?? process.env.NODE_ENV === "development"}
       />
     </div>
-  )
+  );
 }

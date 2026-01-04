@@ -1,4 +1,4 @@
-import type { PayLevel } from '@/lib/services/auth/types';
+import type { PayLevel } from "@/lib/services/auth/types";
 
 /**
  * 系统配置信息
@@ -229,4 +229,3 @@ export interface UpdateUserStatusRequest {
   /** 是否激活 */
   is_active: boolean;
 }
-

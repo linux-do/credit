@@ -1,7 +1,11 @@
-import Link from "next/link"
-import { Card, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
-import { UserRound, Bell, Shield, Palette } from "lucide-react"
-
+import Link from "next/link";
+import {
+  Card,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
+import { UserRound, Bell, Shield, Palette } from "lucide-react";
 
 /* 设置项 */
 const settingsItems = [
@@ -33,16 +37,19 @@ const settingsItems = [
     href: "/settings/appearance",
     category: "个人设置",
   },
-]
+];
 
 export default function SettingsPage() {
-  const groupedSettings = settingsItems.reduce((acc, item) => {
-    if (!acc[item.category]) {
-      acc[item.category] = []
-    }
-    acc[item.category].push(item)
-    return acc
-  }, {} as Record<string, typeof settingsItems>)
+  const groupedSettings = settingsItems.reduce(
+    (acc, item) => {
+      if (!acc[item.category]) {
+        acc[item.category] = [];
+      }
+      acc[item.category].push(item);
+      return acc;
+    },
+    {} as Record<string, typeof settingsItems>
+  );
 
   return (
     <div className="space-y-6 py-6">
@@ -50,7 +57,9 @@ export default function SettingsPage() {
 
       {Object.entries(groupedSettings).map(([category, items]) => (
         <div key={category} className="space-y-4">
-          <div className="font-medium text-sm text-muted-foreground">{category}</div>
+          <div className="font-medium text-sm text-muted-foreground">
+            {category}
+          </div>
           <div className="grid grid-cols-2 gap-4">
             {items.map((item) => (
               <Link key={item.href} href={item.href}>
@@ -59,7 +68,9 @@ export default function SettingsPage() {
                     <div className="flex items-center gap-4">
                       <item.icon className="size-5 text-primary" />
                       <div>
-                        <CardTitle className="mb-1 text-sm">{item.title}</CardTitle>
+                        <CardTitle className="mb-1 text-sm">
+                          {item.title}
+                        </CardTitle>
                         <CardDescription className="text-xs">
                           {item.description}
                         </CardDescription>
@@ -73,5 +84,5 @@ export default function SettingsPage() {
         </div>
       ))}
     </div>
-  )
+  );
 }

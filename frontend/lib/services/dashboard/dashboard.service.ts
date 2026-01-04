@@ -1,15 +1,12 @@
-import { BaseService } from '../core/base.service';
-import type {
-  DailyStatsResponse,
-  TopCustomersResponse,
-} from './types';
+import { BaseService } from "../core/base.service";
+import type { DailyStatsResponse, TopCustomersResponse } from "./types";
 
 /**
  * 仪表板服务
  * 处理仪表板统计数据相关的 API 请求
  */
 export class DashboardService extends BaseService {
-  protected static readonly basePath = '/api/v1/dashboard';
+  protected static readonly basePath = "/api/v1/dashboard";
 
   /**
    * 获取每日收支统计
@@ -17,7 +14,7 @@ export class DashboardService extends BaseService {
    * @returns 每日统计数据列表
    * @throws {UnauthorizedError} 当未登录时
    * @throws {ValidationError} 当参数验证失败时
-   * 
+   *
    * @example
    * ```typescript
    * const stats = await DashboardService.getDailyStats(7);
@@ -28,14 +25,14 @@ export class DashboardService extends BaseService {
    * //   ...
    * // ]
    * ```
-   * 
+   *
    * @remarks
    * - days 参数必须在 1-7 之间
    * - 返回的数据按日期降序排列
    * - income 和 expense 为字符串格式的金额
    */
   static async getDailyStats(days: number): Promise<DailyStatsResponse> {
-    return this.get<DailyStatsResponse>('/stats/daily', { days });
+    return this.get<DailyStatsResponse>("/stats/daily", { days });
   }
 
   /**
@@ -45,7 +42,7 @@ export class DashboardService extends BaseService {
    * @returns Top 客户列表
    * @throws {UnauthorizedError} 当未登录时
    * @throws {ValidationError} 当参数验证失败时
-   * 
+   *
    * @example
    * ```typescript
    * const customers = await DashboardService.getTopCustomers(7, 5);
@@ -56,14 +53,20 @@ export class DashboardService extends BaseService {
    * //   ...
    * // ]
    * ```
-   * 
+   *
    * @remarks
    * - days 参数必须在 1-7 之间
    * - limit 参数必须在 1-10 之间
    * - 返回的数据按累计付款金额降序排列
    * - total_amount 为字符串格式的金额
    */
-  static async getTopCustomers(days: number, limit: number): Promise<TopCustomersResponse> {
-    return this.get<TopCustomersResponse>('/stats/top-customers', { days, limit });
+  static async getTopCustomers(
+    days: number,
+    limit: number
+  ): Promise<TopCustomersResponse> {
+    return this.get<TopCustomersResponse>("/stats/top-customers", {
+      days,
+      limit,
+    });
   }
 }

@@ -1,12 +1,28 @@
-import * as React from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import * as React from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 /**
  * 功能卡片组件
  */
-function FeatureCard({ title, description, linkText, href }: { title: string, description: string, linkText: string, href?: string }) {
+function FeatureCard({
+  title,
+  description,
+  linkText,
+  href,
+}: {
+  title: string;
+  description: string;
+  linkText: string;
+  href?: string;
+}) {
   return (
     <Card className="bg-background border border-border shadow-none transition-shadow">
       <CardHeader>
@@ -18,23 +34,30 @@ function FeatureCard({ title, description, linkText, href }: { title: string, de
         </CardDescription>
         {href ? (
           <Link href={href}>
-            <Button variant="link" className="px-0 h-auto text-xs text-blue-600 font-normal hover:text-blue-700">
+            <Button
+              variant="link"
+              className="px-0 h-auto text-xs text-blue-600 font-normal hover:text-blue-700"
+            >
               {linkText}
             </Button>
           </Link>
         ) : (
-          <Button variant="link" className="px-0 h-auto text-xs text-muted-foreground font-normal cursor-not-allowed" disabled>
+          <Button
+            variant="link"
+            className="px-0 h-auto text-xs text-muted-foreground font-normal cursor-not-allowed"
+            disabled
+          >
             {linkText}
           </Button>
         )}
       </CardContent>
     </Card>
-  )
+  );
 }
 
 /**
  * 积分收益组件
- * 
+ *
  * 显示积分收益功能和规则
  */
 export function Receive() {
@@ -42,9 +65,12 @@ export function Receive() {
     <div className="space-y-4">
       <div className="bg-muted/50 rounded-lg px-6 py-8">
         <div className="max-w-2xl">
-          <h2 className="text-2xl font-bold mb-4 text-foreground">获得积分收益</h2>
+          <h2 className="text-2xl font-bold mb-4 text-foreground">
+            获得积分收益
+          </h2>
           <p className="text-muted-foreground mb-6 leading-relaxed">
-            通过无代码选项快速开始探索或使用与我们的 API 集成的可自定义积分服务。
+            通过无代码选项快速开始探索或使用与我们的 API
+            集成的可自定义积分服务。
           </p>
           <Button className="bg-primary hover:bg-primary/90 font-medium px-6 rounded-md shadow-sm">
             开始使用
@@ -72,5 +98,5 @@ export function Receive() {
         />
       </div>
     </div>
-  )
+  );
 }

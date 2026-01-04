@@ -3,7 +3,7 @@
  * - fixed: 固定金额，每个红包金额相同
  * - random: 拼手气，随机分配金额
  */
-export type RedEnvelopeType = 'fixed' | 'random';
+export type RedEnvelopeType = "fixed" | "random";
 
 /**
  * 红包状态
@@ -11,7 +11,7 @@ export type RedEnvelopeType = 'fixed' | 'random';
  * - finished: 已领完
  * - expired: 已过期
  */
-export type RedEnvelopeStatus = 'active' | 'finished' | 'expired';
+export type RedEnvelopeStatus = "active" | "finished" | "expired";
 
 /**
  * 红包信息
@@ -128,7 +128,7 @@ export interface RedEnvelopeListParams {
   /** 每页数量，1-100 */
   page_size: number;
   /** 查询类型（sent: 发出的, received: 收到的） */
-  type?: 'sent' | 'received';
+  type?: "sent" | "received";
 }
 
 /**

@@ -1,11 +1,11 @@
-import { type ReactNode } from "react"
+import { type ReactNode } from "react";
 
 export type PolicySection = {
-  value: string
-  title: string
-  content: ReactNode
+  value: string;
+  title: string;
+  content: ReactNode;
   children?: {
-    value: string
-    title: string
-  }[]
-}
+    value: string;
+    title: string;
+  }[];
+};

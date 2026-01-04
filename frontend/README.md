@@ -22,11 +22,13 @@ Modern frontend application for the Linux Do Credit system.
 ### Installation
 
 1. Install dependencies:
+
    ```bash
    pnpm install
    ```
 
 2. Run the development server:
+
    ```bash
    pnpm dev
    ```

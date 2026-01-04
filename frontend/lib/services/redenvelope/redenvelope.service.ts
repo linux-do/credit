@@ -1,4 +1,4 @@
-import { BaseService } from '../core/base.service';
+import { BaseService } from "../core/base.service";
 import type {
   CreateRedEnvelopeRequest,
   CreateRedEnvelopeResponse,
@@ -7,14 +7,14 @@ import type {
   RedEnvelopeDetailResponse,
   RedEnvelopeListParams,
   RedEnvelopeListResponse,
-} from './types';
+} from "./types";
 
 /**
  * 红包服务
  * 处理红包创建、领取、查询相关的 API 请求
  */
 export class RedEnvelopeService extends BaseService {
-  protected static readonly basePath = '/api/v1/redenvelope';
+  protected static readonly basePath = "/api/v1/redenvelope";
 
   /**
    * 创建红包
@@ -36,8 +36,10 @@ export class RedEnvelopeService extends BaseService {
    * console.log('分享链接:', result.link);
    * ```
    */
-  static async create(data: CreateRedEnvelopeRequest): Promise<CreateRedEnvelopeResponse> {
-    return this.post<CreateRedEnvelopeResponse>('/create', data);
+  static async create(
+    data: CreateRedEnvelopeRequest
+  ): Promise<CreateRedEnvelopeResponse> {
+    return this.post<CreateRedEnvelopeResponse>("/create", data);
   }
 
   /**
@@ -54,8 +56,10 @@ export class RedEnvelopeService extends BaseService {
    * console.log('领取金额:', result.amount);
    * ```
    */
-  static async claim(data: ClaimRedEnvelopeRequest): Promise<ClaimRedEnvelopeResponse> {
-    return this.post<ClaimRedEnvelopeResponse>('/claim', data);
+  static async claim(
+    data: ClaimRedEnvelopeRequest
+  ): Promise<ClaimRedEnvelopeResponse> {
+    return this.post<ClaimRedEnvelopeResponse>("/claim", data);
   }
 
   /**
@@ -90,7 +94,9 @@ export class RedEnvelopeService extends BaseService {
    * });
    * ```
    */
-  static async getList(params: RedEnvelopeListParams): Promise<RedEnvelopeListResponse> {
-    return this.post<RedEnvelopeListResponse>('/list', params);
+  static async getList(
+    params: RedEnvelopeListParams
+  ): Promise<RedEnvelopeListResponse> {
+    return this.post<RedEnvelopeListResponse>("/list", params);
   }
 }

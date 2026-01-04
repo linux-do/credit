@@ -1,17 +1,17 @@
-import { ComponentType } from "react"
+import { ComponentType } from "react";
 
 export interface AvatarDecorationTheme {
-  key: string
-  MainDecoration: ComponentType<{ className?: string }>
-  InteractionDecoration: ComponentType<{ className?: string; show?: boolean }>
-  BackgroundEffect?: ComponentType
+  key: string;
+  MainDecoration: ComponentType<{ className?: string }>;
+  InteractionDecoration: ComponentType<{ className?: string; show?: boolean }>;
+  BackgroundEffect?: ComponentType;
   smallMainDecorationConfig?: {
-    className?: string
-  }
+    className?: string;
+  };
   largeMainDecorationConfig?: {
-    className?: string
-  }
+    className?: string;
+  };
   interactionDecorationConfig?: {
-    className?: string
-  }
+    className?: string;
+  };
 }

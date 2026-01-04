@@ -1,5 +1,5 @@
-import { SecurityMain } from "@/components/common/settings/security"
+import { SecurityMain } from "@/components/common/settings/security";
 
 export default function SecurityPage() {
-  return <SecurityMain />
+  return <SecurityMain />;
 }

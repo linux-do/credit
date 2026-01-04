@@ -1,14 +1,23 @@
-import * as React from "react"
-import { Area, AreaChart, XAxis } from "recharts"
-import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { CountingNumber } from '@/components/animate-ui/primitives/texts/counting-number'
-import { Skeleton } from "@/components/ui/skeleton"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Info } from "lucide-react"
+import * as React from "react";
+import { Area, AreaChart, XAxis } from "recharts";
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import { CountingNumber } from "@/components/animate-ui/primitives/texts/counting-number";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Info } from "lucide-react";
 
-import { useUser } from "@/contexts/user-context"
-import { DashboardService } from "@/lib/services"
-import type { DailyStatsItem } from "@/lib/services"
+import { useUser } from "@/contexts/user-context";
+import { DashboardService } from "@/lib/services";
+import type { DailyStatsItem } from "@/lib/services";
 
 const chartConfig = {
   total: {
@@ -23,7 +32,7 @@ const chartConfig = {
     label: "支出",
     color: "#f43f5e",
   },
-} satisfies ChartConfig
+} satisfies ChartConfig;
 
 /**
  * 数据面板组件
@@ -31,72 +40,84 @@ const chartConfig = {
  * @returns {React.ReactNode} 数据面板组件
  */
 export function DataPanel() {
-  const { user, loading: userLoading } = useUser()
-  const [dailyStats, setDailyStats] = React.useState<DailyStatsItem[]>([])
-  const [loading, setLoading] = React.useState(true)
+  const { user, loading: userLoading } = useUser();
+  const [dailyStats, setDailyStats] = React.useState<DailyStatsItem[]>([]);
+  const [loading, setLoading] = React.useState(true);
 
-  const availableBalance = parseFloat(user?.available_balance || '0')
-  const remainQuota = parseFloat(user?.remain_quota || '0')
-  const communityBalance = parseFloat(user?.community_balance || '0').toLocaleString()
+  const availableBalance = parseFloat(user?.available_balance || "0");
+  const remainQuota = parseFloat(user?.remain_quota || "0");
+  const communityBalance = parseFloat(
+    user?.community_balance || "0"
+  ).toLocaleString();
 
   /* 获取每日统计数据 */
   React.useEffect(() => {
     const fetchDailyStats = async () => {
-      setLoading(true)
-      const data = await DashboardService.getDailyStats(7)
-      setDailyStats(data)
-      setLoading(false)
-    }
+      setLoading(true);
+      const data = await DashboardService.getDailyStats(7);
+      setDailyStats(data);
+      setLoading(false);
+    };
 
     if (!userLoading && user) {
-      fetchDailyStats()
+      fetchDailyStats();
     }
-  }, [userLoading, user])
+  }, [userLoading, user]);
 
   /* 根据当前余额和每日收支反推历史积分总额 */
   const chartData = React.useMemo(() => {
-    if (!dailyStats.length || userLoading) return []
+    if (!dailyStats.length || userLoading) return [];
 
-    const sortedStats = [...dailyStats].sort((a, b) =>
-      new Date(b.date).getTime() - new Date(a.date).getTime()
-    )
+    const sortedStats = [...dailyStats].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
 
-    let currentBalance = availableBalance
-    const balanceHistory: Array<{ date: string; total: number; income: number; expense: number }> = []
+    let currentBalance = availableBalance;
+    const balanceHistory: Array<{
+      date: string;
+      total: number;
+      income: number;
+      expense: number;
+    }> = [];
 
     for (let i = 0; i < sortedStats.length; i++) {
-      const stat = sortedStats[i]
-      const income = parseFloat(stat.income || '0')
-      const expense = parseFloat(stat.expense || '0')
+      const stat = sortedStats[i];
+      const income = parseFloat(stat.income || "0");
+      const expense = parseFloat(stat.expense || "0");
 
       balanceHistory.unshift({
-        date: new Date(stat.date).toLocaleDateString('zh-CN', {
-          month: 'numeric',
-          day: 'numeric'
+        date: new Date(stat.date).toLocaleDateString("zh-CN", {
+          month: "numeric",
+          day: "numeric",
         }),
         total: Math.max(0, currentBalance),
         income,
-        expense
-      })
+        expense,
+      });
 
-      currentBalance = currentBalance - income + expense
+      currentBalance = currentBalance - income + expense;
     }
 
-    return balanceHistory
-  }, [dailyStats, availableBalance, userLoading])
+    return balanceHistory;
+  }, [dailyStats, availableBalance, userLoading]);
 
   return (
     <div className="flex flex-col md:grid md:grid-cols-3 gap-8 md:gap-12">
       {/* 积分趋势图表区域 - 移动端在上方，桌面端占左侧 2/3 */}
       <div className="md:col-span-2 order-1 md:order-none">
-        <h3 className="text-sm text-muted-foreground font-medium mb-2">积分趋势</h3>
+        <h3 className="text-sm text-muted-foreground font-medium mb-2">
+          积分趋势
+        </h3>
 
         {loading || userLoading ? (
           <div className="w-full h-[240px] flex items-center justify-center">
             <Skeleton className="h-full w-full rounded-lg" />
           </div>
         ) : chartData.length > 0 ? (
-          <ChartContainer config={chartConfig} className="w-full h-[240px] font-bold">
+          <ChartContainer
+            config={chartConfig}
+            className="w-full h-[240px] font-bold"
+          >
             <AreaChart
               data={chartData}
               margin={{
@@ -108,8 +129,16 @@ export function DataPanel() {
             >
               <defs>
                 <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(217, 91%, 60%)" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="hsl(217, 91%, 60%)" stopOpacity={0} />
+                  <stop
+                    offset="5%"
+                    stopColor="hsl(217, 91%, 60%)"
+                    stopOpacity={0.2}
+                  />
+                  <stop
+                    offset="95%"
+                    stopColor="hsl(217, 91%, 60%)"
+                    stopOpacity={0}
+                  />
                 </linearGradient>
                 <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
@@ -189,12 +218,19 @@ export function DataPanel() {
                 <Info className="size-3.5 cursor-pointer" />
               </PopoverTrigger>
               <PopoverContent side="top" className="w-auto max-w-[280px] p-3">
-                <p className="text-xs">社区基准分数(上一次从社区同步的积分基准值): {userLoading ? '-' : communityBalance} </p>
+                <p className="text-xs">
+                  社区基准分数(上一次从社区同步的积分基准值):{" "}
+                  {userLoading ? "-" : communityBalance}{" "}
+                </p>
               </PopoverContent>
             </Popover>
           </div>
           <div className="text-xl font-semibold pt-2">
-            {userLoading ? '-' : <CountingNumber number={availableBalance} decimalPlaces={2} />}
+            {userLoading ? (
+              "-"
+            ) : (
+              <CountingNumber number={availableBalance} decimalPlaces={2} />
+            )}
           </div>
         </div>
 
@@ -206,15 +242,23 @@ export function DataPanel() {
                 <Info className="size-3.5 cursor-pointer" />
               </PopoverTrigger>
               <PopoverContent side="top" className="w-auto max-w-[280px] p-3">
-                <p className="text-xs">每日积分消耗额度限制，每日 0 点自动重置</p>
+                <p className="text-xs">
+                  每日积分消耗额度限制，每日 0 点自动重置
+                </p>
               </PopoverContent>
             </Popover>
           </div>
           <div className="text-xl font-semibold pt-2">
-            {userLoading ? '-' : remainQuota < 0 ? "无限制" : <CountingNumber number={remainQuota} decimalPlaces={2} />}
+            {userLoading ? (
+              "-"
+            ) : remainQuota < 0 ? (
+              "无限制"
+            ) : (
+              <CountingNumber number={remainQuota} decimalPlaces={2} />
+            )}
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

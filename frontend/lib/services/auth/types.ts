@@ -83,4 +83,3 @@ export interface OAuthCallbackRequest {
   /** 授权码 */
   code: string;
 }
-

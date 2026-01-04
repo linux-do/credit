@@ -1,4 +1,4 @@
-import type { ThemeConfig } from "./types"
+import type { ThemeConfig } from "./types";
 
 /**
  * 主题系统配置
@@ -7,4 +7,4 @@ import type { ThemeConfig } from "./types"
 export const THEME_CONFIG: ThemeConfig = {
   styleDir: "public/style",
   storageKey: "app-theme-id",
-}
+};

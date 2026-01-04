@@ -213,7 +213,6 @@ export interface UpdatePaymentLinkRequest {
   user_limit?: number;
 }
 
-
 /**
  * 通过支付链接支付请求参数
  */

@@ -1,4 +1,3 @@
-
 export default function TradePage() {
-  return <div>test</div>
+  return <div>test</div>;
 }

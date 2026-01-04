@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useState } from "react"
-import { toast } from "sonner"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
+import * as React from "react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogClose,
@@ -14,74 +14,74 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { PasswordDialog } from "@/components/common/general/password-dialog"
-import services from "@/lib/services"
-import type { TransferRequest } from "@/lib/services"
+} from "@/components/ui/dialog";
+import { PasswordDialog } from "@/components/common/general/password-dialog";
+import services from "@/lib/services";
+import type { TransferRequest } from "@/lib/services";
 
 /**
  * 积分转移组件
- * 
+ *
  * 提供用户之间的积分转移功能 (弹窗式)
  */
 export function Transfer() {
-  const [isFormOpen, setIsFormOpen] = useState(false)
-  const [isPasswordOpen, setIsPasswordOpen] = useState(false)
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isPasswordOpen, setIsPasswordOpen] = useState(false);
 
   /* 表单状态 */
-  const [recipientUsername, setRecipientUsername] = useState("")
-  const [recipientId, setRecipientId] = useState("")
-  const [amount, setAmount] = useState("")
-  const [remark, setRemark] = useState("")
-  const [loading, setLoading] = useState(false)
+  const [recipientUsername, setRecipientUsername] = useState("");
+  const [recipientId, setRecipientId] = useState("");
+  const [amount, setAmount] = useState("");
+  const [remark, setRemark] = useState("");
+  const [loading, setLoading] = useState(false);
 
   /* 验证金额格式*/
   const validateAmount = (value: string): boolean => {
-    const regex = /^\d+(\.\d{1,2})?$/
-    return regex.test(value) && parseFloat(value) > 0
-  }
+    const regex = /^\d+(\.\d{1,2})?$/;
+    return regex.test(value) && parseFloat(value) > 0;
+  };
 
   /* 处理表单提交（第一步）*/
   const handleFormSubmit = () => {
     if (!recipientUsername.trim()) {
-      toast.error("请输入接收方 LINUX DO 用户名")
-      return
+      toast.error("请输入接收方 LINUX DO 用户名");
+      return;
     }
 
     if (!recipientId.trim()) {
-      toast.error("请输入接收方 LINUX DO ID")
-      return
+      toast.error("请输入接收方 LINUX DO ID");
+      return;
     }
 
     /* 验证ID是否为有效数字*/
-    const idNum = parseInt(recipientId)
+    const idNum = parseInt(recipientId);
     if (isNaN(idNum) || idNum <= 0) {
-      toast.error("接收方 LINUX DO ID 格式不正确")
-      return
+      toast.error("接收方 LINUX DO ID 格式不正确");
+      return;
     }
 
     if (!amount.trim()) {
-      toast.error("请输入要转移的积分数量")
-      return
+      toast.error("请输入要转移的积分数量");
+      return;
     }
 
     if (!validateAmount(amount)) {
-      toast.error("积分数量格式不正确，必须大于0且最多2位小数")
-      return
+      toast.error("积分数量格式不正确，必须大于0且最多2位小数");
+      return;
     }
 
     if (remark.length > 200) {
-      toast.error("备注最多200字符")
-      return
+      toast.error("备注最多200字符");
+      return;
     }
 
     /* 关闭表单对话框，打开支付密码对话框*/
-    setIsFormOpen(false)
-    setIsPasswordOpen(true)
-  }
+    setIsFormOpen(false);
+    setIsPasswordOpen(true);
+  };
 
   const handleConfirmTransfer = async (password: string) => {
-    setLoading(true)
+    setLoading(true);
     try {
       const transferData: TransferRequest = {
         recipient_id: recipientId,
@@ -89,27 +89,27 @@ export function Transfer() {
         amount: parseFloat(amount),
         pay_key: password,
         remark: remark || undefined,
-      }
+      };
 
-      await services.transaction.transfer(transferData)
+      await services.transaction.transfer(transferData);
 
-      toast.success("积分转移成功！积分已实时到账。")
+      toast.success("积分转移成功！积分已实时到账。");
 
       /* 重置所有状态*/
-      setRecipientUsername("")
-      setRecipientId("")
-      setAmount("")
-      setRemark("")
-      setIsPasswordOpen(false)
+      setRecipientUsername("");
+      setRecipientId("");
+      setAmount("");
+      setRemark("");
+      setIsPasswordOpen(false);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : '转移失败'
-      toast.error('转移失败', {
-        description: errorMessage
-      })
+      const errorMessage = error instanceof Error ? error.message : "转移失败";
+      toast.error("转移失败", {
+        description: errorMessage,
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="space-y-4">
@@ -120,7 +120,11 @@ export function Transfer() {
             快速、安全地将积分转移给其他用户，支持实时到账，积分即刻可用。
           </p>
           <Button
-            onClick={() => toast.error('积分转移功能已下架，请遵循积分使用规范并使用正确流转功能继续！')}
+            onClick={() =>
+              toast.error(
+                "积分转移功能已下架，请遵循积分使用规范并使用正确流转功能继续！"
+              )
+            }
             className="bg-primary hover:bg-primary/90 font-medium px-6 rounded-md shadow-sm"
           >
             开始转移
@@ -141,7 +145,9 @@ export function Transfer() {
             <div className="grid gap-2">
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="recipient">接收方用户名 <span className="text-red-500">*</span></Label>
+                  <Label htmlFor="recipient">
+                    接收方用户名 <span className="text-red-500">*</span>
+                  </Label>
                   <Input
                     id="recipient"
                     type="text"
@@ -150,11 +156,15 @@ export function Transfer() {
                     onChange={(e) => setRecipientUsername(e.target.value)}
                     disabled={loading}
                   />
-                  <p className="text-xs text-muted-foreground">请输入接收方 LINUX DO 用户名</p>
+                  <p className="text-xs text-muted-foreground">
+                    请输入接收方 LINUX DO 用户名
+                  </p>
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="recipientId">接收方 LINUX DO ID <span className="text-red-500">*</span></Label>
+                  <Label htmlFor="recipientId">
+                    接收方 LINUX DO ID <span className="text-red-500">*</span>
+                  </Label>
                   <Input
                     id="recipientId"
                     type="text"
@@ -164,13 +174,17 @@ export function Transfer() {
                     className="font-mono"
                     disabled={loading}
                   />
-                  <p className="text-xs text-muted-foreground">请输入接收方的用户 LINUX DO ID</p>
+                  <p className="text-xs text-muted-foreground">
+                    请输入接收方的用户 LINUX DO ID
+                  </p>
                 </div>
               </div>
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="amount">积分数量 <span className="text-red-500">*</span></Label>
+              <Label htmlFor="amount">
+                积分数量 <span className="text-red-500">*</span>
+              </Label>
               <div className="relative">
                 <Input
                   id="amount"
@@ -181,7 +195,9 @@ export function Transfer() {
                   disabled={loading}
                 />
               </div>
-              <p className="text-xs text-muted-foreground">请输入要转移的积分数量，支持最多两位小数</p>
+              <p className="text-xs text-muted-foreground">
+                请输入要转移的积分数量，支持最多两位小数
+              </p>
             </div>
 
             <div className="grid gap-2">
@@ -196,18 +212,26 @@ export function Transfer() {
                 className="resize-none"
                 disabled={loading}
               />
-              <p className="text-xs text-muted-foreground">最多 200 个字符，用于记录用途，可选</p>
+              <p className="text-xs text-muted-foreground">
+                最多 200 个字符，用于记录用途，可选
+              </p>
             </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
             <DialogClose asChild>
-              <Button variant="ghost" disabled={loading} className="h-8 text-xs">取消</Button>
+              <Button
+                variant="ghost"
+                disabled={loading}
+                className="h-8 text-xs"
+              >
+                取消
+              </Button>
             </DialogClose>
             <Button
               onClick={(e) => {
-                e.preventDefault()
-                handleFormSubmit()
+                e.preventDefault();
+                handleFormSubmit();
               }}
               disabled={!recipientId || !amount || loading}
               className="bg-primary hover:bg-primary/90 h-8 text-xs"
@@ -221,16 +245,16 @@ export function Transfer() {
       <PasswordDialog
         isOpen={isPasswordOpen}
         onOpenChange={(open) => {
-          setIsPasswordOpen(open)
+          setIsPasswordOpen(open);
           if (!open) {
-            setIsFormOpen(true)
+            setIsFormOpen(true);
           }
         }}
         onConfirm={handleConfirmTransfer}
         loading={loading}
         title="密码验证"
-        description={`正在向 ${ recipientUsername } 转移 ${ amount } LDC`}
+        description={`正在向 ${recipientUsername} 转移 ${amount} LDC`}
       />
     </div>
-  )
+  );
 }
