@@ -7,7 +7,7 @@
  * @returns API 基础 URL
  */
 export function getApiBaseUrl(): string {
-  return process.env.NEXT_PUBLIC_LINUX_DO_CREDIT_BACKEND_URL || '';
+  return process.env.NEXT_PUBLIC_LINUX_DO_CREDIT_BACKEND_URL || "";
 }
 
 /**
@@ -21,4 +21,3 @@ export const apiConfig = {
   /** 携带凭证 */
   withCredentials: true,
 } as const;
-

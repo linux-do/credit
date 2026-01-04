@@ -1,16 +1,22 @@
-import * as React from "react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import type { MerchantAPIKey } from "@/lib/services"
+import * as React from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type { MerchantAPIKey } from "@/lib/services";
 
 interface MerchantSelectorProps {
   /** API Keys 列表 */
-  apiKeys: MerchantAPIKey[]
+  apiKeys: MerchantAPIKey[];
   /** 选中的 API Key */
-  selectedKeyId: string | null
+  selectedKeyId: string | null;
   /** 选择回调 */
-  onSelect: (id: string) => void
+  onSelect: (id: string) => void;
   /** 是否正在加载 */
-  loading?: boolean
+  loading?: boolean;
 }
 
 /**
@@ -25,7 +31,7 @@ export function MerchantSelector({
 }: MerchantSelectorProps) {
   return (
     <Select
-      value={selectedKeyId || ''}
+      value={selectedKeyId || ""}
       onValueChange={(value) => onSelect(value)}
       disabled={loading || apiKeys.length === 0}
     >
@@ -37,7 +43,11 @@ export function MerchantSelector({
           <SelectItem
             key={apiKey.id}
             value={apiKey.id}
-            title={apiKey.app_description ? `${ apiKey.app_name } - ${ apiKey.app_description }` : apiKey.app_name}
+            title={
+              apiKey.app_description
+                ? `${apiKey.app_name} - ${apiKey.app_description}`
+                : apiKey.app_name
+            }
           >
             <div className="flex items-center gap-2 text-xs">
               <span className="font-medium">{apiKey.app_name}</span>
@@ -51,5 +61,5 @@ export function MerchantSelector({
         ))}
       </SelectContent>
     </Select>
-  )
+  );
 }

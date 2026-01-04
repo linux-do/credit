@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -30,7 +30,9 @@ export default function NotFound() {
             404
           </h1>
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-2xl font-medium tracking-[0.2em] text-foreground/80 uppercase">Page Not Found</span>
+            <span className="text-2xl font-medium tracking-[0.2em] text-foreground/80 uppercase">
+              Page Not Found
+            </span>
           </div>
         </motion.div>
 

@@ -2,25 +2,25 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
-  experimental: {
-  },
+  experimental: {},
   async rewrites() {
-    const backendUrl = process.env.LINUX_DO_CREDIT_BACKEND_URL || 'http://localhost:8000';
+    const backendUrl =
+      process.env.LINUX_DO_CREDIT_BACKEND_URL || "http://localhost:8000";
     return [
       // 易支付兼容接口 - 创建订单
       {
-        source: '/epay/pay/:path*',
-        destination: `${ backendUrl }/pay/:path*`,
+        source: "/epay/pay/:path*",
+        destination: `${backendUrl}/pay/:path*`,
       },
       // 易支付兼容接口 - 查询订单和退款
       {
-        source: '/epay/api.php',
-        destination: `${ backendUrl }/api.php`,
+        source: "/epay/api.php",
+        destination: `${backendUrl}/api.php`,
       },
       // 标准 RESTful API 接口
       {
-        source: '/api/:path*',
-        destination: `${ backendUrl }/api/:path*`,
+        source: "/api/:path*",
+        destination: `${backendUrl}/api/:path*`,
       },
     ];
   },

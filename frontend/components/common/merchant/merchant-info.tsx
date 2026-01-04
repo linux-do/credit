@@ -1,9 +1,9 @@
-import * as React from "react"
-import { useState } from "react"
-import Link from "next/link"
-import { toast } from "sonner"
-import { Copy, Eye, EyeOff, Trash2, ExternalLink, Edit } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import * as React from "react";
+import { useState } from "react";
+import Link from "next/link";
+import { toast } from "sonner";
+import { Copy, Eye, EyeOff, Trash2, ExternalLink, Edit } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,63 +14,68 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { MerchantDialog } from "@/components/common/merchant/merchant-dialog"
-import { TestModeToggle } from "@/components/common/merchant/merchant-test"
-import { DistributeDialog } from "@/components/common/merchant/merchant-distribute"
-import { formatDateTime } from "@/lib/utils"
-import { type UpdateAPIKeyRequest, type MerchantAPIKey } from "@/lib/services"
+} from "@/components/ui/alert-dialog";
+import { MerchantDialog } from "@/components/common/merchant/merchant-dialog";
+import { TestModeToggle } from "@/components/common/merchant/merchant-test";
+import { DistributeDialog } from "@/components/common/merchant/merchant-distribute";
+import { formatDateTime } from "@/lib/utils";
+import { type UpdateAPIKeyRequest, type MerchantAPIKey } from "@/lib/services";
 
 interface MerchantInfoProps {
   /** API Key */
-  apiKey: MerchantAPIKey
+  apiKey: MerchantAPIKey;
   /** 更新回调 */
-  onUpdate?: (updatedKey: MerchantAPIKey) => void
+  onUpdate?: (updatedKey: MerchantAPIKey) => void;
   /** 删除回调 */
-  onDelete: (id: string) => void
+  onDelete: (id: string) => void;
   /** 更新 API Key */
-  updateAPIKey?: (id: string, data: UpdateAPIKeyRequest) => Promise<void>
+  updateAPIKey?: (id: string, data: UpdateAPIKeyRequest) => Promise<void>;
 }
 
 /**
  * 集市中心应用信息组件
  * 显示集市中心应用的凭证信息（Client ID 和 Secret）
  */
-export function MerchantInfo({ apiKey, onUpdate, onDelete, updateAPIKey }: MerchantInfoProps) {
-  const [showClientId, setShowClientId] = useState(false)
-  const [showClientSecret, setShowClientSecret] = useState(false)
+export function MerchantInfo({
+  apiKey,
+  onUpdate,
+  onDelete,
+  updateAPIKey,
+}: MerchantInfoProps) {
+  const [showClientId, setShowClientId] = useState(false);
+  const [showClientSecret, setShowClientSecret] = useState(false);
 
   /* 复制到剪贴板 */
   const copyToClipboard = async (text: string, label: string) => {
     try {
-      await navigator.clipboard.writeText(text)
-      toast.success(`${ label } 已复制`)
+      await navigator.clipboard.writeText(text);
+      toast.success(`${label} 已复制`);
     } catch {
       try {
-        const textArea = document.createElement('textarea')
-        textArea.value = text
-        textArea.style.position = 'fixed'
-        textArea.style.opacity = '0'
-        document.body.appendChild(textArea)
-        textArea.select()
-        const successful = document.execCommand('copy')
-        document.body.removeChild(textArea)
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+        document.body.appendChild(textArea);
+        textArea.select();
+        const successful = document.execCommand("copy");
+        document.body.removeChild(textArea);
 
         if (successful) {
-          toast.success(`${ label } 已复制`)
+          toast.success(`${label} 已复制`);
         } else {
-          toast.error('复制失败')
+          toast.error("复制失败");
         }
       } catch {
-        toast.error('复制失败')
+        toast.error("复制失败");
       }
     }
-  }
+  };
 
   const maskText = (text: string, showLength: number = 8) => {
-    if (text.length <= showLength * 2) return text
-    return `${ text.substring(0, showLength) }${ '•'.repeat(20) }${ text.substring(text.length - showLength) }`
-  }
+    if (text.length <= showLength * 2) return text;
+    return `${text.substring(0, showLength)}${"•".repeat(20)}${text.substring(text.length - showLength)}`;
+  };
 
   return (
     <div className="space-y-6 sticky top-0">
@@ -78,7 +83,9 @@ export function MerchantInfo({ apiKey, onUpdate, onDelete, updateAPIKey }: Merch
         <h2 className="font-semibold mb-4">应用信息</h2>
         <div className="border border-dashed rounded-lg">
           <div className="px-3 py-2 flex items-center justify-between border-b border-dashed last:border-b-0">
-            <label className="text-xs font-medium text-muted-foreground">应用名称</label>
+            <label className="text-xs font-medium text-muted-foreground">
+              应用名称
+            </label>
             <div className="flex items-center gap-2 max-w-[70%]">
               <p className="text-xs font-medium truncate">{apiKey.app_name}</p>
               {apiKey.test_mode && (
@@ -91,18 +98,28 @@ export function MerchantInfo({ apiKey, onUpdate, onDelete, updateAPIKey }: Merch
 
           {apiKey.app_description && (
             <div className="px-3 py-2 flex items-center justify-between border-b border-dashed last:border-b-0">
-              <label className="text-xs font-medium text-muted-foreground">应用描述</label>
-              <p className="text-xs text-muted-foreground truncate text-right max-w-[70%]">{apiKey.app_description}</p>
+              <label className="text-xs font-medium text-muted-foreground">
+                应用描述
+              </label>
+              <p className="text-xs text-muted-foreground truncate text-right max-w-[70%]">
+                {apiKey.app_description}
+              </p>
             </div>
           )}
 
           <div className="px-3 py-2 flex items-center justify-between border-b border-dashed last:border-b-0">
-            <label className="text-xs font-medium text-muted-foreground">创建时间</label>
-            <p className="text-xs text-muted-foreground text-right max-w-[70%]">{formatDateTime(apiKey.created_at)}</p>
+            <label className="text-xs font-medium text-muted-foreground">
+              创建时间
+            </label>
+            <p className="text-xs text-muted-foreground text-right max-w-[70%]">
+              {formatDateTime(apiKey.created_at)}
+            </p>
           </div>
 
           <div className="px-3 py-2 flex items-center justify-between border-b border-dashed last:border-b-0">
-            <label className="text-xs font-medium text-muted-foreground">应用地址</label>
+            <label className="text-xs font-medium text-muted-foreground">
+              应用地址
+            </label>
             <Link
               href={apiKey.app_homepage_url}
               target="_blank"
@@ -117,7 +134,9 @@ export function MerchantInfo({ apiKey, onUpdate, onDelete, updateAPIKey }: Merch
 
           {apiKey.redirect_uri && (
             <div className="px-3 py-2 flex items-center justify-between border-b border-dashed last:border-b-0">
-              <label className="text-xs font-medium text-muted-foreground">回调 URI</label>
+              <label className="text-xs font-medium text-muted-foreground">
+                回调 URI
+              </label>
               <Link
                 href={apiKey.redirect_uri}
                 target="_blank"
@@ -132,7 +151,9 @@ export function MerchantInfo({ apiKey, onUpdate, onDelete, updateAPIKey }: Merch
           )}
 
           <div className="px-3 py-2 flex items-center justify-between">
-            <label className="text-xs font-medium text-muted-foreground">通知 URL</label>
+            <label className="text-xs font-medium text-muted-foreground">
+              通知 URL
+            </label>
             <Link
               href={apiKey.notify_url}
               target="_blank"
@@ -152,24 +173,34 @@ export function MerchantInfo({ apiKey, onUpdate, onDelete, updateAPIKey }: Merch
         <div className="border border-dashed rounded-lg px-3 py-2 space-y-4">
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-medium text-muted-foreground">Client ID</label>
-              <span className="text-[10px] text-muted-foreground">客户端标识</span>
+              <label className="text-xs font-medium text-muted-foreground">
+                Client ID
+              </label>
+              <span className="text-[10px] text-muted-foreground">
+                客户端标识
+              </span>
             </div>
             <div className="flex items-center p-2 h-8 border border-dashed rounded-sm">
               <code className="text-xs text-muted-foreground font-mono flex-1 overflow-x-auto p-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                {showClientId ? apiKey.client_id : maskText(apiKey.client_id, 8)}
+                {showClientId
+                  ? apiKey.client_id
+                  : maskText(apiKey.client_id, 8)}
               </code>
               <Button
                 variant="ghost"
                 className="size-6 p-1"
                 onClick={() => setShowClientId(!showClientId)}
               >
-                {showClientId ? <EyeOff className="size-3 text-muted-foreground" /> : <Eye className="size-3 text-muted-foreground" />}
+                {showClientId ? (
+                  <EyeOff className="size-3 text-muted-foreground" />
+                ) : (
+                  <Eye className="size-3 text-muted-foreground" />
+                )}
               </Button>
               <Button
                 variant="ghost"
                 className="size-6 p-1"
-                onClick={() => copyToClipboard(apiKey.client_id, 'Client ID')}
+                onClick={() => copyToClipboard(apiKey.client_id, "Client ID")}
               >
                 <Copy className="size-3 text-muted-foreground" />
               </Button>
@@ -178,23 +209,33 @@ export function MerchantInfo({ apiKey, onUpdate, onDelete, updateAPIKey }: Merch
 
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-medium text-muted-foreground">Client Secret</label>
-              <span className="text-[10px] text-muted-foreground">客户端密钥</span>
+              <label className="text-xs font-medium text-muted-foreground">
+                Client Secret
+              </label>
+              <span className="text-[10px] text-muted-foreground">
+                客户端密钥
+              </span>
             </div>
             <div className="flex items-center p-2 h-8 border border-dashed rounded-sm">
               <code className="text-xs text-muted-foreground font-mono flex-1 overflow-x-auto p-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                {showClientSecret ? apiKey.client_secret : '•'.repeat(40)}
+                {showClientSecret ? apiKey.client_secret : "•".repeat(40)}
               </code>
               <Button
                 variant="ghost"
                 className="size-6 p-1"
                 onClick={() => setShowClientSecret(!showClientSecret)}
               >
-                {showClientSecret ? <EyeOff className="size-3 text-muted-foreground" /> : <Eye className="size-3 text-muted-foreground" />}
+                {showClientSecret ? (
+                  <EyeOff className="size-3 text-muted-foreground" />
+                ) : (
+                  <Eye className="size-3 text-muted-foreground" />
+                )}
               </Button>
               <Button
                 variant="ghost"
-                onClick={() => copyToClipboard(apiKey.client_secret, 'Client Secret')}
+                onClick={() =>
+                  copyToClipboard(apiKey.client_secret, "Client Secret")
+                }
                 className="size-6 p-1"
               >
                 <Copy className="size-3" />
@@ -210,11 +251,14 @@ export function MerchantInfo({ apiKey, onUpdate, onDelete, updateAPIKey }: Merch
           <MerchantDialog
             mode="update"
             apiKey={apiKey}
-            onSuccess={() => { }}
+            onSuccess={() => {}}
             onUpdate={onUpdate}
             updateAPIKey={updateAPIKey}
             trigger={
-              <Button variant="outline" className="text-xs text-primary h-8 border-dashed border-primary/50 hover:bg-primary/5 w-full">
+              <Button
+                variant="outline"
+                className="text-xs text-primary h-8 border-dashed border-primary/50 hover:bg-primary/5 w-full"
+              >
                 <Edit className="size-3 mr-1" />
                 编辑应用
               </Button>
@@ -225,7 +269,10 @@ export function MerchantInfo({ apiKey, onUpdate, onDelete, updateAPIKey }: Merch
 
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="outline" className="text-xs text-destructive h-8 border-dashed border-destructive/50 hover:bg-destructive/5 w-full">
+              <Button
+                variant="outline"
+                className="text-xs text-destructive h-8 border-dashed border-destructive/50 hover:bg-destructive/5 w-full"
+              >
                 <Trash2 className="size-3 mr-1" />
                 删除应用
               </Button>
@@ -259,5 +306,5 @@ export function MerchantInfo({ apiKey, onUpdate, onDelete, updateAPIKey }: Merch
         </div>
       </div>
     </div>
-  )
+  );
 }

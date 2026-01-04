@@ -1,5 +1,5 @@
-import { ProfileMain } from "@/components/common/settings/profile"
+import { ProfileMain } from "@/components/common/settings/profile";
 
 export default function ProfilePage() {
-  return <ProfileMain />
+  return <ProfileMain />;
 }

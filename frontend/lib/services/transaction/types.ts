@@ -1,12 +1,28 @@
 /**
  * 订单类型
  */
-export type OrderType = 'receive' | 'payment' | 'transfer' | 'community' | 'online' | 'test' | 'distribute' | 'red_envelope_send' | 'red_envelope_receive';
+export type OrderType =
+  | "receive"
+  | "payment"
+  | "transfer"
+  | "community"
+  | "online"
+  | "test"
+  | "distribute"
+  | "red_envelope_send"
+  | "red_envelope_receive";
 
 /**
  * 订单状态
  */
-export type OrderStatus = 'success' | 'pending' | 'failed' | 'expired' | 'disputing' | 'refund' | 'refused';
+export type OrderStatus =
+  | "success"
+  | "pending"
+  | "failed"
+  | "expired"
+  | "disputing"
+  | "refund"
+  | "refused";
 
 /**
  * 订单信息
@@ -133,4 +149,3 @@ export interface TransferResponse {
   /** 交易时间 */
   trade_time: string;
 }
-

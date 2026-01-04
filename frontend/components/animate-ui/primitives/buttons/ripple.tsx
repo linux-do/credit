@@ -1,10 +1,13 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { motion, type HTMLMotionProps } from 'motion/react';
+import * as React from "react";
+import { motion, type HTMLMotionProps } from "motion/react";
 
-import { getStrictContext } from '@/lib/utils/get-strict-context';
-import { Slot, type WithAsChild } from '@/components/animate-ui/primitives/animate/slot';
+import { getStrictContext } from "@/lib/utils/get-strict-context";
+import {
+  Slot,
+  type WithAsChild,
+} from "@/components/animate-ui/primitives/animate/slot";
 
 type Ripple = {
   id: number;
@@ -18,10 +21,10 @@ type RippleButtonContextType = {
 };
 
 const [RippleButtonProvider, useRippleButton] =
-  getStrictContext<RippleButtonContextType>('RippleButtonContext');
+  getStrictContext<RippleButtonContextType>("RippleButtonContext");
 
 type RippleButtonProps = WithAsChild<
-  HTMLMotionProps<'button'> & {
+  HTMLMotionProps<"button"> & {
     hoverScale?: number;
     tapScale?: number;
   }
@@ -61,7 +64,7 @@ function RippleButton({
         setRipples((prev) => prev.filter((r) => r.id !== newRipple.id));
       }, 600);
     },
-    [],
+    []
   );
 
   const handleClick = React.useCallback(
@@ -71,7 +74,7 @@ function RippleButton({
         onClick(event);
       }
     },
-    [createRipple, onClick],
+    [createRipple, onClick]
   );
 
   const Component = asChild ? Slot : motion.button;
@@ -85,8 +88,8 @@ function RippleButton({
         whileTap={{ scale: tapScale }}
         whileHover={{ scale: hoverScale }}
         style={{
-          position: 'relative',
-          overflow: 'hidden',
+          position: "relative",
+          overflow: "hidden",
           ...style,
         }}
         {...props}
@@ -96,16 +99,16 @@ function RippleButton({
 }
 
 type RippleButtonRipplesProps = WithAsChild<
-  HTMLMotionProps<'span'> & {
+  HTMLMotionProps<"span"> & {
     color?: string;
     scale?: number;
   }
 >;
 
 function RippleButtonRipples({
-  color = 'var(--ripple-button-ripple-color)',
+  color = "var(--ripple-button-ripple-color)",
   scale = 10,
-  transition = { duration: 0.6, ease: 'easeOut' },
+  transition = { duration: 0.6, ease: "easeOut" },
   asChild = false,
   style,
   ...props
@@ -121,11 +124,11 @@ function RippleButtonRipples({
       animate={{ scale, opacity: 0 }}
       transition={transition}
       style={{
-        position: 'absolute',
-        borderRadius: '50%',
-        pointerEvents: 'none',
-        width: '20px',
-        height: '20px',
+        position: "absolute",
+        borderRadius: "50%",
+        pointerEvents: "none",
+        width: "20px",
+        height: "20px",
         backgroundColor: color,
         top: ripple.y - 10,
         left: ripple.x - 10,

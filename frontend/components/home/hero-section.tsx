@@ -1,7 +1,14 @@
 import * as React from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
-import { ArrowRight, Zap, Shield, Globe, CreditCard, Wallet } from "lucide-react";
+import {
+  ArrowRight,
+  Zap,
+  Shield,
+  Globe,
+  CreditCard,
+  Wallet,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { CountingNumber } from "@/components/animate-ui/primitives/texts/counting-number";
@@ -13,14 +20,16 @@ export interface HeroSectionProps {
 /**
  * Hero Section - 首页 Hero 展示
  */
-export const HeroSection = React.memo(function HeroSection({ className }: HeroSectionProps) {
+export const HeroSection = React.memo(function HeroSection({
+  className,
+}: HeroSectionProps) {
   const [balance, setBalance] = React.useState(12450.0);
   const [income, setIncome] = React.useState(240.0);
 
   React.useEffect(() => {
     const interval = setInterval(() => {
-      setBalance(Math.random() * (65123.45 - (-65)) + (-65));
-      setIncome(Math.random() * (656.56 - (-65.65)) + (-65.65));
+      setBalance(Math.random() * (65123.45 - -65) + -65);
+      setIncome(Math.random() * (656.56 - -65.65) + -65.65);
     }, 6565);
 
     return () => clearInterval(interval);
@@ -40,13 +49,16 @@ export const HeroSection = React.memo(function HeroSection({ className }: HeroSe
         className="relative z-10 w-full h-screen flex flex-col justify-center px-6"
       >
         <div className="container mx-auto max-w-7xl grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-
           <div className="max-w-5xl pt-20 lg:pt-0">
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+              transition={{
+                duration: 0.6,
+                delay: 0.1,
+                ease: [0.16, 1, 0.3, 1],
+              }}
               className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] mb-6 text-foreground"
             >
               LINUX DO Credit <br />
@@ -59,7 +71,11 @@ export const HeroSection = React.memo(function HeroSection({ className }: HeroSe
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              transition={{
+                duration: 0.6,
+                delay: 0.2,
+                ease: [0.16, 1, 0.3, 1],
+              }}
               className="text-sm md:text-base text-muted-foreground max-w-xl leading-relaxed mb-10"
             >
               专为 LINUX DO 社区打造的积分流通基础设施
@@ -71,7 +87,11 @@ export const HeroSection = React.memo(function HeroSection({ className }: HeroSe
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              transition={{
+                duration: 0.6,
+                delay: 0.3,
+                ease: [0.16, 1, 0.3, 1],
+              }}
               className="flex flex-col sm:flex-row items-center gap-4"
             >
               <Link href="/home" className="w-full sm:w-auto">
@@ -141,7 +161,9 @@ export const HeroSection = React.memo(function HeroSection({ className }: HeroSe
                   </div>
                   <div className="flex justify-between items-end">
                     <div>
-                      <p className="text-sm text-muted-foreground mb-1">Total Balance</p>
+                      <p className="text-sm text-muted-foreground mb-1">
+                        Total Balance
+                      </p>
                       <div className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-1">
                         <span>LDC</span>
                         <CountingNumber
@@ -159,14 +181,22 @@ export const HeroSection = React.memo(function HeroSection({ className }: HeroSe
 
               <motion.div
                 animate={{ y: [0, -20, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
                 className="absolute -top-6 -right-6 z-20 bg-background/60 backdrop-blur-xl border border-white/20 p-4 rounded-2xl shadow-xl"
               >
                 <div className="flex items-center gap-3">
-                  <div className={cn(
-                    "w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-500",
-                    income < 0 ? "bg-red-500/20 text-red-500" : "bg-green-500/20 text-green-500"
-                  )}>
+                  <div
+                    className={cn(
+                      "w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-500",
+                      income < 0
+                        ? "bg-red-500/20 text-red-500"
+                        : "bg-green-500/20 text-green-500"
+                    )}
+                  >
                     <Wallet className="size-5" />
                   </div>
                   <div>
@@ -183,7 +213,6 @@ export const HeroSection = React.memo(function HeroSection({ className }: HeroSe
                   </div>
                 </div>
               </motion.div>
-
             </motion.div>
           </div>
         </div>

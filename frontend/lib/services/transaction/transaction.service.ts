@@ -1,12 +1,17 @@
-import { BaseService } from '../core/base.service';
-import type { TransactionQueryParams, TransactionListResponse, TransferRequest, TransferResponse } from './types';
+import { BaseService } from "../core/base.service";
+import type {
+  TransactionQueryParams,
+  TransactionListResponse,
+  TransferRequest,
+  TransferResponse,
+} from "./types";
 
 /**
  * 交易服务
  * 处理订单和交易记录相关的 API 请求
  */
 export class TransactionService extends BaseService {
-  protected static readonly basePath = '/api/v1/order';
+  protected static readonly basePath = "/api/v1/order";
 
   /**
    * 获取交易记录列表（分页）
@@ -14,7 +19,7 @@ export class TransactionService extends BaseService {
    * @returns 交易记录列表
    * @throws {UnauthorizedError} 当未登录时
    * @throws {ValidationError} 当参数验证失败时
-   * 
+   *
    * @example
    * ```typescript
    * const result = await TransactionService.getTransactions({
@@ -25,8 +30,13 @@ export class TransactionService extends BaseService {
    * });
    * ```
    */
-  static async getTransactions(params: TransactionQueryParams): Promise<TransactionListResponse> {
-    return this.post<TransactionListResponse>('/transactions', params as unknown as Record<string, unknown>);
+  static async getTransactions(
+    params: TransactionQueryParams
+  ): Promise<TransactionListResponse> {
+    return this.post<TransactionListResponse>(
+      "/transactions",
+      params as unknown as Record<string, unknown>
+    );
   }
 
   /**
@@ -37,7 +47,7 @@ export class TransactionService extends BaseService {
    * @throws {NotFoundError} 当收款人不存在时
    * @throws {ValidationError} 当参数验证失败时
    * @throws {BadRequestError} 当余额不足或支付密码错误时
-   * 
+   *
    * @example
    * ```typescript
    * const result = await TransactionService.transfer({
@@ -48,7 +58,7 @@ export class TransactionService extends BaseService {
    *   remark: '转账备注'
    * });
    * ```
-   * 
+   *
    * @remarks
    * - 转账金额必须大于0，最多2位小数
    * - 支付密码必须为6-10位
@@ -58,7 +68,8 @@ export class TransactionService extends BaseService {
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   static async transfer(data: TransferRequest): Promise<TransferResponse> {
-    throw new Error('积分转移功能已下架，请遵循积分使用规范并使用正确流转功能继续！');
+    throw new Error(
+      "积分转移功能已下架，请遵循积分使用规范并使用正确流转功能继续！"
+    );
   }
 }
-

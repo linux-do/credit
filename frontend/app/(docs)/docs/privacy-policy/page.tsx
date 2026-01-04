@@ -1,6 +1,6 @@
-import { LegalPageLayout } from "@/components/common/docs/legal-page-layout"
-import { privacySections } from "@/components/common/docs/privacy"
-import { TERMS_LAST_UPDATED } from "@/components/common/docs/terms"
+import { LegalPageLayout } from "@/components/common/docs/legal-page-layout";
+import { privacySections } from "@/components/common/docs/privacy";
+import { TERMS_LAST_UPDATED } from "@/components/common/docs/terms";
 
 export default function PrivacyPolicyPage() {
   return (
@@ -16,5 +16,5 @@ export default function PrivacyPolicyPage() {
         </span>
       }
     />
-  )
+  );
 }

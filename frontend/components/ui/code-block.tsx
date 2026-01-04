@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Check, Copy } from "lucide-react"
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import { Check, Copy } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface CodeBlockProps extends React.HTMLAttributes<HTMLDivElement> {
-  code: string
-  language?: string
-  showLineNumbers?: boolean
+  code: string;
+  language?: string;
+  showLineNumbers?: boolean;
 }
 
 export function CodeBlock({
@@ -16,13 +16,13 @@ export function CodeBlock({
   className,
   ...props
 }: CodeBlockProps) {
-  const [hasCopied, setHasCopied] = React.useState(false)
+  const [hasCopied, setHasCopied] = React.useState(false);
 
   const onCopy = () => {
-    navigator.clipboard.writeText(code)
-    setHasCopied(true)
-    setTimeout(() => setHasCopied(false), 2000)
-  }
+    navigator.clipboard.writeText(code);
+    setHasCopied(true);
+    setTimeout(() => setHasCopied(false), 2000);
+  };
 
   return (
     <div
@@ -51,11 +51,16 @@ export function CodeBlock({
       </div>
       <div className="p-4 overflow-x-auto bg-transparent">
         <pre className="font-mono text-xs leading-relaxed text-[#e0e0e0] !bg-transparent !p-0 !m-0 !border-0 shadow-none whitespace-pre-wrap break-all">
-          <code className={cn("!bg-transparent !p-0 !m-0 !border-0 shadow-none font-mono", language && `language-${ language }`)}>
+          <code
+            className={cn(
+              "!bg-transparent !p-0 !m-0 !border-0 shadow-none font-mono",
+              language && `language-${language}`
+            )}
+          >
             {code}
           </code>
         </pre>
       </div>
     </div>
-  )
+  );
 }

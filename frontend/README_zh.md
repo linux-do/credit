@@ -22,11 +22,13 @@ Linux Do Credit 系统的现代化前端应用。
 ### 安装
 
 1. 安装依赖:
+
    ```bash
    pnpm install
    ```
 
 2. 运行开发服务器:
+
    ```bash
    pnpm dev
    ```

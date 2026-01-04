@@ -61,4 +61,3 @@ export interface RequestConfig {
   /** 是否携带凭证 */
   withCredentials?: boolean;
 }
-

@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { toast } from "sonner"
-import { Spinner } from "@/components/ui/spinner"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { motion, useAnimation } from "motion/react"
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
+import { Spinner } from "@/components/ui/spinner";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { motion, useAnimation } from "motion/react";
 import {
   Dialog,
   DialogContent,
@@ -13,25 +13,24 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion"
-import { SquareArrowUpRight } from 'lucide-react';
+} from "@/components/ui/accordion";
+import { SquareArrowUpRight } from "lucide-react";
 
-import { cn } from "@/lib/utils"
-import services from "@/lib/services"
-import { termsSections } from "@/components/common/docs/terms"
-import { privacySections } from "@/components/common/docs/privacy"
-
+import { cn } from "@/lib/utils";
+import services from "@/lib/services";
+import { termsSections } from "@/components/common/docs/terms";
+import { privacySections } from "@/components/common/docs/privacy";
 
 /**
  * 登录表单组件
  * 显示登录表单和登录按钮
- * 
+ *
  * @example
  * ```tsx
  * <LoginForm />
@@ -44,55 +43,56 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const [isLoading, setIsLoading] = useState(false)
-  const [hasAgreed, setHasAgreed] = useState(false)
-  const controls = useAnimation()
-
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasAgreed, setHasAgreed] = useState(false);
+  const controls = useAnimation();
 
   useEffect(() => {
-    const agreed = localStorage.getItem("loginPromptAgreed") === "true"
+    const agreed = localStorage.getItem("loginPromptAgreed") === "true";
     if (agreed) {
-      setHasAgreed(true)
+      setHasAgreed(true);
     }
-  }, [])
+  }, []);
 
   const handleAgreementChange = (checked: boolean | string) => {
-    const isChecked = checked === true
-    setHasAgreed(isChecked)
+    const isChecked = checked === true;
+    setHasAgreed(isChecked);
     if (isChecked) {
-      localStorage.setItem("loginPromptAgreed", "true")
+      localStorage.setItem("loginPromptAgreed", "true");
     } else {
-      localStorage.removeItem("loginPromptAgreed")
+      localStorage.removeItem("loginPromptAgreed");
     }
-  }
+  };
 
   /* 处理登录 */
   const handleLogin = async () => {
     if (!hasAgreed) {
-      toast.error("请先阅读并勾选服务条款和隐私政策")
+      toast.error("请先阅读并勾选服务条款和隐私政策");
       controls.start({
         x: [0, -4, 4, -4, 4, 0],
         color: ["#ef4444", "inherit"],
-        transition: { duration: 0.5 }
-      })
-      return
+        transition: { duration: 0.5 },
+      });
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      await services.auth.initiateLogin()
+      await services.auth.initiateLogin();
     } catch (error) {
-      setIsLoading(false)
-      console.error('Login error:', error)
-      const message = error instanceof Error ? error.message : "登录失败，请重试"
+      setIsLoading(false);
+      console.error("Login error:", error);
+      const message =
+        error instanceof Error ? error.message : "登录失败，请重试";
       toast.error(message, {
         duration: 5000,
-        description: error instanceof Error && error.name === 'NetworkError'
-          ? '请确认后端服务已启动'
-          : undefined
-      })
+        description:
+          error instanceof Error && error.name === "NetworkError"
+            ? "请确认后端服务已启动"
+            : undefined,
+      });
     }
-  }
+  };
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -104,7 +104,11 @@ export function LoginForm({
           onClick={handleLogin}
           disabled={isLoading}
         >
-          {isLoading ? <Spinner className="mr-2" /> : <SquareArrowUpRight className="mr-2 h-4 w-4" />}
+          {isLoading ? (
+            <Spinner className="mr-2" />
+          ) : (
+            <SquareArrowUpRight className="mr-2 h-4 w-4" />
+          )}
           {isLoading ? "正在跳转..." : "使用 LINUX DO 登录"}
         </Button>
       </div>
@@ -122,8 +126,7 @@ export function LoginForm({
           htmlFor="terms"
           className="text-muted-foreground text-xs text-balance opacity-75 hover:opacity-100 transition-opacity cursor-pointer leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
         >
-          我已阅读并同意
-          {" "}
+          我已阅读并同意{" "}
           <Dialog>
             <DialogTrigger asChild>
               <button
@@ -137,7 +140,9 @@ export function LoginForm({
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>服务条款</DialogTitle>
-                <DialogDescription>请仔细阅读以下条款，使用本服务即表示您接受。</DialogDescription>
+                <DialogDescription>
+                  请仔细阅读以下条款，使用本服务即表示您接受。
+                </DialogDescription>
               </DialogHeader>
               <Accordion type="single" collapsible className="w-full">
                 {termsSections.map((section) => (
@@ -148,8 +153,8 @@ export function LoginForm({
                 ))}
               </Accordion>
             </DialogContent>
-          </Dialog>
-          {" "}及{" "}
+          </Dialog>{" "}
+          及{" "}
           <Dialog>
             <DialogTrigger asChild>
               <button
@@ -163,7 +168,9 @@ export function LoginForm({
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>隐私政策</DialogTitle>
-                <DialogDescription>我们重视您的隐私，以下说明信息如何收集与使用。</DialogDescription>
+                <DialogDescription>
+                  我们重视您的隐私，以下说明信息如何收集与使用。
+                </DialogDescription>
               </DialogHeader>
               <Accordion type="single" collapsible className="w-full">
                 {privacySections.map((section) => (
@@ -178,5 +185,5 @@ export function LoginForm({
         </label>
       </motion.div>
     </div>
-  )
+  );
 }

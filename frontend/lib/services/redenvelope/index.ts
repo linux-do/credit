@@ -1,4 +1,4 @@
-export { RedEnvelopeService } from './redenvelope.service';
+export { RedEnvelopeService } from "./redenvelope.service";
 export type {
   RedEnvelopeType,
   RedEnvelopeStatus,
@@ -11,4 +11,4 @@ export type {
   RedEnvelopeDetailResponse,
   RedEnvelopeListParams,
   RedEnvelopeListResponse,
-} from './types';
+} from "./types";

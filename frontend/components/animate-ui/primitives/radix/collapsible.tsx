@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { Collapsible as CollapsiblePrimitive } from 'radix-ui';
-import { AnimatePresence, motion, type HTMLMotionProps } from 'motion/react';
+import * as React from "react";
+import { Collapsible as CollapsiblePrimitive } from "radix-ui";
+import { AnimatePresence, motion, type HTMLMotionProps } from "motion/react";
 
-import { getStrictContext } from '@/lib/utils/get-strict-context';
-import { useControlledState } from '@/hooks/use-controlled-state';
+import { getStrictContext } from "@/lib/utils/get-strict-context";
+import { useControlledState } from "@/hooks/use-controlled-state";
 
 type CollapsibleContextType = {
   isOpen: boolean;
@@ -13,7 +13,7 @@ type CollapsibleContextType = {
 };
 
 const [CollapsibleProvider, useCollapsible] =
-  getStrictContext<CollapsibleContextType>('CollapsibleContext');
+  getStrictContext<CollapsibleContextType>("CollapsibleContext");
 
 type CollapsibleProps = React.ComponentProps<typeof CollapsiblePrimitive.Root>;
 
@@ -47,15 +47,15 @@ function CollapsibleTrigger(props: CollapsibleTriggerProps) {
 
 type CollapsibleContentProps = Omit<
   React.ComponentProps<typeof CollapsiblePrimitive.Content>,
-  'asChild' | 'forceMount'
+  "asChild" | "forceMount"
 > &
-  HTMLMotionProps<'div'> & {
+  HTMLMotionProps<"div"> & {
     keepRendered?: boolean;
   };
 
 function CollapsibleContent({
   keepRendered = false,
-  transition = { duration: 0.35, ease: 'easeInOut' },
+  transition = { duration: 0.35, ease: "easeInOut" },
   ...props
 }: CollapsibleContentProps) {
   const { isOpen } = useCollapsible();
@@ -68,11 +68,11 @@ function CollapsibleContent({
             key="collapsible-content"
             data-slot="collapsible-content"
             layout
-            initial={{ opacity: 0, height: 0, overflow: 'hidden', y: 20 }}
+            initial={{ opacity: 0, height: 0, overflow: "hidden", y: 20 }}
             animate={
               isOpen
-                ? { opacity: 1, height: 'auto', overflow: 'hidden', y: 0 }
-                : { opacity: 0, height: 0, overflow: 'hidden', y: 20 }
+                ? { opacity: 1, height: "auto", overflow: "hidden", y: 0 }
+                : { opacity: 0, height: 0, overflow: "hidden", y: 20 }
             }
             transition={transition}
             {...props}
@@ -85,9 +85,9 @@ function CollapsibleContent({
               key="collapsible-content"
               data-slot="collapsible-content"
               layout
-              initial={{ opacity: 0, height: 0, overflow: 'hidden', y: 20 }}
-              animate={{ opacity: 1, height: 'auto', overflow: 'hidden', y: 0 }}
-              exit={{ opacity: 0, height: 0, overflow: 'hidden', y: 20 }}
+              initial={{ opacity: 0, height: 0, overflow: "hidden", y: 20 }}
+              animate={{ opacity: 1, height: "auto", overflow: "hidden", y: 0 }}
+              exit={{ opacity: 0, height: 0, overflow: "hidden", y: 20 }}
               transition={transition}
               {...props}
             />
