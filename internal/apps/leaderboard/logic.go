@@ -20,7 +20,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/linux-do/credit/internal/db"
 	"github.com/linux-do/credit/internal/model"
@@ -96,35 +95,4 @@ func getUserRank(ctx context.Context, userID uint64) (*UserRankResponse, error) 
 		_ = db.Redis.Set(ctx, db.PrefixedKey(cacheKey), data, getCacheTTL(ctx)).Err()
 	}
 	return response, nil
-}
-
-func getCacheTTL(ctx context.Context) time.Duration {
-	ttl, err := model.GetIntByKey(ctx, model.ConfigKeyLeaderboardCacheTTLSeconds)
-	if err != nil || ttl <= 0 {
-		ttl = 30
-	}
-	return time.Duration(ttl) * time.Second
-}
-
-func queryLeaderboard(ctx context.Context, req *ListRequest) ([]LeaderboardEntry, int64, error) {
-	offset := (req.Page - 1) * req.PageSize
-
-	baseQuery := db.DB(ctx).Model(&model.User{})
-
-	var total int64
-	if err := baseQuery.Count(&total).Error; err != nil {
-		return nil, 0, err
-	}
-
-	var items []LeaderboardEntry
-	if err := baseQuery.
-		Select("id as user_id, username, avatar_url, available_balance").
-		Order("available_balance DESC, id ASC").
-		Offset(offset).
-		Limit(req.PageSize).
-		Scan(&items).Error; err != nil {
-		return nil, 0, err
-	}
-
-	return items, total, nil
 }
