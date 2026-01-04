@@ -11,7 +11,7 @@ export interface HeroSectionProps {
 }
 
 /**
- * Hero Section
+ * Hero Section - 首页 Hero 展示
  */
 export const HeroSection = React.memo(function HeroSection({ className }: HeroSectionProps) {
   const [balance, setBalance] = React.useState(12450.0);
@@ -27,7 +27,7 @@ export const HeroSection = React.memo(function HeroSection({ className }: HeroSe
   }, []);
 
   return (
-    <section className={cn("snap-start w-full", className)}>
+    <section className={cn("w-full", className)}>
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
