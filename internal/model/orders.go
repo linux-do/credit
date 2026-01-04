@@ -32,13 +32,16 @@ import (
 type OrderType string
 
 const (
-	OrderTypeReceive    OrderType = "receive"
-	OrderTypePayment    OrderType = "payment"
-	OrderTypeTransfer   OrderType = "transfer"
-	OrderTypeCommunity  OrderType = "community"
-	OrderTypeOnline     OrderType = "online"
-	OrderTypeTest       OrderType = "test"
-	OrderTypeDistribute OrderType = "distribute"
+	OrderTypeReceive            OrderType = "receive"
+	OrderTypePayment            OrderType = "payment"
+	OrderTypeTransfer           OrderType = "transfer"
+	OrderTypeCommunity          OrderType = "community"
+	OrderTypeOnline             OrderType = "online"
+	OrderTypeTest               OrderType = "test"
+	OrderTypeDistribute         OrderType = "distribute"
+	OrderTypeRedEnvelopeSend    OrderType = "red_envelope_send"
+	OrderTypeRedEnvelopeReceive OrderType = "red_envelope_receive"
+	OrderTypeRedEnvelopeRefund  OrderType = "red_envelope_refund"
 )
 
 type OrderStatus string
@@ -61,8 +64,8 @@ type Order struct {
 	ClientID        string          `json:"client_id" gorm:"size:64;index:idx_orders_client_status_created,priority:1;index:idx_orders_client_payee,priority:1;index:idx_orders_client_payer,priority:1"`
 	PayerUserID     uint64          `json:"payer_user_id" gorm:"index:idx_orders_payer_status_type_created,priority:1;index:idx_orders_payer_status_type_trade,priority:1;index:idx_orders_client_payer,priority:2"`
 	PayeeUserID     uint64          `json:"payee_user_id" gorm:"index:idx_orders_payee_status_type_created,priority:1;index:idx_orders_client_payee,priority:2"`
-	PayerUsername   string          `json:"payer_username" gorm:"->"`
-	PayeeUsername   string          `json:"payee_username" gorm:"->"`
+	PayerUsername   string          `json:"payer_username" gorm:"-:migration;->"`
+	PayeeUsername   string          `json:"payee_username" gorm:"-:migration;->"`
 	Amount          decimal.Decimal `json:"amount" gorm:"type:numeric(20,2);not null;index"`
 	Status          OrderStatus     `json:"status" gorm:"type:varchar(20);not null;index:idx_orders_payee_status_type_created,priority:2;index:idx_orders_payer_status_type_created,priority:2;index:idx_orders_client_status_created,priority:2;index:idx_orders_payer_status_type_trade,priority:2;index:idx_orders_payment_link_status,priority:2"`
 	Type            OrderType       `json:"type" gorm:"type:varchar(20);not null;index:idx_orders_payee_status_type_created,priority:3;index:idx_orders_payer_status_type_created,priority:3;index:idx_orders_payer_status_type_trade,priority:3"`

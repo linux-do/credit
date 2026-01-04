@@ -15,6 +15,7 @@ app:
   session_secure: false
   session_http_only: false
   api_prefix: "/api"
+  frontend_url: "http://localhost:3000"
   frontend_pay_url: "http://localhost:3000/paying"
 
 # OAuth2/OIDC(优先)
@@ -107,6 +108,7 @@ scheduler:
   dispute_auto_refund_dispatch_interval_seconds: 3
   auto_refund_expired_disputes_task_cron: "0 0 * * *"
   sync_orders_to_clickhouse_task_cron: "10 0 * * *"
+  refund_expired_red_envelopes_task_cron: "0 1 * * *"
 
 # Worker
 worker:

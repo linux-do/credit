@@ -25,7 +25,9 @@ export const typeConfig: Record<OrderType, { label: string; color: string }> = {
   community: { label: '社区划转', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300' },
   online: { label: '在线活动', color: 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-300' },
   distribute: { label: '商户分发', color: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300' },
-  test: { label: '应用测试', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300 font-bold' }
+  test: { label: '应用测试', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300 font-bold' },
+  red_envelope_send: { label: '红包支出', color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' },
+  red_envelope_receive: { label: '红包收入', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' }
 }
 
 /* 状态标签配置 */

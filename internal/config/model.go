@@ -37,6 +37,7 @@ type appConfig struct {
 	NodeID                  int64  `mapstructure:"node_id"`
 	APIPrefix               string `mapstructure:"api_prefix"`
 	GracefulShutdownTimeout int    `mapstructure:"graceful_shutdown_timeout"`
+	FrontendURL             string `mapstructure:"frontend_url"`
 	FrontendPayURL          string `mapstructure:"frontend_pay_url"`
 	SessionCookieName       string `mapstructure:"session_cookie_name"`
 	SessionSecret           string `mapstructure:"session_secret"`
@@ -145,6 +146,7 @@ type schedulerConfig struct {
 	DisputeAutoRefundDispatchIntervalSeconds int    `mapstructure:"dispute_auto_refund_dispatch_interval_seconds"`
 	AutoRefundExpiredDisputesTaskCron        string `mapstructure:"auto_refund_expired_disputes_task_cron"`
 	SyncOrdersToClickHouseTaskCron           string `mapstructure:"sync_orders_to_clickhouse_task_cron"`
+	RefundExpiredRedEnvelopesTaskCron        string `mapstructure:"refund_expired_red_envelopes_task_cron"`
 }
 
 // workerConfig 工作配置

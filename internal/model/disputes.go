@@ -38,8 +38,8 @@ type Dispute struct {
 	Reason            string        `json:"reason" gorm:"size:500;not null"`
 	Status            DisputeStatus `json:"status" gorm:"type:varchar(20);index;index:idx_dispute_order_status,priority:2;index:idx_initiator_status_created,priority:2;not null;default:'disputing'"`
 	HandlerUserID     *uint64       `json:"handler_user_id" gorm:"index"`
-	InitiatorUsername string        `json:"initiator_username" gorm:"->"`
-	HandlerUsername   string        `json:"handler_username" gorm:"->"`
+	InitiatorUsername string        `json:"initiator_username" gorm:"-:migration;->"`
+	HandlerUsername   string        `json:"handler_username" gorm:"-:migration;->"`
 	CreatedAt         time.Time     `json:"created_at" gorm:"autoCreateTime;index:idx_initiator_status_created,priority:3"`
 	UpdatedAt         time.Time     `json:"updated_at" gorm:"autoUpdateTime"`
 }

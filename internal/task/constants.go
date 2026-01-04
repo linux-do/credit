@@ -23,6 +23,7 @@ const (
 	AutoRefundSingleDisputeTask           = "dispute:auto_refund_single"
 	MerchantPaymentNotifyTask             = "payment:merchant_notify"
 	SyncOrdersToClickHouseTask            = "order:sync_to_clickhouse"
+	RefundExpiredRedEnvelopesTask         = "redenvelope:refund_expired"
 )
 
 const (
@@ -33,9 +34,10 @@ const (
 
 // 管理员可下发的任务类型标识
 const (
-	TaskTypeOrderSync        = "order_sync"
-	TaskTypeUserGamification = "user_gamification"
-	TaskTypeDisputeRefund    = "dispute_auto_refund"
+	TaskTypeOrderSync         = "order_sync"
+	TaskTypeUserGamification  = "user_gamification"
+	TaskTypeDisputeRefund     = "dispute_auto_refund"
+	TaskTypeRedEnvelopeRefund = "redenvelope_auto_refund"
 )
 
 // TaskMeta 任务元数据
@@ -74,6 +76,15 @@ var DispatchableTasks = []TaskMeta{
 		AsynqTask:    AutoRefundExpiredDisputesTask,
 		Name:         "争议自动退款",
 		Description:  "处理过期争议的自动退款",
+		SupportsTime: false,
+		MaxRetry:     5,
+		Queue:        QueueDefault,
+	},
+	{
+		Type:         TaskTypeRedEnvelopeRefund,
+		AsynqTask:    RefundExpiredRedEnvelopesTask,
+		Name:         "红包自动退款",
+		Description:  "处理过期红包的自动退款",
 		SupportsTime: false,
 		MaxRetry:     5,
 		Queue:        QueueDefault,

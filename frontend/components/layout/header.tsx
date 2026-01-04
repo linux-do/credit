@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { AnimatePresence, motion } from "motion/react"
 import { Button } from "@/components/ui/button"
-import { Bell, Plus, Settings, Search, Moon, Sun } from "lucide-react"
+import { Bell, Plus, Settings, Search, Moon, Sun, Maximize2, Minimize2 } from "lucide-react"
 import { useUser } from "@/contexts/user-context"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { useTheme } from "next-themes"
@@ -20,7 +20,7 @@ import { SearchDialog } from "@/components/layout/search-dialog"
  * <SiteHeader />
  * ```
  */
-export function SiteHeader() {
+export function SiteHeader({ isFullWidth = false, onToggleFullWidth }: { isFullWidth?: boolean, onToggleFullWidth?: (value: boolean) => void }) {
   const { user } = useUser()
   const { theme, setTheme } = useTheme()
   const router = useRouter()
@@ -58,7 +58,7 @@ export function SiteHeader() {
           </div>
         </div>
 
-        <div className="hidden md:flex w-full max-w-[1320px] mx-auto px-12 items-center gap-4">
+        <div className={`hidden md:flex w-full items-center gap-4 ${!isFullWidth ? "max-w-[1320px]" : ""} mx-auto px-12`}>
           <div className="relative w-64 cursor-pointer" onClick={() => setSearchOpen(true)}>
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <div className="h-8 border-none bg-muted/100 pl-10 pr-3 text-sm rounded-md flex items-center text-muted-foreground">
@@ -81,6 +81,11 @@ export function SiteHeader() {
             <Button className="mx-1 size-7 rounded-full bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => router.push('/merchant')}>
               <Plus className="size-4" />
               <span className="sr-only">新建</span>
+            </Button>
+
+            <Button variant="ghost" size="icon" className="size-9 text-muted-foreground hover:text-foreground" onClick={() => onToggleFullWidth?.(!isFullWidth)}>
+              {isFullWidth ? <Minimize2 className="size-[18px]" /> : <Maximize2 className="size-[18px]" />}
+              <span className="sr-only">切换全宽</span>
             </Button>
 
             <Button variant="ghost" size="icon" className="size-9 text-muted-foreground hover:text-foreground" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>

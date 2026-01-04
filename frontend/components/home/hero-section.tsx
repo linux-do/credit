@@ -4,17 +4,30 @@ import { motion } from "motion/react";
 import { ArrowRight, Zap, Shield, Globe, CreditCard, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { CountingNumber } from "@/components/animate-ui/primitives/texts/counting-number";
 
 export interface HeroSectionProps {
   className?: string;
 }
 
 /**
- * Hero Section
+ * Hero Section - 首页 Hero 展示
  */
 export const HeroSection = React.memo(function HeroSection({ className }: HeroSectionProps) {
+  const [balance, setBalance] = React.useState(12450.0);
+  const [income, setIncome] = React.useState(240.0);
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setBalance(Math.random() * (65123.45 - (-65)) + (-65));
+      setIncome(Math.random() * (656.56 - (-65.65)) + (-65.65));
+    }, 6565);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
-    <section className={cn("snap-start w-full", className)}>
+    <section className={cn("w-full", className)}>
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -129,7 +142,15 @@ export const HeroSection = React.memo(function HeroSection({ className }: HeroSe
                   <div className="flex justify-between items-end">
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">Total Balance</p>
-                      <p className="text-3xl font-bold tracking-tight text-foreground">LDC 12,450.00</p>
+                      <div className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-1">
+                        <span>LDC</span>
+                        <CountingNumber
+                          number={balance}
+                          decimalPlaces={2}
+                          thousandSeparator=","
+                          initiallyStable={true}
+                        />
+                      </div>
                     </div>
                     <div className="h-8 w-8 rounded-full bg-primary" />
                   </div>
@@ -142,12 +163,23 @@ export const HeroSection = React.memo(function HeroSection({ className }: HeroSe
                 className="absolute -top-6 -right-6 z-20 bg-background/60 backdrop-blur-xl border border-white/20 p-4 rounded-2xl shadow-xl"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center text-green-500">
+                  <div className={cn(
+                    "w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-500",
+                    income < 0 ? "bg-red-500/20 text-red-500" : "bg-green-500/20 text-green-500"
+                  )}>
                     <Wallet className="size-5" />
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Income</p>
-                    <p className="text-sm font-bold">+ LDC 240.00</p>
+                    <div className="text-sm font-bold flex items-center gap-1">
+                      <span>{income < 0 ? "-" : "+"} LDC</span>
+                      <CountingNumber
+                        number={Math.abs(income)}
+                        decimalPlaces={2}
+                        thousandSeparator=","
+                        initiallyStable={true}
+                      />
+                    </div>
                   </div>
                 </div>
               </motion.div>

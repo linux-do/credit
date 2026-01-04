@@ -17,6 +17,7 @@ type CountingNumberProps = Omit<React.ComponentProps<'span'>, 'children'> & {
   transition?: SpringOptions;
   delay?: number;
   initiallyStable?: boolean;
+  thousandSeparator?: string;
 } & UseIsInViewOptions;
 
 function CountingNumber({
@@ -32,6 +33,7 @@ function CountingNumber({
   decimalPlaces = 0,
   delay = 0,
   initiallyStable = false,
+  thousandSeparator = '',
   ...props
 }: CountingNumberProps) {
   const { ref: localRef, isInView } = useIsInView(
@@ -83,11 +85,20 @@ function CountingNumber({
             : paddedInt;
         }
 
+        if (thousandSeparator) {
+          const [intPart, fracPart] = formatted.split(decimalSeparator);
+          const regex = /\B(?=(\d{3})+(?!\d))/g;
+          const separatedInt = intPart.replace(regex, thousandSeparator);
+          formatted = fracPart
+            ? `${ separatedInt }${ decimalSeparator }${ fracPart }`
+            : separatedInt;
+        }
+
         localRef.current.textContent = formatted;
       }
     });
     return () => unsubscribe();
-  }, [springVal, decimals, padStart, number, decimalSeparator, localRef]);
+  }, [springVal, decimals, padStart, number, decimalSeparator, localRef, thousandSeparator]);
 
   const finalIntLength = Math.floor(Math.abs(number)).toString().length;
 
@@ -98,6 +109,12 @@ function CountingNumber({
       const [intPart, fracPart] = out.split(decimalSeparator);
       const paddedInt = (intPart ?? '').padStart(finalIntLength, '0');
       out = fracPart ? `${ paddedInt }${ decimalSeparator }${ fracPart }` : paddedInt;
+    }
+    if (thousandSeparator) {
+      const [intPart, fracPart] = out.split(decimalSeparator);
+      const regex = /\B(?=(\d{3})+(?!\d))/g;
+      const separatedInt = intPart.replace(regex, thousandSeparator);
+      out = fracPart ? `${ separatedInt }${ decimalSeparator }${ fracPart }` : separatedInt;
     }
     return out;
   };
