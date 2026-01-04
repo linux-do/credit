@@ -186,7 +186,7 @@ function MembershipCard({
             <div className="text-right">
               <div className="text-[8px] sm:text-[9px] md:text-[10px] opacity-70">分数范围</div>
               <div className="text-[8px] sm:text-[9px] md:text-[10px] font-medium tabular-nums">
-                {config.minScore.toLocaleString()} - {config.maxScore?.toLocaleString() || "∞"}
+                {config.minScore < 0 ? "0.00" : config.minScore.toLocaleString()} - {config.maxScore?.toLocaleString() || "∞"}
               </div>
             </div>
           </div>
