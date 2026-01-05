@@ -37,17 +37,17 @@ export const DeveloperSection = React.memo(function DeveloperSection({ className
           className="order-2 lg:order-1 relative"
         >
           <div className="relative overflow-hidden rounded-xl border border-white/20 bg-black backdrop-blur-xl shadow-2xl">
-            <div className="flex justify-between items-center px-4 py-3 border-b border-white/20">
-              <div className="flex gap-2">
+            <div className="flex items-center px-4 py-3 border-b border-white/20">
+              <div className="flex-1 flex gap-2">
                 <div className="w-3 h-3 rounded-full bg-[#ff5f56]" />
                 <div className="w-3 h-3 rounded-full bg-[#ffbd2e]" />
                 <div className="w-3 h-3 rounded-full bg-[#27c93f]" />
               </div>
-              <div className="text-xs text-muted-foreground font-mono flex items-center gap-1">
+              <div className="flex-none text-xs text-muted-foreground font-mono flex items-center gap-1">
                 <Terminal className="w-3 h-3" />
                 bash
               </div>
-              <div className="w-10" />
+              <div className="flex-1" />
             </div>
 
             <div className="p-6 overflow-x-auto relative group">
