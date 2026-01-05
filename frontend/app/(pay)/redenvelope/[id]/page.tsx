@@ -1,10 +1,6 @@
 import { RedEnvelopeClaimPage } from "@/components/common/redenvelope/red-envelope-claim"
 
-interface Props {
-  params: Promise<{ id: string }>
-}
-
-export default async function RedEnvelopePage({ params }: Props) {
+export default async function RedEnvelopePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   return <RedEnvelopeClaimPage id={id} />
 }

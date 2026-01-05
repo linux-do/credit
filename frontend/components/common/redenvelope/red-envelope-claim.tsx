@@ -51,11 +51,11 @@ export function RedEnvelopeClaimPage({ id }: RedEnvelopeClaimProps) {
     try {
       const result = await services.redEnvelope.claim({ id })
       setClaimedAmount(result.amount)
-      
+
       // Reload the full details to get updated claims list
       const updatedDetail = await services.redEnvelope.getDetail(id)
       setDetail(updatedDetail)
-      
+
       setTimeout(() => setState("claimed"), 1500)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "领取失败")
@@ -104,160 +104,126 @@ export function RedEnvelopeClaimPage({ id }: RedEnvelopeClaimProps) {
   const envelope = detail?.red_envelope
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col items-center justify-center bg-background p-4">
+    <div className="relative min-h-screen w-full flex flex-col items-center justify-center bg-background p-2 sm:p-4">
       <div className="relative z-10 w-full h-full flex items-center justify-center">
-        <AnimatePresence mode="wait">
-          {(state === "ready" || state === "opening") && (
-            <motion.div
-              key="envelope"
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 1.2, opacity: 0 }}
-              className="flex flex-col items-center justify-center w-full max-w-sm"
-            >
-              {/* 红包封面 - WeChat style with enhanced visuals */}
+        {/* 统一卡片容器 - 响应式尺寸 */}
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+          className="relative w-72 h-[420px] sm:w-80 sm:h-[480px] md:w-[360px] md:h-[540px] rounded-3xl shadow-2xl overflow-hidden"
+        >
+          <AnimatePresence mode="wait">
+            {(state === "ready" || state === "opening") && (
               <motion.div
-                className="relative w-80 h-[480px]"
-                initial={{ y: -20 }}
-                animate={{ y: 0 }}
-                transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                key="cover"
+                initial={{ opacity: 1 }}
+                animate={{ opacity: 1 }}
+                exit={{ y: -40, opacity: 0, scale: 0.95, transition: { duration: 0.5, ease: "easeInOut" } }}
+                className="absolute inset-0 bg-gradient-to-br from-red-500 via-red-600 to-red-700"
               >
-                {/* 红包主体 */}
-                <div className="absolute inset-0 bg-gradient-to-br from-red-500 via-red-600 to-red-700 rounded-3xl shadow-2xl overflow-hidden">
-                  {/* 顶部金色光晕效果 */}
-                  <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-yellow-400/30 via-yellow-500/20 to-transparent" />
-                  
-                  {/* 底部阴影 */}
-                  <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/30 to-transparent" />
-                  
-                  {/* 装饰性图案 */}
-                  <div className="absolute inset-0 opacity-10">
-                    <div className="absolute top-10 left-10 w-20 h-20 border-2 border-yellow-300 rounded-full" />
-                    <div className="absolute top-20 right-12 w-16 h-16 border-2 border-yellow-300 rounded-full" />
-                    <div className="absolute bottom-20 left-16 w-24 h-24 border-2 border-yellow-300 rounded-full" />
-                  </div>
+                <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-yellow-400/30 via-yellow-500/20 to-transparent" />
 
-                  {/* 发送者信息 */}
-                  <div className="absolute top-12 left-0 right-0 text-center z-10">
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ delay: 0.2, type: "spring" }}
-                    >
-                      <Avatar className="h-14 w-14 mx-auto mb-3 border-2 border-yellow-400/80 shadow-lg">
-                        <AvatarImage src={envelope?.creator_avatar_url} alt={envelope?.creator_username} />
-                        <AvatarFallback className="bg-gradient-to-br from-yellow-300 to-yellow-500 text-red-600 font-bold text-lg">
-                          {envelope?.creator_username?.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                    </motion.div>
-                    <motion.p
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.3 }}
-                      className="text-yellow-100 text-base font-medium"
-                    >
-                      {envelope?.creator_username} 的红包
-                    </motion.p>
-                  </div>
+                <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/30 to-transparent" />
 
-                  {/* 中间圆形按钮 - 只有这个可点击 */}
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
-                    <motion.button
-                      className="relative w-28 h-28 rounded-full bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-500 flex items-center justify-center shadow-2xl cursor-pointer border-4 border-yellow-200/50 focus:outline-none focus:ring-4 focus:ring-yellow-300/50"
-                      whileHover={state === "ready" ? { scale: 1.1, rotate: [0, -5, 5, -5, 0] } : {}}
-                      whileTap={state === "ready" ? { scale: 0.95 } : {}}
-                      animate={state === "opening" ? { 
-                        rotate: [0, 360],
-                        scale: [1, 1.2, 1]
-                      } : {
-                        y: [0, -8, 0]
-                      }}
-                      transition={state === "opening" ? {
-                        duration: 1.5
-                      } : {
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      }}
-                      onClick={state === "ready" ? handleOpen : undefined}
-                      disabled={state !== "ready"}
-                    >
-                      {/* 内部光晕 */}
-                      <div className="absolute inset-2 rounded-full bg-gradient-to-br from-yellow-200 to-transparent opacity-60" />
-                      
-                      {/* 開 字 */}
-                      <span className="relative text-red-600 font-bold text-4xl z-10" style={{ fontFamily: 'serif' }}>
-                        開
-                      </span>
-                      
-                      {/* 外部光圈动画 */}
-                      {state === "ready" && (
-                        <motion.div
-                          className="absolute inset-0 rounded-full border-2 border-yellow-300"
-                          animate={{
-                            scale: [1, 1.3, 1],
-                            opacity: [0.8, 0, 0.8]
-                          }}
-                          transition={{
-                            duration: 2,
-                            repeat: Infinity,
-                            ease: "easeOut"
-                          }}
-                        />
-                      )}
-                    </motion.button>
-                  </div>
-
-                  {/* 祝福语 */}
-                  <div className="absolute bottom-20 left-0 right-0 text-center px-8 z-10">
-                    <motion.p
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.4 }}
-                      className="text-yellow-100 text-lg font-medium leading-relaxed"
-                    >
-                      {envelope?.greeting || "恭喜发财，大吉大利"}
-                    </motion.p>
-                  </div>
+                <div className="absolute inset-0 opacity-10">
+                  <div className="absolute top-10 left-10 w-20 h-20 border-2 border-yellow-300 rounded-full" />
+                  <div className="absolute top-20 right-12 w-16 h-16 border-2 border-yellow-300 rounded-full" />
+                  <div className="absolute bottom-20 left-16 w-24 h-24 border-2 border-yellow-300 rounded-full" />
                 </div>
 
-                {/* 3D 立体效果阴影 */}
-                <div className="absolute inset-0 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.3)] pointer-events-none" />
+                <div className="absolute top-12 left-0 right-0 text-center z-10">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.15, type: "spring", stiffness: 300, damping: 20 }}
+                  >
+                    <Avatar className="h-14 w-14 mx-auto mb-3 border-2 border-yellow-400/80 shadow-lg">
+                      <AvatarImage src={envelope?.creator_avatar_url} alt={envelope?.creator_username} />
+                      <AvatarFallback className="bg-gradient-to-br from-yellow-300 to-yellow-500 text-red-600 font-bold text-lg">
+                        {envelope?.creator_username?.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  </motion.div>
+                  <motion.p
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="text-yellow-100 text-base font-medium"
+                  >
+                    {envelope?.creator_username} 的红包
+                  </motion.p>
+                </div>
+
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+                  {state === "opening" && (
+                    <motion.div
+                      className="absolute inset-0 -m-6"
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 2.5, opacity: [0, 1, 0] }}
+                      transition={{ duration: 0.8, ease: "easeOut" }}
+                    >
+                      <div className="w-full h-full rounded-full" style={{ background: "radial-gradient(circle, rgba(253,224,71,0.7) 0%, rgba(250,204,21,0.4) 30%, transparent 60%)" }} />
+                    </motion.div>
+                  )}
+
+                  <motion.button
+                    className="relative w-24 h-24 rounded-full bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-500 flex items-center justify-center shadow-2xl cursor-pointer border-4 border-yellow-200/50 focus:outline-none"
+                    whileHover={state === "ready" ? { scale: 1.08 } : {}}
+                    whileTap={state === "ready" ? { scale: 0.95 } : {}}
+                    animate={state === "opening" ? {
+                      scale: [1, 1.2, 0.8, 0],
+                      opacity: [1, 1, 1, 0]
+                    } : {}}
+                    transition={state === "opening" ? {
+                      duration: 0.7,
+                      ease: "easeInOut"
+                    } : {
+                      duration: 0.2
+                    }}
+                    onClick={state === "ready" ? handleOpen : undefined}
+                    disabled={state !== "ready"}
+                  >
+                    <div className="absolute inset-2 rounded-full bg-gradient-to-br from-yellow-200 to-transparent opacity-60" />
+                    <span className="relative text-red-600 font-bold text-3xl z-10" style={{ fontFamily: 'serif' }}>
+                      開
+                    </span>
+
+                    {state === "ready" && (
+                      <motion.div
+                        className="absolute inset-0 rounded-full border-2 border-yellow-300/70"
+                        animate={{ scale: [1, 1.2], opacity: [0.7, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut" }}
+                      />
+                    )}
+                  </motion.button>
+                </div>
+
+                <div className="absolute bottom-20 left-0 right-0 text-center px-8 z-10">
+                  <motion.p
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                    className="text-yellow-100 text-lg font-medium leading-relaxed"
+                  >
+                    {envelope?.greeting || "恭喜发财，大吉大利"}
+                  </motion.p>
+                </div>
               </motion.div>
+            )}
 
-              {state === "ready" && (
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5 }}
-                  className="text-muted-foreground text-sm mt-8"
-                >
-                  点击 &ldquo;開&rdquo; 字领取红包
-                </motion.p>
-              )}
-            </motion.div>
-          )}
-
-          {(state === "claimed" || state === "opened") && (
-            <motion.div
-              key="result"
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="w-full max-w-md"
-            >
+            {(state === "claimed" || state === "opened") && (
               <motion.div
-                initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
-                className="bg-card/70 backdrop-blur-2xl border border-border/50 rounded-3xl overflow-hidden shadow-2xl"
+                key="result"
+                initial={{ y: 30, opacity: 0, scale: 0.98 }}
+                animate={{ y: 0, opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+                className="absolute inset-0 bg-card backdrop-blur-2xl flex flex-col"
               >
-                {/* 头部 */}
-                <div className="bg-gradient-to-br from-red-500 via-red-600 to-red-700 p-8 text-center relative overflow-hidden">
-                  {/* 背景装饰 */}
+                <div className="bg-gradient-to-br from-red-500 via-red-600 to-red-700 px-4 py-3 sm:px-6 sm:py-5 text-center relative overflow-hidden shrink-0">
                   <div className="absolute inset-0 opacity-10">
-                    <div className="absolute top-4 left-4 w-16 h-16 border-2 border-yellow-300 rounded-full" />
-                    <div className="absolute bottom-4 right-4 w-20 h-20 border-2 border-yellow-300 rounded-full" />
+                    <div className="absolute top-4 left-4 w-12 h-12 border-2 border-yellow-300 rounded-full" />
+                    <div className="absolute bottom-4 right-4 w-16 h-16 border-2 border-yellow-300 rounded-full" />
                   </div>
 
                   <motion.div
@@ -265,36 +231,34 @@ export function RedEnvelopeClaimPage({ id }: RedEnvelopeClaimProps) {
                     animate={{ scale: 1 }}
                     transition={{ delay: 0.2, type: "spring" }}
                   >
-                    <Avatar className="h-16 w-16 mx-auto mb-3 border-2 border-yellow-400/80 shadow-lg relative z-10">
+                    <Avatar className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-1.5 sm:mb-2 border-2 border-yellow-400/80 shadow-lg relative z-10">
                       <AvatarImage src={envelope?.creator_avatar_url} alt={envelope?.creator_username} />
-                      <AvatarFallback className="bg-gradient-to-br from-yellow-300 to-yellow-500 text-red-600 font-bold text-xl">
+                      <AvatarFallback className="bg-gradient-to-br from-yellow-300 to-yellow-500 text-red-600 font-bold text-sm sm:text-base">
                         {envelope?.creator_username?.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                   </motion.div>
-                  <p className="text-yellow-100 font-medium relative z-10">{envelope?.creator_username} 的红包</p>
-                  <p className="text-yellow-100/90 text-sm mt-1 relative z-10">
+                  <p className="text-yellow-100 font-medium text-xs sm:text-sm relative z-10">{envelope?.creator_username} 的红包</p>
+                  <p className="text-yellow-100/90 text-[10px] sm:text-xs mt-0.5 relative z-10">
                     {envelope?.greeting || "恭喜发财，大吉大利"}
                   </p>
                 </div>
 
-                {/* 领取金额 */}
                 {claimedAmount && (
-                  <div className="p-8 text-center border-b border-border/50">
+                  <div className="px-4 py-3 sm:px-6 sm:py-4 text-center border-b border-border/50 shrink-0">
                     <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ type: "spring", delay: 0.3 }}
                     >
-                      <p className="text-5xl font-bold text-red-500 mb-2">{claimedAmount}</p>
-                      <p className="text-muted-foreground text-sm">LDC</p>
+                      <p className="text-3xl sm:text-4xl font-bold text-red-500 mb-0.5 sm:mb-1">{claimedAmount}</p>
+                      <p className="text-muted-foreground text-[10px] sm:text-xs">LDC</p>
                     </motion.div>
                   </div>
                 )}
 
-                {/* 领取记录 */}
-                <div className="p-6">
-                  <div className="flex justify-between items-center mb-4 text-sm text-muted-foreground">
+                <div className="px-3 py-2 sm:px-5 sm:py-4 flex-1 flex flex-col overflow-hidden">
+                  <div className="flex justify-between items-center mb-2 sm:mb-3 text-[10px] sm:text-xs text-muted-foreground shrink-0">
                     <span>
                       {detail?.claims.length || 0}/{envelope?.total_count} 个红包已领取
                     </span>
@@ -303,44 +267,43 @@ export function RedEnvelopeClaimPage({ id }: RedEnvelopeClaimProps) {
                     </span>
                   </div>
 
-                  <ScrollArea className="h-56">
-                    <div className="space-y-3">
+                  <ScrollArea className="flex-1">
+                    <div className="space-y-1 sm:space-y-2">
                       {detail?.claims.map((claim: RedEnvelopeClaim) => (
                         <motion.div
                           key={claim.id}
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
-                          className="flex items-center justify-between py-2"
+                          className="flex items-center justify-between py-1 sm:py-1.5"
                         >
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-10 w-10">
+                          <div className="flex items-center gap-2 sm:gap-2.5 overflow-hidden">
+                            <Avatar className="h-6 w-6 sm:h-8 sm:w-8 shrink-0">
                               <AvatarImage src={claim.avatar_url} alt={claim.username} />
-                              <AvatarFallback className="text-sm">
+                              <AvatarFallback className="text-[10px] sm:text-xs">
                                 {claim.username.charAt(0).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
-                            <span className="text-sm font-medium">{claim.username}</span>
+                            <span className="text-xs sm:text-sm font-medium truncate">{claim.username}</span>
                           </div>
-                          <span className="text-sm font-semibold text-red-500">{claim.amount} LDC</span>
+                          <span className="text-xs sm:text-sm font-semibold text-red-500 shrink-0">{claim.amount} LDC</span>
                         </motion.div>
                       ))}
                     </div>
                   </ScrollArea>
                 </div>
 
-                {/* 底部按钮 */}
-                <div className="p-6 border-t border-border/50">
+                <div className="px-3 py-2 sm:px-5 sm:py-4 border-t border-border/50 shrink-0">
                   <Button
-                    className="w-full bg-red-500 hover:bg-red-600 text-white h-12 rounded-xl font-medium"
+                    className="w-full bg-red-500 hover:bg-red-600 text-white h-8 sm:h-10 rounded-lg sm:rounded-xl font-medium text-xs sm:text-sm"
                     onClick={() => window.location.href = "/trade"}
                   >
                     查看我的红包
                   </Button>
                 </div>
               </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            )}
+          </AnimatePresence>
+        </motion.div>
       </div>
     </div>
   )

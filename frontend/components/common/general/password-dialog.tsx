@@ -56,15 +56,15 @@ export function PasswordDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="w-xs sm:w-md">
         <DialogHeader>
-          <DialogTitle className="text-center">{title}</DialogTitle>
-          <DialogDescription className="text-center">
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>
             {description}
           </DialogDescription>
         </DialogHeader>
-        <div className="flex flex-col items-center space-y-6">
 
+        <div className="py-2 flex justify-center">
           <InputOTP
             maxLength={6}
             value={password}
@@ -85,10 +85,20 @@ export function PasswordDialog({
               <InputOTPSlot index={5} className="w-10 h-10 text-base" />
             </InputOTPGroup>
           </InputOTP>
+        </div>
 
+        <div className="flex justify-end gap-2 pt-2">
+          <Button
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+            disabled={loading}
+            className="h-8 text-xs"
+          >
+            取消
+          </Button>
           <Button
             type="button"
-            className="w-full bg-primary hover:bg-primary/90 h-8 text-xs"
+            className="bg-primary hover:bg-primary/90 h-8 text-xs"
             onClick={handleConfirm}
             disabled={password.length !== 6 || loading}
           >

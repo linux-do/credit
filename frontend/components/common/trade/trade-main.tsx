@@ -9,7 +9,7 @@ import { Receive } from "@/components/common/trade/receive"
 import { TradeTable } from "@/components/common/trade/trade-table"
 import { Transfer } from "@/components/common/trade/transfer"
 import { Online } from "@/components/common/trade/online"
-import { RedEnvelope } from "@/components/common/trade/red-envelope"
+import { RedEnvelope, RedEnvelopeList } from "@/components/common/trade/red-envelope"
 import { TransactionProvider } from "@/contexts/transaction-context"
 import services from "@/lib/services"
 import type { OrderType } from "@/lib/services"
@@ -63,6 +63,7 @@ const PAGE_COMPONENTS: Record<TabValue, React.ComponentType> = {
 export function TradeMain() {
   const [activeTab, setActiveTab] = React.useState<TabValue>('receive')
   const [mounted, setMounted] = React.useState(false)
+  const [refreshKey, setRefreshKey] = React.useState(0)
 
   React.useEffect(() => {
     setMounted(true)
@@ -71,7 +72,7 @@ export function TradeMain() {
   const [redEnvelopeEnabled, setRedEnvelopeEnabled] = React.useState(false)
 
   React.useEffect(() => {
-    // 从公共配置中获取红包功能状态
+    /* 获取红包状态 */
     services.config.getPublicConfig()
       .then(res => setRedEnvelopeEnabled(res.red_envelope_enabled))
       .catch(() => setRedEnvelopeEnabled(false))
@@ -85,6 +86,9 @@ export function TradeMain() {
 
   /* 渲染活动页面内容 */
   const renderPageContent = () => {
+    if (activeTab === 'redenvelope') {
+      return <RedEnvelope onSuccess={() => setRefreshKey(prev => prev + 1)} />
+    }
     const Component = PAGE_COMPONENTS[activeTab]
     return Component ? <Component /> : null
   }
@@ -119,7 +123,7 @@ export function TradeMain() {
               <TabsTrigger value="community" className={TAB_TRIGGER_STYLES}>社区划转</TabsTrigger>
               <TabsTrigger value="online" className={TAB_TRIGGER_STYLES}>在线流转</TabsTrigger>
               {redEnvelopeEnabled && (
-                <TabsTrigger value="redenvelope" className={TAB_TRIGGER_STYLES}>红包</TabsTrigger>
+                <TabsTrigger value="redenvelope" className={TAB_TRIGGER_STYLES}>积分红包</TabsTrigger>
               )}
               <TabsTrigger value="all" className={TAB_TRIGGER_STYLES}>所有活动</TabsTrigger>
             </TabsList>
@@ -128,12 +132,14 @@ export function TradeMain() {
           <div className="pt-2 space-y-8">
             {renderPageContent()}
 
-            {activeTab !== 'redenvelope' && (
-              <div className="space-y-4">
-                <h2 className="font-semibold">活动记录</h2>
+            <div className="space-y-4">
+              <h2 className="font-semibold">活动记录</h2>
+              {activeTab === 'redenvelope' ? (
+                <RedEnvelopeList refreshTrigger={refreshKey} />
+              ) : (
                 <TradeTable type={getOrderType(activeTab)} />
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </Tabs>
       </div>

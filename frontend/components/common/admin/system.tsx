@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { Input } from "@/components/ui/input"
+import { Switch } from "@/components/ui/switch"
 import { ManagePage, ManageDetailPanel } from "@/components/common/general/manage-pannel"
 
 import { formatDateTime } from "@/lib/utils"
@@ -59,26 +60,35 @@ function SystemConfigDetailPanel({
 
           <div className="pl-3 py-2 flex items-center justify-between border-b border-dashed last:border-b-0">
             <label className="text-xs font-medium text-muted-foreground">配置值</label>
-            <div className="flex gap-1 w-[90%]">
-              <Input
-                type="number"
-                step="1"
-                min="0"
-                value={editData.value !== undefined ? editData.value : (config?.value || '')}
-                placeholder={editData.value === undefined && !config?.value ? '必需' : ''}
-                onChange={(e) => {
-                  const value = e.target.value
-                  if (value === '') {
-                    onEditDataChange('value', '')
-                    return
-                  }
-                  onEditDataChange('value', value)
-                }}
-                className="!text-[12px] text-right h-4 rounded-none border-none shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:!text-[12px] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-inner-spin-button]"
-                style={{
-                  MozAppearance: 'textfield'
-                }}
-              />
+            <div className="flex gap-1 w-[90%] justify-end items-center pr-3">
+              {config?.key.endsWith('_enabled') ? (
+                <Switch
+                  checked={editData.value !== undefined ? editData.value === 'true' : (config?.value === 'true')}
+                  onCheckedChange={(checked) => {
+                    onEditDataChange('value', checked ? 'true' : 'false')
+                  }}
+                />
+              ) : (
+                <Input
+                  type="number"
+                  step="1"
+                  min="0"
+                  value={editData.value !== undefined ? editData.value : (config?.value || '')}
+                  placeholder={editData.value === undefined && !config?.value ? '必需' : ''}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    if (value === '') {
+                      onEditDataChange('value', '')
+                      return
+                    }
+                    onEditDataChange('value', value)
+                  }}
+                  className="!text-[12px] text-right h-4 rounded-none border-none shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:!text-[12px] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-inner-spin-button]"
+                  style={{
+                    MozAppearance: 'textfield'
+                  }}
+                />
+              )}
             </div>
           </div>
 

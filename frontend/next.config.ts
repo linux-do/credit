@@ -17,11 +17,16 @@ const nextConfig: NextConfig = {
         source: '/epay/api.php',
         destination: `${ backendUrl }/api.php`,
       },
+      // Credit 协议接口 - 商户分发
+      {
+        source: '/lpay/distribute',
+        destination: `${ backendUrl }/pay/distribute`,
+      },
       // 标准 RESTful API 接口
       {
         source: '/api/:path*',
         destination: `${ backendUrl }/api/:path*`,
-      },
+      }
     ];
   },
 };

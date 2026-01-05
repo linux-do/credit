@@ -3,11 +3,13 @@
 import * as React from "react"
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
+import { Info } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import services, { type MerchantAPIKey, type CreateAPIKeyRequest, type UpdateAPIKeyRequest } from "@/lib/services"
 
 interface MerchantDialogProps {
@@ -43,6 +45,8 @@ export function MerchantDialog({
   const [open, setOpen] = useState(false)
   const [processing, setProcessing] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [showNotifyTooltip, setShowNotifyTooltip] = useState(false)
+  const [tooltipSide, setTooltipSide] = useState<'top' | 'bottom'>('bottom')
   const [formData, setFormData] = useState<CreateAPIKeyRequest | UpdateAPIKeyRequest>({
     app_name: '',
     app_homepage_url: '',
@@ -216,26 +220,24 @@ export function MerchantDialog({
             <Label htmlFor="app_name">应用名称 <span className="text-red-500">*</span></Label>
             <Input
               id="app_name"
-              placeholder="您的应用名称"
+              placeholder="您的应用名称。最多 20 个字符，用于标识您的应用"
               maxLength={20}
               value={formData.app_name}
               onChange={(e) => setFormData({ ...formData, app_name: e.target.value })}
               disabled={processing}
             />
-            <p className="text-xs text-muted-foreground">最多 20 个字符，用于标识您的应用</p>
           </div>
 
           <div className="grid gap-2">
             <Label htmlFor="app_description">应用描述</Label>
             <Input
               id="app_description"
-              placeholder="您的应用描述"
+              placeholder="您的应用描述。最多 100 个字符，用于描述您的应用，可选"
               maxLength={100}
               value={formData.app_description}
               onChange={(e) => setFormData({ ...formData, app_description: e.target.value })}
               disabled={processing}
             />
-            <p className="text-xs text-muted-foreground">最多 100 个字符，用于描述您的应用，可选</p>
           </div>
 
           <div className="grid gap-2">
@@ -243,27 +245,76 @@ export function MerchantDialog({
             <Input
               id="app_homepage_url"
               type="url"
-              placeholder="https://credit.linux.do"
+              placeholder="URL 必须包含 http:// 或 https:// ，用于展示您的应用主页"
               maxLength={100}
               value={formData.app_homepage_url}
               onChange={(e) => setFormData({ ...formData, app_homepage_url: e.target.value })}
               disabled={processing}
             />
-            <p className="text-xs text-muted-foreground">URL 必须为包含 http:// 或 https:// ，用于展示您的应用主页</p>
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="notify_url">通知 URL <span className="text-red-500">*</span></Label>
+            <div className="flex items-center gap-1.5">
+              <Label htmlFor="notify_url">通知 URL <span className="text-red-500">*</span></Label>
+              <TooltipProvider>
+                <Tooltip open={showNotifyTooltip} onOpenChange={setShowNotifyTooltip}>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      className="inline-flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                      onMouseEnter={() => {
+                        setTooltipSide('bottom')
+                        setShowNotifyTooltip(true)
+                      }}
+                      onClick={() => {
+                        setTooltipSide('bottom')
+                        setShowNotifyTooltip(!showNotifyTooltip)
+                      }}
+                    >
+                      <Info className="size-3" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side={tooltipSide} className="w-64">
+                    <div className="space-y-2">
+                      <p className="text-xs">如果您只需要使用在线积分流转服务，建议直接填写 http://localhost:3000/ 即可</p>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="w-full h-6 text-xs"
+                        onClick={() => {
+                          setFormData({ ...formData, notify_url: 'http://localhost:3000/' })
+                          setShowNotifyTooltip(false)
+                        }}
+                      >
+                        快速填入
+                      </Button>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
             <Input
               id="notify_url"
               type="url"
-              placeholder="https://credit.linux.do/notify"
+              placeholder="URL 必须为包含 http:// 或 https:// ，用于接收积分服务成功的异步通知"
               maxLength={100}
               value={formData.notify_url}
-              onChange={(e) => setFormData({ ...formData, notify_url: e.target.value })}
+              onChange={(e) => {
+                const value = e.target.value
+                setFormData({ ...formData, notify_url: value })
+                if (value.trim()) {
+                  setShowNotifyTooltip(false)
+                }
+              }}
+              onClick={() => {
+                if (!formData.notify_url || !formData.notify_url.trim()) {
+                  setTooltipSide('top')
+                  setShowNotifyTooltip(true)
+                }
+              }}
+              onBlur={() => setShowNotifyTooltip(false)}
               disabled={processing}
             />
-            <p className="text-xs text-muted-foreground">URL 必须为包含 http:// 或 https:// ，用于接收积分服务成功的异步通知</p>
           </div>
 
           <div className="grid gap-2">
@@ -271,13 +322,12 @@ export function MerchantDialog({
             <Input
               id="redirect_uri"
               type="url"
-              placeholder="https://credit.linux.do/callback"
+              placeholder="URL 必须包含 http:// 或 https:// ，用于接收积分服务完成后的回调，可选"
               maxLength={100}
               value={formData.redirect_uri}
               onChange={(e) => setFormData({ ...formData, redirect_uri: e.target.value })}
               disabled={processing}
             />
-            <p className="text-xs text-muted-foreground">URL 必须为包含 http:// 或 https:// ，用于接收积分服务完成后的回调，可选</p>
           </div>
         </div>
 
@@ -297,6 +347,6 @@ export function MerchantDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
+    </Dialog >
   )
 }

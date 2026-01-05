@@ -7,13 +7,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Separator } from "@/components/ui/separator"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 import type { OrderType, OrderStatus } from "@/lib/services"
 
@@ -104,7 +98,7 @@ export const timeRangeOptions = [
       from.setHours(0, 0, 0, 0)
       const tomorrow = new Date(today)
       tomorrow.setHours(0, 0, 0, 0)
-      tomorrow.setDate(tomorrow.getDate() + 1)  // 明天 00:00:00
+      tomorrow.setDate(tomorrow.getDate() + 1)
       return { from, to: tomorrow }
     }
   },
@@ -222,7 +216,6 @@ export function TableFilter({
             selectedValues={selectedTypes}
             options={typeConfig}
             onToggleValue={toggleType}
-            onChange={onTypeChange}
           />
         )}
 
@@ -232,7 +225,6 @@ export function TableFilter({
             selectedValues={selectedStatuses}
             options={statusConfig}
             onToggleValue={toggleStatus}
-            onChange={onStatusChange}
           />
         )}
 
@@ -266,67 +258,103 @@ export function TableFilter({
       )}
 
       {enablePagination && onPageChange && onPageSizeChange && (
-        <div className="flex items-center gap-1.5 self-end lg:self-auto">
-          <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-            {total} 条记录
-          </span>
-          <div className="flex items-center border border-dashed rounded-md shadow-none">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-5.5 w-6 rounded-none rounded-l-md disabled:opacity-30"
-              onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-              disabled={currentPage <= 1 || loading}
-            >
-              <ChevronLeft className="size-3" />
-            </Button>
-            <span className="text-[10px] font-mono text-muted-foreground px-2 border-x border-dashed">
-              {currentPage}/{totalPages}
-            </span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-5.5 w-6 rounded-none rounded-r-md disabled:opacity-30"
-              onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-              disabled={currentPage >= totalPages || loading}
-            >
-              <ChevronRight className="size-3" />
-            </Button>
-          </div>
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          total={total}
+          pageSize={pageSize}
+          onPageChange={onPageChange}
+          onPageSizeChange={onPageSizeChange}
+          onRefresh={onRefresh}
+          loading={loading}
+        />
+      )}
+    </div>
+  )
+}
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-6 border-dashed text-[10px] px-2 font-mono shadow-none" disabled={loading}>
-                {pageSize}条/页
-                <ChevronDown className="size-3 opacity-50" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {[20, 50, 100].map(size => (
-                <DropdownMenuItem
-                  key={size}
-                  onClick={() => onPageSizeChange(size)}
-                  className={cn("font-mono text-xs", pageSize === size && "bg-accent")}
-                >
-                  {size}条/页
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
 
-          {onRefresh && (
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-6 w-6 border-dashed shadow-none"
-              onClick={onRefresh}
-              disabled={loading}
-              title="刷新数据"
+interface TablePaginationProps {
+  currentPage: number
+  totalPages: number
+  total: number
+  pageSize: number
+  onPageChange: (page: number) => void
+  onPageSizeChange: (size: number) => void
+  onRefresh?: () => void
+  loading?: boolean
+}
+
+export function TablePagination({
+  currentPage,
+  totalPages,
+  total,
+  pageSize,
+  onPageChange,
+  onPageSizeChange,
+  onRefresh,
+  loading = false
+}: TablePaginationProps) {
+  return (
+    <div className="flex items-center gap-2 self-end lg:self-auto">
+      <span className="text-[10px] text-muted-foreground whitespace-nowrap hidden sm:inline-block">
+        {total} 条记录
+      </span>
+      <div className="flex items-center border border-dashed rounded-md shadow-none bg-background">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-5.5 w-6 rounded-none rounded-l-md disabled:opacity-30"
+          onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+          disabled={currentPage <= 1 || loading}
+        >
+          <ChevronLeft className="size-3" />
+        </Button>
+        <span className="text-[10px] font-mono text-muted-foreground px-2 border-x border-dashed h-5.5 flex items-center">
+          {currentPage}/{totalPages}
+        </span>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-5.5 w-6 rounded-none rounded-r-md disabled:opacity-30"
+          onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+          disabled={currentPage >= totalPages || loading}
+        >
+          <ChevronRight className="size-3" />
+        </Button>
+      </div>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm" className="h-6 border-dashed text-[10px] px-2 font-mono shadow-none" disabled={loading}>
+            {pageSize}条/页
+            <ChevronDown className="size-3 opacity-50" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {[20, 50, 100].map(size => (
+            <DropdownMenuItem
+              key={size}
+              onClick={() => onPageSizeChange(size)}
+              className={cn("font-mono text-xs", pageSize === size && "bg-accent")}
             >
-              <Loader2 className={cn("size-3", loading && "animate-spin")} />
-            </Button>
-          )}
-        </div>
+              {size}条/页
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {onRefresh && (
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-6 w-6 border-dashed shadow-none"
+          onClick={onRefresh}
+          disabled={loading}
+          title="刷新数据"
+        >
+          <Loader2 className={cn("size-3", loading && "animate-spin")} />
+        </Button>
       )}
     </div>
   )
@@ -335,12 +363,11 @@ export function TableFilter({
 /**
  * 可复用的筛选选择器组件
  */
-function FilterSelect<T extends string>({ label, selectedValues, options, onToggleValue, onChange }: {
+export function FilterSelect<T extends string>({ label, selectedValues, options, onToggleValue }: {
   label: string
   selectedValues: T[]
   options: Record<T, { label: string; color: string }>
   onToggleValue: (value: T) => void
-  onChange?: (values: T[]) => void
 }) {
   return (
     <DropdownMenu>
@@ -390,17 +417,6 @@ function FilterSelect<T extends string>({ label, selectedValues, options, onTogg
             </DropdownMenuItem>
           )
         })}
-        {selectedValues.length > 0 && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onSelect={() => onChange?.([])}
-              className="h-5 justify-center text-center text-xs font-bold"
-            >
-              清除筛选
-            </DropdownMenuItem>
-          </>
-        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )
@@ -498,7 +514,7 @@ export interface SearchValues {
   payee_username?: string
 }
 
-function SearchFilter({
+export function SearchFilter({
   values,
   onSearch
 }: {
@@ -549,7 +565,7 @@ function SearchFilter({
           搜索
           {hasSearchValues && (
             <>
-              <Separator orientation="vertical" className="mx-1" />
+              <Separator orientation="vertical" className="mx-1 h-3" />
               <Badge
                 variant="secondary"
                 className="text-[10px] h-3 px-1 rounded-full bg-primary text-primary-foreground"
