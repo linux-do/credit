@@ -56,6 +56,7 @@ import {
   ShieldCheck,
   Globe,
   Layers,
+  Trophy,
 } from "lucide-react"
 
 import { useUser } from "@/contexts/user-context"
@@ -68,6 +69,7 @@ const data = {
     { title: "集市", url: "/merchant", icon: Store },
     { title: "积分", url: "/balance", icon: Wallet },
     { title: "活动", url: "/trade", icon: CircleDollarSign },
+    { title: "排行榜", url: "/leaderboard", icon: Trophy },
   ],
   admin: [
     { title: "系统配置", url: "/admin/system", icon: ShieldCheck },
@@ -87,7 +89,7 @@ const data = {
 /**
  * 应用侧边栏组件
  * 显示应用侧边栏
- * 
+ *
  * @example
  * ```tsx
  * <AppSidebar />

@@ -48,6 +48,7 @@ import (
 	"github.com/linux-do/credit/internal/apps/admin/system_config"
 	"github.com/linux-do/credit/internal/apps/admin/user_pay_config"
 	"github.com/linux-do/credit/internal/apps/dashboard"
+	"github.com/linux-do/credit/internal/apps/leaderboard"
 	"github.com/linux-do/credit/internal/apps/oauth"
 	"github.com/linux-do/credit/internal/apps/order"
 	"github.com/linux-do/credit/internal/apps/user"
@@ -143,6 +144,15 @@ func Serve() {
 			{
 				dashboardRouter.GET("/stats/daily", dashboard.GetDailyStats)
 				dashboardRouter.GET("/stats/top-customers", dashboard.GetTopCustomers)
+			}
+
+			// Leaderboard
+			leaderboardRouter := apiV1Router.Group("/leaderboard")
+			leaderboardRouter.Use(oauth.LoginRequired())
+			{
+				leaderboardRouter.GET("", leaderboard.List)
+				leaderboardRouter.GET("/me", leaderboard.GetMyRank)
+				leaderboardRouter.GET("/users/:id", leaderboard.GetUserRankByID)
 			}
 
 			// Order

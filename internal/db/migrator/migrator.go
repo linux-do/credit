@@ -95,6 +95,11 @@ func initSystemConfigs() {
 			Description: "新用户保护期天数，期内积分下降不扣分",
 		},
 		{
+			Key:         model.ConfigKeyLeaderboardCacheTTLSeconds,
+			Value:       "30",
+			Description: "排行榜缓存过期时间（秒）",
+		},
+		{
 			Key:         model.ConfigKeyRedEnvelopeEnabled,
 			Value:       "0",
 			Description: "红包功能是否启用（1启用，0禁用）",
