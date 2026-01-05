@@ -68,13 +68,13 @@ export function TradeMain() {
     setMounted(true)
   }, [])
 
-  const [redEnvelopeEnabled, setRedEnvelopeEnabled] = React.useState(0)
+  const [redEnvelopeEnabled, setRedEnvelopeEnabled] = React.useState(false)
 
   React.useEffect(() => {
     // 从公共配置中获取红包功能状态
     services.config.getPublicConfig()
       .then(res => setRedEnvelopeEnabled(res.red_envelope_enabled))
-      .catch(() => setRedEnvelopeEnabled(0))
+      .catch(() => setRedEnvelopeEnabled(false))
   }, [])
 
   /* 获取活动类型 */
@@ -118,7 +118,7 @@ export function TradeMain() {
               <TabsTrigger value="transfer" className={TAB_TRIGGER_STYLES}>积分转移</TabsTrigger>
               <TabsTrigger value="community" className={TAB_TRIGGER_STYLES}>社区划转</TabsTrigger>
               <TabsTrigger value="online" className={TAB_TRIGGER_STYLES}>在线流转</TabsTrigger>
-              {redEnvelopeEnabled === 1 && (
+              {redEnvelopeEnabled && (
                 <TabsTrigger value="redenvelope" className={TAB_TRIGGER_STYLES}>红包</TabsTrigger>
               )}
               <TabsTrigger value="all" className={TAB_TRIGGER_STYLES}>所有活动</TabsTrigger>

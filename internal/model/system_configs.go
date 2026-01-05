@@ -106,3 +106,18 @@ func GetDecimalByKey(ctx context.Context, key string, precision int32) (decimal.
 	// 裁剪到指定小数位数
 	return value.Truncate(precision), nil
 }
+
+// GetBoolByKey 通过 key 查询配置并转换为 bool 类型
+func GetBoolByKey(ctx context.Context, key string) (bool, error) {
+	var sc SystemConfig
+	if err := sc.GetByKey(ctx, key); err != nil {
+		return false, err
+	}
+
+	value, err := strconv.ParseBool(sc.Value)
+	if err != nil {
+		return false, fmt.Errorf("配置 %s 的值 '%s' 无法转换为布尔值: %w", key, sc.Value, err)
+	}
+
+	return value, nil
+}

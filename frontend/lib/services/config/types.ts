@@ -4,8 +4,8 @@
 export interface PublicConfigResponse {
   /** 争议时间窗口（小时） */
   dispute_time_window_hours: number;
-  /** 红包功能是否启用（1启用，0禁用） */
-  red_envelope_enabled: number;
+  /** 红包功能是否启用 */
+  red_envelope_enabled: boolean;
   /** 单个红包的最大积分上限 */
   red_envelope_max_amount: string;
   /** 每日发红包的个数限制 */

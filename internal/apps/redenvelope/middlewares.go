@@ -28,12 +28,12 @@ import (
 // CheckRedEnvelopeEnabled 检查红包功能是否启用的中间件
 func CheckRedEnvelopeEnabled() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		enabled, err := model.GetIntByKey(c.Request.Context(), model.ConfigKeyRedEnvelopeEnabled)
+		enabled, err := model.GetBoolByKey(c.Request.Context(), model.ConfigKeyRedEnvelopeEnabled)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, util.Err(err.Error()))
 			return
 		}
-		if enabled != 1 {
+		if !enabled {
 			c.AbortWithStatusJSON(http.StatusForbidden, util.Err(common.RedEnvelopeDisabled))
 			return
 		}
