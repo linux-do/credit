@@ -146,6 +146,8 @@ func Serve() {
 				dashboardRouter.GET("/stats/top-customers", dashboard.GetTopCustomers)
 			}
 
+			apiV1Router.GET("/dashboard/stats/user-balance", dashboard.GetUserBalanceStats)
+
 			// Leaderboard
 			leaderboardRouter := apiV1Router.Group("/leaderboard")
 			leaderboardRouter.Use(oauth.LoginRequired())

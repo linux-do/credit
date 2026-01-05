@@ -136,3 +136,38 @@ func HGetJSON[T any](ctx context.Context, hashKey, fieldKey string, data *T) err
 
 	return nil
 }
+
+// GetJSON 从Redis获取数据并反序列化为泛型类型
+// ctx: 上下文
+// key: Redis key
+// data: 用于接收数据的指针（泛型）
+func GetJSON[T any](ctx context.Context, key string, data *T) error {
+	val, err := Redis.Get(ctx, PrefixedKey(key)).Bytes()
+	if err != nil {
+		return err
+	}
+
+	if err := json.Unmarshal(val, data); err != nil {
+		return fmt.Errorf("failed to unmarshal data: %w", err)
+	}
+
+	return nil
+}
+
+// SetJSON 将泛型数据序列化为JSON并设置到Redis
+// ctx: 上下文
+// key: Redis key
+// data: 要存储的数据（泛型）
+// expiration: 过期时间
+func SetJSON[T any](ctx context.Context, key string, data T, expiration time.Duration) error {
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return fmt.Errorf("failed to marshal data: %w", err)
+	}
+
+	if err := Redis.Set(ctx, PrefixedKey(key), jsonData, expiration).Err(); err != nil {
+		return fmt.Errorf("failed to set redis key: %w", err)
+	}
+
+	return nil
+}

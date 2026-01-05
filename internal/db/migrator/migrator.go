@@ -96,7 +96,7 @@ func initSystemConfigs() {
 		},
 		{
 			Key:         model.ConfigKeyLeaderboardCacheTTLSeconds,
-			Value:       "30",
+			Value:       "600",
 			Description: "排行榜缓存过期时间（秒）",
 		},
 		{
@@ -123,6 +123,11 @@ func initSystemConfigs() {
 			Key:         model.ConfigKeyRedEnvelopeMaxRecipients,
 			Value:       "10000",
 			Description: "每个红包的最大可领取人数上限",
+		},
+		{
+			Key:         model.ConfigKeyUserBalanceStatsCacheTTL,
+			Value:       "600",
+			Description: "用户余额统计缓存过期时间（秒）",
 		},
 	}
 

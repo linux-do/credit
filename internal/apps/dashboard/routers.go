@@ -18,6 +18,7 @@ package dashboard
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/linux-do/credit/internal/apps/oauth"
@@ -136,4 +137,61 @@ func GetTopCustomers(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, util.OK(customers))
+}
+
+// UserBalanceStatsResponse 用户余额统计响应
+type UserBalanceStatsResponse struct {
+	TotalCount   int64           `json:"total_count"`
+	TotalAmount  decimal.Decimal `json:"total_amount"`
+	AvgAmount    decimal.Decimal `json:"avg_amount"`
+	MedianAmount decimal.Decimal `json:"median_amount"`
+	MinAmount    decimal.Decimal `json:"min_amount"`
+	MaxAmount    decimal.Decimal `json:"max_amount"`
+	StdDev       decimal.Decimal `json:"std_dev"`
+}
+
+// GetUserBalanceStats 获取用户余额统计
+// @Summary 获取用户余额统计
+// @Description 统计所有用户的AvailableBalance字段
+// @Tags dashboard
+// @Accept json
+// @Produce json
+// @Success 200 {object} util.ResponseAny{data=UserBalanceStatsResponse}
+// @Router /api/v1/dashboard/stats/user-balance [get]
+func GetUserBalanceStats(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	var cachedStats UserBalanceStatsResponse
+	if err := db.GetJSON(ctx, dashboardCacheKeyPrefix, &cachedStats); err == nil {
+		c.JSON(http.StatusOK, util.OK(cachedStats))
+		return
+	}
+
+	stats, err := calculateUserBalanceStats(ctx)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, util.Err("查询用户余额统计失败: "+err.Error()))
+		return
+	}
+
+	median, err := calculateMedian(ctx)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, util.Err("计算中位数失败: "+err.Error()))
+		return
+	}
+
+	response := UserBalanceStatsResponse{
+		TotalCount:   stats.TotalCount,
+		TotalAmount:  stats.TotalAmount,
+		AvgAmount:    stats.AvgAmount,
+		MedianAmount: median,
+		MinAmount:    stats.MinAmount,
+		MaxAmount:    stats.MaxAmount,
+		StdDev:       stats.StdDev,
+	}
+
+	if cacheTTL, errGet := model.GetIntByKey(ctx, model.ConfigKeyUserBalanceStatsCacheTTL); errGet == nil && cacheTTL > 0 {
+		_ = db.SetJSON(ctx, dashboardCacheKeyPrefix, response, time.Duration(cacheTTL)*time.Second)
+	}
+
+	c.JSON(http.StatusOK, util.OK(response))
 }

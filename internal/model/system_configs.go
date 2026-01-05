@@ -42,6 +42,7 @@ const (
 	ConfigKeyRedEnvelopeDailyLimit      = "red_envelope_daily_limit"      // 每日发红包的个数限制
 	ConfigKeyRedEnvelopeFeeRate         = "red_envelope_fee_rate"         // 红包手续费率（0-1之间的小数，0表示不收费）
 	ConfigKeyRedEnvelopeMaxRecipients   = "red_envelope_max_recipients"   // 每个红包的最大可领取人数上限
+	ConfigKeyUserBalanceStatsCacheTTL   = "user_balance_stats_cache_ttl"  // 用户余额统计缓存过期时间（秒）
 )
 
 const (
