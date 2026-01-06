@@ -3,6 +3,7 @@
 import * as React from "react"
 import { Command as CommandPrimitive } from "cmdk"
 import { SearchIcon } from "lucide-react"
+import { motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
 import {
@@ -84,17 +85,42 @@ function CommandInput({
 
 function CommandList({
   className,
+  children,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.List>) {
+  const ref = React.useRef<HTMLDivElement>(null)
+  const [height, setHeight] = React.useState<number | "auto">("auto")
+
+  React.useEffect(() => {
+    if (ref.current) {
+      const resizeObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          setHeight(entry.contentRect.height)
+        }
+      })
+      resizeObserver.observe(ref.current)
+      return () => resizeObserver.disconnect()
+    }
+  }, [])
+
   return (
-    <CommandPrimitive.List
-      data-slot="command-list"
-      className={cn(
-        "max-h-[450px] scroll-py-1 overflow-x-hidden overflow-y-auto",
-        className
-      )}
-      {...props}
-    />
+    <motion.div
+      animate={{ height }}
+      transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+      className="overflow-hidden"
+    >
+      <CommandPrimitive.List
+        ref={ref}
+        data-slot="command-list"
+        className={cn(
+          "max-h-[450px] scroll-py-1 overflow-x-hidden overflow-y-auto",
+          className
+        )}
+        {...props}
+      >
+        {children}
+      </CommandPrimitive.List>
+    </motion.div>
   )
 }
 
@@ -147,7 +173,7 @@ function CommandItem({
     <CommandPrimitive.Item
       data-slot="command-item"
       className={cn(
-        "data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex cursor-pointer items-center gap-3 rounded-md px-4 py-3 text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5 data-[selected=true]:before:absolute data-[selected=true]:before:left-0 data-[selected=true]:before:h-full data-[selected=true]:before:w-1 data-[selected=true]:before:bg-primary data-[selected=true]:before:content-[''] overflow-hidden",
+        "data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex cursor-pointer items-center gap-3 rounded-md px-4 py-3 text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5 data-[selected=true]:before:absolute data-[selected=true]:before:left-0 data-[selected=true]:before:h-full data-[selected=true]:before:w-1 data-[selected=true]:before:bg-primary data-[selected=true]:before:content-[''] overflow-hidden animate-in fade-in-0 slide-in-from-top-1 duration-200",
         className
       )}
       {...props}
