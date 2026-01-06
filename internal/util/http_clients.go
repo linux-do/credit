@@ -23,6 +23,8 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 // IsLocalhost 检查 URL 是否为 localhost
@@ -35,14 +37,14 @@ func IsLocalhost(urlStr string) bool {
 	return hostname == "localhost" || hostname == "127.0.0.1" || hostname == "::1"
 }
 
-// 配置HTTP客户端
+// 配置HTTP客户端 使用 otelhttp 自动注入 trace span
 var httpClient = &http.Client{
 	Timeout: 10 * time.Second,
-	Transport: &http.Transport{
+	Transport: otelhttp.NewTransport(&http.Transport{
 		MaxIdleConns:        100,
 		MaxIdleConnsPerHost: 20,
 		IdleConnTimeout:     60 * time.Second,
-	},
+	}),
 }
 
 func Request(ctx context.Context, method, url string, body io.Reader, headers, cookies map[string]string) (*http.Response, error) {
