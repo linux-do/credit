@@ -43,6 +43,23 @@ definitions:
       test_mode:
         type: boolean
     type: object
+  dashboard.UserBalanceStatsResponse:
+    properties:
+      avg_amount:
+        type: number
+      max_amount:
+        type: number
+      median_amount:
+        type: number
+      min_amount:
+        type: number
+      std_dev:
+        type: number
+      total_amount:
+        type: number
+      total_count:
+        type: integer
+    type: object
   dispute.CloseDisputeRequest:
     properties:
       dispute_id:
@@ -859,6 +876,26 @@ paths:
           schema:
             $ref: '#/definitions/util.ResponseAny'
       summary: 获取Top客户
+      tags:
+      - dashboard
+  /api/v1/dashboard/stats/user-balance:
+    get:
+      consumes:
+      - application/json
+      description: 统计所有用户的AvailableBalance字段
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ResponseAny'
+            - properties:
+                data:
+                  $ref: '#/definitions/dashboard.UserBalanceStatsResponse'
+              type: object
+      summary: 获取用户余额统计
       tags:
       - dashboard
   /api/v1/health:

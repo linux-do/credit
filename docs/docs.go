@@ -581,6 +581,41 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/dashboard/stats/user-balance": {
+            "get": {
+                "description": "统计所有用户的AvailableBalance字段",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "dashboard"
+                ],
+                "summary": "获取用户余额统计",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/util.ResponseAny"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dashboard.UserBalanceStatsResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/health": {
             "get": {
                 "produces": [
@@ -1719,6 +1754,32 @@ const docTemplate = `{
                 },
                 "test_mode": {
                     "type": "boolean"
+                }
+            }
+        },
+        "dashboard.UserBalanceStatsResponse": {
+            "type": "object",
+            "properties": {
+                "avg_amount": {
+                    "type": "number"
+                },
+                "max_amount": {
+                    "type": "number"
+                },
+                "median_amount": {
+                    "type": "number"
+                },
+                "min_amount": {
+                    "type": "number"
+                },
+                "std_dev": {
+                    "type": "number"
+                },
+                "total_amount": {
+                    "type": "number"
+                },
+                "total_count": {
+                    "type": "integer"
                 }
             }
         },

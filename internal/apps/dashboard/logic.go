@@ -96,3 +96,54 @@ func mergeDailyStats(startDate time.Time, days int, incomeMap, expenseMap map[st
 
 	return result
 }
+
+// userBalanceStatsResult 用户余额统计查询结果
+type userBalanceStatsResult struct {
+	TotalCount  int64
+	TotalAmount decimal.Decimal
+	AvgAmount   decimal.Decimal
+	MinAmount   decimal.Decimal
+	MaxAmount   decimal.Decimal
+	StdDev      decimal.Decimal
+}
+
+// calculateUserBalanceStats 计算用户余额统计数据
+func calculateUserBalanceStats(ctx context.Context) (*userBalanceStatsResult, error) {
+	var result userBalanceStatsResult
+
+	err := db.DB(ctx).Model(&model.User{}).
+		Select(`
+			COUNT(*) as total_count,
+			COALESCE(SUM(available_balance), 0) as total_amount,
+			COALESCE(AVG(available_balance), 0) as avg_amount,
+			COALESCE(MIN(available_balance), 0) as min_amount,
+			COALESCE(MAX(available_balance), 0) as max_amount,
+			COALESCE(STDDEV_SAMP(available_balance), 0) as std_dev
+		`).
+		Scan(&result).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+// calculateMedian 计算用户余额中位数
+func calculateMedian(ctx context.Context) (decimal.Decimal, error) {
+	var median decimal.Decimal
+
+	err := db.DB(ctx).Raw(`
+		SELECT COALESCE(
+			PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY available_balance),
+			0
+		) as median
+		FROM users
+	`).Scan(&median).Error
+
+	if err != nil {
+		return decimal.Zero, err
+	}
+
+	return median, nil
+}
