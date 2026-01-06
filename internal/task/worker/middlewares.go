@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/linux-do/credit/internal/logger"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/hibiken/asynq"
 	"github.com/linux-do/credit/internal/otel_trace"
@@ -32,7 +33,7 @@ import (
 func taskLoggingMiddleware(h asynq.Handler) asynq.Handler {
 	return asynq.HandlerFunc(func(ctx context.Context, t *asynq.Task) error {
 		// 初始化 Trace
-		ctx, span := otel_trace.Start(ctx, "TaskProcess_"+t.Type())
+		ctx, span := otel_trace.Start(ctx, "TaskProcess_"+t.Type(), trace.WithSpanKind(trace.SpanKindConsumer))
 		defer span.End()
 
 		// 添加任务信息到 Span
