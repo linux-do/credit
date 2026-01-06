@@ -34,7 +34,7 @@ export default function MainLayout({
           <SidebarInset className="flex flex-col min-w-0 h-screen">
             <SiteHeader isFullWidth={isFullWidth} onToggleFullWidth={setIsFullWidth} />
             <div className="flex flex-1 flex-col bg-background overflow-y-auto overflow-x-hidden min-w-0 hide-scrollbar">
-              <div className={`w-full mx-auto px-12 min-w-0 ${!isFullWidth ? "max-w-[1320px]" : ""}`}>
+              <div className={`w-full mx-auto px-12 min-w-0 transition-all duration-300 ease-in-out ${!isFullWidth ? "max-w-[1320px]" : "max-w-full"}`}>
                 <motion.div
                   key={pathname}
                   initial={{ opacity: 0 }}

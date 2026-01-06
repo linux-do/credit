@@ -58,7 +58,7 @@ export function SiteHeader({ isFullWidth = false, onToggleFullWidth }: { isFullW
           </div>
         </div>
 
-        <div className={`hidden md:flex w-full items-center gap-4 ${!isFullWidth ? "max-w-[1320px]" : ""} mx-auto px-12`}>
+        <div className={`hidden md:flex w-full items-center gap-4 transition-all duration-300 ease-in-out ${!isFullWidth ? "max-w-[1320px]" : "max-w-full"} mx-auto px-12`}>
           <div className="relative w-64 cursor-pointer" onClick={() => setSearchOpen(true)}>
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <div className="h-8 border-none bg-muted/100 pl-10 pr-3 text-sm rounded-md flex items-center text-muted-foreground">
