@@ -149,7 +149,13 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
                 >
                   <Icon className="mr-2 h-4 w-4" />
                   <div className="flex flex-col">
-                    <span>{item.title}</span>
+                    <span>
+                      {item.title.split(new RegExp(`(${search})`, 'gi')).map((part, i) => 
+                        part.toLowerCase() === search.toLowerCase() ? 
+                          <span key={i} className="text-primary font-bold">{part}</span> : 
+                          part
+                      )}
+                    </span>
                     <span className="text-xs text-muted-foreground">{item.description}</span>
                   </div>
                 </CommandItem>
