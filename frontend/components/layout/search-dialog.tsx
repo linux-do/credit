@@ -148,18 +148,24 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
                   key={item.id}
                   value={item.title}
                   onSelect={() => handleSelect(item)}
+                  className="flex items-center justify-between"
                 >
-                  <Icon className="mr-2 h-4 w-4" />
-                  <div className="flex flex-col">
-                    <span>
-                      {item.title.split(new RegExp(`(${search})`, 'gi')).map((part, i) => 
-                        part.toLowerCase() === search.toLowerCase() ? 
-                          <span key={i} className="text-primary font-bold">{part}</span> : 
-                          part
-                      )}
-                    </span>
-                    <span className="text-xs text-muted-foreground">{item.description}</span>
+                  <div className="flex items-center">
+                    <Icon className="mr-2 h-4 w-4" />
+                    <div className="flex flex-col">
+                      <span>
+                        {item.title.split(new RegExp(`(${search})`, 'gi')).map((part, i) => 
+                          part.toLowerCase() === search.toLowerCase() ? 
+                            <span key={i} className="text-primary font-bold">{part}</span> : 
+                            part
+                        )}
+                      </span>
+                      <span className="text-xs text-muted-foreground">{item.description}</span>
+                    </div>
                   </div>
+                  <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded-md font-medium">
+                    {categoryLabels[item.category as keyof typeof categoryLabels]}
+                  </span>
                 </CommandItem>
               ))}
             </CommandGroup>
