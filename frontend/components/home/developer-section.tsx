@@ -15,9 +15,30 @@ export interface DeveloperSectionProps {
 export const DeveloperSection = React.memo(function DeveloperSection({ className }: DeveloperSectionProps) {
   const [copied, setCopied] = React.useState(false);
 
-  const onCopy = () => {
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const codeContent = `curl https://credit.linux.do/epay/submit.php \\
+  -u sk_live_...: \\
+  -d amount=1000 \\
+  -d currency="cny" \\
+  -d description="Pro Plan"`;
+
+  const onCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(codeContent);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback for older browsers
+      const textArea = document.createElement("textarea");
+      textArea.value = codeContent;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-9999px";
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   return (
