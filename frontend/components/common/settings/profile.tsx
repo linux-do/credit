@@ -2,7 +2,10 @@
 
 import * as React from "react"
 import Link from "next/link"
+import { motion, useAnimation } from "motion/react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+
+
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel"
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -242,6 +245,15 @@ export function ProfileMain() {
   const [current, setCurrent] = React.useState(0)
   const [levelConfigs, setLevelConfigs] = React.useState<LevelConfig[]>([])
 
+  const controls = useAnimation()
+
+  const handleAvatarClick = () => {
+    controls.start({
+      rotate: [0, -20, 20, -20, 20, 0],
+      transition: { duration: 0.5, ease: "easeInOut" }
+    })
+  }
+
   const score = user?.pay_score ?? 0
   const currentLevel = getLevelConfig(score, levelConfigs)
 
@@ -354,12 +366,18 @@ export function ProfileMain() {
         <h2 className="font-medium text-sm text-muted-foreground">基本信息</h2>
 
         <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
-          <Avatar className="size-14 sm:size-16">
-            <AvatarImage src={user.avatar_url} alt={user.nickname || user.username} />
-            <AvatarFallback className="text-lg sm:text-xl">
-              {(user.nickname || user.username).slice(0, 2)}
-            </AvatarFallback>
-          </Avatar>
+          <motion.div
+            animate={controls}
+            onClick={handleAvatarClick}
+            className="cursor-pointer origin-center"
+          >
+            <Avatar className="size-14 sm:size-16">
+              <AvatarImage src={user.avatar_url} alt={user.nickname || user.username} />
+              <AvatarFallback className="text-lg sm:text-xl">
+                {(user.nickname || user.username).slice(0, 2)}
+              </AvatarFallback>
+            </Avatar>
+          </motion.div>
 
           <div className="flex-1 w-full">
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
