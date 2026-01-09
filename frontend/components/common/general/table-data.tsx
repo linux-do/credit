@@ -12,10 +12,10 @@ import { LoadingStateWithBorder } from "@/components/layout/loading"
 import { ListRestart, Layers, LucideIcon } from "lucide-react"
 import { formatDateTime } from "@/lib/utils"
 import type { Order } from "@/lib/services"
+import { useUser } from "@/contexts/user-context"
 import {
   OrderDetailDialog,
   CreateDisputeDialog,
-  CancelDisputeDialog,
   ViewDisputeHistoryDialog,
   RefundReviewDialog,
 } from "./dispute-dialog"
@@ -117,13 +117,17 @@ const TransactionTableRow = React.memo(React.forwardRef<HTMLTableRowElement, {
   style,
   ...props
 }, ref) {
+  const { user } = useUser()
   const getAmountDisplay = (amount: string) => (
     <span className="text-xs font-semibold">
       {parseFloat(amount).toFixed(2)}
     </span>
   )
 
-  const isDisputing = order.type === 'receive' && order.status === 'disputing'
+  const isDisputeSupported = order.type === 'payment' || order.type === 'online' || order.type === 'receive'
+  const isCurrentUserPayer = user?.id === order.payer_user_id
+  const isCurrentUserPayee = user?.id === order.payee_user_id
+  const isDisputing = order.status === 'disputing' && isCurrentUserPayee
 
   return (
     <TableRow
@@ -229,24 +233,29 @@ const TransactionTableRow = React.memo(React.forwardRef<HTMLTableRowElement, {
       `}>
         <OrderDetailDialog order={order} />
 
-        {/* 场景1：付款方对成功的订单发起争议 (支持 payment 和 online 类型) */}
-        {(order.type === 'payment' || order.type === 'online') && order.status === 'success' && (
+        {/* 场景1：消费方对成功的订单发起争议 */}
+        {isDisputeSupported && isCurrentUserPayer && order.status === 'success' && (
           <CreateDisputeDialog order={order} />
         )}
 
-        {/* 场景2：付款方取消正在进行的争议 (支持 payment 和 online 类型) */}
-        {(order.type === 'payment' || order.type === 'online') && order.status === 'disputing' && (
-          <CancelDisputeDialog order={order} />
-        )}
-
-        {/* 场景3：付款方查看被拒绝的争议记录 (支持 payment 和 online 类型) */}
-        {(order.type === 'payment' || order.type === 'online') && order.status === 'refused' && (
+        {/* 场景2：消费方查看正在进行的争议 */}
+        {isDisputeSupported && isCurrentUserPayer && order.status === 'disputing' && (
           <ViewDisputeHistoryDialog order={order} />
         )}
 
-        {/* 场景4：收款方（商户）处理争议 */}
-        {order.type === 'receive' && order.status === 'disputing' && (
+        {/* 场景3：消费方查看已处理的争议（拒绝或退款） */}
+        {isDisputeSupported && isCurrentUserPayer && (order.status === 'refused' || order.status === 'refund') && (
+          <ViewDisputeHistoryDialog order={order} />
+        )}
+
+        {/* 场景4：服务方处理正在进行的争议 */}
+        {isDisputeSupported && isCurrentUserPayee && order.status === 'disputing' && (
           <RefundReviewDialog order={order} />
+        )}
+
+        {/* 场景5：服务方查看已处理的争议（拒绝或退款） */}
+        {isDisputeSupported && isCurrentUserPayee && (order.status === 'refused' || order.status === 'refund') && (
+          <ViewDisputeHistoryDialog order={order} />
         )}
       </TableCell>
     </TableRow>
