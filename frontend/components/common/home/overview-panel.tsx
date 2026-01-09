@@ -324,7 +324,7 @@ function IncomeStatsCard() {
 
   return (
     <OverviewCard
-      title="收入统计"
+      title="7天收入统计"
       headerExtra={
         <div className="text-xl font-semibold">
           {loading ? (
@@ -438,7 +438,7 @@ function ExpenseStatsCard() {
 
   return (
     <OverviewCard
-      title="支出统计"
+      title="7天支出统计"
       headerExtra={
         <div className="text-xl font-semibold">
           {loading ? (
