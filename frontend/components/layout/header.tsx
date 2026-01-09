@@ -27,8 +27,13 @@ export function SiteHeader({ isFullWidth = false, onToggleFullWidth }: { isFullW
   const [mounted, setMounted] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
 
+  const [metaKey, setMetaKey] = useState("⌘")
+
   useEffect(() => {
     setMounted(true)
+    if (typeof navigator !== 'undefined' && !navigator.userAgent?.includes("Mac")) {
+      setMetaKey("Ctrl")
+    }
   }, [])
 
   return (
@@ -64,7 +69,7 @@ export function SiteHeader({ isFullWidth = false, onToggleFullWidth }: { isFullW
             <div className="h-8 border-none bg-muted/100 pl-10 pr-3 text-sm rounded-md flex items-center text-muted-foreground">
               <span>搜索</span>
               <kbd className="ml-auto pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-                <span className="text-xs">⌘</span>K
+                <span className="text-xs">{metaKey}</span>K
               </kbd>
             </div>
           </div>

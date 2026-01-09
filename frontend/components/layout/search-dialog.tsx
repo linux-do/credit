@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/command"
 import { searchItems, type SearchItem } from "@/lib/utils/search-data"
 import { Home, Settings, FileText, Shield } from "lucide-react"
+import { useUser } from "@/contexts/user-context"
 
 interface SearchDialogProps {
   open: boolean
@@ -32,19 +33,135 @@ const categoryLabels = {
   admin: '管理',
 }
 
+const getTips = (metaKey: string) => [
+  (
+    <>
+      <span className="text-muted-foreground/80 lowercase">Tips: 还可以使用</span>
+      <kbd className="bg-muted px-1.5 py-0.5 rounded border shadow-sm text-foreground mx-1">/</kbd>
+      <span className="text-muted-foreground/80 lowercase">来打开此界面</span>
+    </>
+  ),
+  (
+    <>
+      <span className="text-muted-foreground/80 lowercase">Tips: 使用</span>
+      <kbd className="bg-muted px-1.5 py-0.5 rounded border shadow-sm text-foreground mx-1">↑</kbd>
+      <kbd className="bg-muted px-1.5 py-0.5 rounded border shadow-sm text-foreground mx-1">↓</kbd>
+      <span className="text-muted-foreground/80 lowercase">来切换选中项</span>
+    </>
+  ),
+  (
+    <>
+      <span className="text-muted-foreground/80 lowercase">Tips: 按住</span>
+      <kbd className="bg-muted px-1.5 py-0.5 rounded border shadow-sm text-foreground mx-1">{metaKey}</kbd>
+      <span className="text-muted-foreground/80 lowercase">+</span>
+      <kbd className="bg-muted px-1.5 py-0.5 rounded border shadow-sm text-foreground mx-1">↵</kbd>
+      <span className="text-muted-foreground/80 lowercase">在新标签页打开</span>
+    </>
+  ),
+  (
+    <>
+      <span className="text-muted-foreground/80 lowercase">你知道吗：搜索功能还在持续升级中</span>
+    </>
+  ),
+  (
+    <>
+      <span className="text-muted-foreground/80 lowercase">你知道吗：积分会在每天 0 点更新</span>
+    </>
+  ),
+  (
+    <>
+      <span className="text-muted-foreground/80 lowercase">你知道吗：新用户前三天享有划转掉分保护</span>
+    </>
+  ),
+  (
+    <>
+      <span className="text-muted-foreground/80 lowercase">想实时查看积分变化？试试这个</span>
+      <a 
+        href="https://linux.do/t/topic/1365853" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="text-primary hover:underline mx-1"
+      >
+        脚本
+      </a>
+    </>
+  ),
+  (
+    <>
+      <span className="text-muted-foreground/80 lowercase">有65！w</span>
+    </>
+  ),
+  (
+    <>
+      <span className="text-muted-foreground/80 lowercase">遇到问题？欢迎提交</span>
+      <a 
+        href="https://github.com/linux-do/credit/issues" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="text-primary hover:underline mx-1"
+      >
+        Issue
+      </a>
+      <span className="text-muted-foreground/80 lowercase">反馈</span>
+    </>
+  )
+
+]
+
 export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
   const router = useRouter()
+  const { user } = useUser()
   const [search, setSearch] = useState('')
+  const [currentTip, setCurrentTip] = useState<React.ReactNode>(null)
   const [results, setResults] = useState<SearchItem[]>([])
+  const [metaKey, setMetaKey] = useState("⌘")
+  const [isCtrlPressed, setIsCtrlPressed] = useState(false)
 
   useEffect(() => {
-    const items = searchItems(search)
-    setResults(items)
-  }, [search])
+    if (typeof navigator !== 'undefined' && !navigator.userAgent?.includes("Mac")) {
+      setMetaKey("Ctrl")
+    }
+  }, [])
 
-  const handleSelect = useCallback((item: SearchItem) => {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Control' || e.key === 'Meta') {
+        setIsCtrlPressed(true)
+      }
+    }
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Control' || e.key === 'Meta') {
+        setIsCtrlPressed(false)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('keyup', handleKeyUp)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keyup', handleKeyUp)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (open) {
+      const tips = getTips(metaKey)
+      const randomTip = tips[Math.floor(Math.random() * tips.length)]
+      setCurrentTip(randomTip)
+    }
+  }, [open, metaKey])
+
+  useEffect(() => {
+    const items = searchItems(search, user?.is_admin)
+    setResults(items)
+  }, [search, user?.is_admin])
+
+  const handleSelect = useCallback((item: SearchItem, openInNewTab = false) => {
     onOpenChange(false)
-    router.push(item.url)
+    if (openInNewTab) {
+      window.open(item.url, '_blank')
+    } else {
+      router.push(item.url)
+    }
     setSearch('')
   }, [onOpenChange, router])
 
@@ -91,7 +208,7 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
         onValueChange={setSearch}
       />
       <CommandList>
-        <CommandEmpty>未找到结果</CommandEmpty>
+        <CommandEmpty>没有找到相关内容，换个词试试？</CommandEmpty>
         {Object.entries(groupedResults).map(([category, items]) => {
           const Icon = categoryIcons[category as keyof typeof categoryIcons]
           return (
@@ -100,13 +217,25 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
                 <CommandItem
                   key={item.id}
                   value={item.title}
-                  onSelect={() => handleSelect(item)}
+                  onSelect={() => handleSelect(item, isCtrlPressed)}
+                  className="flex items-center justify-between"
                 >
-                  <Icon className="mr-2 h-4 w-4" />
-                  <div className="flex flex-col">
-                    <span>{item.title}</span>
-                    <span className="text-xs text-muted-foreground">{item.description}</span>
+                  <div className="flex items-center">
+                    <Icon className="mr-2 h-4 w-4" />
+                    <div className="flex flex-col">
+                      <span>
+                        {item.title.split(new RegExp(`(${search})`, 'gi')).map((part, i) => 
+                          part.toLowerCase() === search.toLowerCase() ? 
+                            <span key={i} className="text-primary font-bold">{part}</span> : 
+                            part
+                        )}
+                      </span>
+                      <span className="text-xs text-muted-foreground">{item.description}</span>
+                    </div>
                   </div>
+                  <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded-md font-medium">
+                    {categoryLabels[item.category as keyof typeof categoryLabels]}
+                  </span>
                 </CommandItem>
               ))}
             </CommandGroup>
@@ -115,12 +244,16 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
       </CommandList>
       <div className="hidden border-t bg-muted/20 px-4 py-2 md:flex items-center gap-4 text-[10px] text-muted-foreground uppercase tracking-wider font-medium select-none">
         <div className="flex items-center gap-1">
+          {isCtrlPressed && <kbd className="bg-muted px-1.5 py-0.5 rounded border shadow-sm text-foreground">{metaKey}</kbd>}
           <kbd className="bg-muted px-1.5 py-0.5 rounded border shadow-sm text-foreground">↵</kbd>
-          <span>打开</span>
+          <span>{isCtrlPressed ? '在新标签页打开' : '打开'}</span>
         </div>
         <div className="flex items-center gap-1">
           <kbd className="bg-muted px-1.5 py-0.5 rounded border shadow-sm text-foreground">Esc</kbd>
           <span>关闭搜索界面</span>
+        </div>
+        <div className="ml-auto flex items-center gap-1">
+          {currentTip}
         </div>
       </div>
     </CommandDialog>

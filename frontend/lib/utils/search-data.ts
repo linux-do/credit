@@ -461,6 +461,24 @@ export const searchData: SearchItem[] = [
     category: 'setting',
     keywords: ['settings', '设置', '安全', 'security', '隐私'],
   },
+
+  // ==================== 管理员 ====================
+  {
+    id: 'admin-system',
+    title: '系统配置',
+    description: '系统配置和管理',
+    url: '/admin/system',
+    category: 'admin',
+    keywords: ['admin', '管理', '系统', '配置', 'system'],
+  },
+  {
+    id: 'admin-user-pay',
+    title: '积分配置',
+    description: '管理用户支付等级和配置',
+    url: '/admin/user_pay',
+    category: 'admin',
+    keywords: ['admin', '管理', '积分', '配置', 'payment', 'config'],
+  },
 ]
 
 /**
@@ -477,17 +495,24 @@ const searchIndex: Map<string, string> = new Map(
 /**
  * 搜索功能
  * @param query 搜索关键词
+ * @param isAdmin 是否为管理员
  * @returns 匹配的搜索结果
  */
-export function searchItems(query: string): SearchItem[] {
+export function searchItems(query: string, isAdmin: boolean = false): SearchItem[] {
   const trimmedQuery = query.trim()
+  
+  // 非管理员不能搜索 admin 类别项
+  const filteredData = isAdmin 
+    ? searchData 
+    : searchData.filter(item => item.category !== 'admin')
+
   if (!trimmedQuery) {
-    return searchData
+    return filteredData
   }
 
   const lowerQuery = trimmedQuery.toLowerCase()
 
-  return searchData.filter((item) => {
+  return filteredData.filter((item) => {
     const searchText = searchIndex.get(item.id)
     return searchText ? searchText.includes(lowerQuery) : false
   })
