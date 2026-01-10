@@ -22,7 +22,7 @@ import { SearchDialog } from "@/components/layout/search-dialog"
  */
 export function SiteHeader({ isFullWidth = false, onToggleFullWidth }: { isFullWidth?: boolean, onToggleFullWidth?: (value: boolean) => void }) {
   const { user } = useUser()
-  const { theme, setTheme } = useTheme()
+  const { setTheme, resolvedTheme } = useTheme()
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -93,8 +93,8 @@ export function SiteHeader({ isFullWidth = false, onToggleFullWidth }: { isFullW
               <span className="sr-only">切换全宽</span>
             </Button>
 
-            <Button variant="ghost" size="icon" className="size-9 text-muted-foreground hover:text-foreground" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
-              {mounted ? (theme === 'dark' ? <Sun className="size-[18px]" /> : <Moon className="size-[18px]" />) : <Moon className="size-[18px]" />}
+            <Button variant="ghost" size="icon" className="size-9 text-muted-foreground hover:text-foreground" onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}>
+              {mounted ? (resolvedTheme === 'dark' ? <Sun className="size-[18px]" /> : <Moon className="size-[18px]" />) : <Moon className="size-[18px]" />}
               <span className="sr-only">主题切换</span>
             </Button>
           </div>
