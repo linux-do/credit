@@ -198,7 +198,11 @@ export function TableFilter({
   }
 
   /* 是否有激活的筛选 */
-  const hasActiveFilters = selectedTypes.length > 0 || selectedStatuses.length > 0 || selectedTimeRange !== null || Object.values(searchValues).some(v => v)
+  const hasActiveFilters = 
+    (enabledFilters.type && selectedTypes.length > 0) || 
+    (enabledFilters.status && selectedStatuses.length > 0) || 
+    (enabledFilters.timeRange && selectedTimeRange !== null) || 
+    (enabledFilters.search && Object.values(searchValues || {}).some(v => v))
 
   return (
     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">

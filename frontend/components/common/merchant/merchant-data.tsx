@@ -9,6 +9,7 @@ import { TableFilter, type SearchValues } from "@/components/common/general/tabl
 import { TransactionTableList } from "@/components/common/general/table-data"
 import type { MerchantAPIKey, OrderType, OrderStatus } from "@/lib/services"
 import { TransactionProvider, useTransaction } from "@/contexts/transaction-context"
+import { formatLocalDate } from "@/lib/utils"
 
 /** 集市功能列表 */
 const MERCHANT_ACTIONS = [
@@ -17,16 +18,6 @@ const MERCHANT_ACTIONS = [
   { title: "在线流转", description: "创建在线积分流转活动", icon: Link2, color: "text-purple-600", bgColor: "bg-purple-50 dark:bg-purple-950/20", action: "online-payment" as const },
 ]
 
-/** 格式化日期为本地时间字符串 */
-const formatLocalDate = (date: Date) => {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  const h = String(date.getHours()).padStart(2, '0')
-  const min = String(date.getMinutes()).padStart(2, '0')
-  const s = String(date.getSeconds()).padStart(2, '0')
-  return `${ y }-${ m }-${ d }T${ h }:${ min }:${ s }+08:00`
-}
 
 /** 获取默认日期范围（最近30天） */
 const getDefaultDateRange = () => {
@@ -46,12 +37,7 @@ interface MerchantDataProps {
  * 显示应用的活动数据和统计信息
  */
 export function MerchantData({ apiKey }: MerchantDataProps) {
-  const start = new Date()
-  start.setHours(0, 0, 0, 0)
-  start.setDate(start.getDate() - 29)
-  const end = new Date()
-  end.setHours(0, 0, 0, 0)
-  end.setDate(end.getDate() + 1)
+  const { from: start, to: end } = getDefaultDateRange()
 
   return (
     <TransactionProvider
@@ -83,8 +69,8 @@ function MerchantDataContent({ apiKey }: MerchantDataProps) {
   const clearAllFilters = () => {
     setSelectedTypes([])
     setSelectedStatuses([])
-    setDateRange(getDefaultDateRange())
-    setSelectedQuickSelection("最近 1 个月")
+    setDateRange(null)
+    setSelectedQuickSelection(null)
     setSelectedSearch({})
   }
 
@@ -97,6 +83,7 @@ function MerchantDataContent({ apiKey }: MerchantDataProps) {
       startTime: dateRange ? formatLocalDate(dateRange.from) : undefined,
       endTime: dateRange ? (() => {
         const endDate = new Date(dateRange.to)
+        endDate.setHours(0, 0, 0, 0)
         endDate.setDate(endDate.getDate() + 1)
         return formatLocalDate(endDate)
       })() : undefined,
