@@ -201,7 +201,7 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
   }, {} as Record<string, SearchItem[]>)
 
   return (
-    <CommandDialog open={open} onOpenChange={onOpenChange}>
+    <CommandDialog open={open} onOpenChange={onOpenChange} shouldFilter={false}>
       <CommandInput
         placeholder="搜索页面和功能..."
         value={search}
@@ -224,10 +224,16 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
                     <Icon className="mr-2 h-4 w-4" />
                     <div className="flex flex-col">
                       <span>
-                        {item.title.split(new RegExp(`(${search})`, 'gi')).map((part, i) => 
-                          part.toLowerCase() === search.toLowerCase() ? 
-                            <span key={i} className="text-primary font-bold">{part}</span> : 
-                            part
+                        {item.matchRange ? (
+                          <>
+                            {item.title.substring(0, item.matchRange[0])}
+                            <span className="text-primary font-bold">
+                              {item.title.substring(item.matchRange[0], item.matchRange[1] + 1)}
+                            </span>
+                            {item.title.substring(item.matchRange[1] + 1)}
+                          </>
+                        ) : (
+                          item.title
                         )}
                       </span>
                       <span className="text-xs text-muted-foreground">{item.description}</span>

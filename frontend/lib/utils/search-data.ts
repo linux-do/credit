@@ -1,6 +1,32 @@
-/**
- * 搜索项接口
- */
+import PinyinMatch from 'pinyin-match'
+
+type MatchResult = [number, number] | false;
+type MatchFunction = (input: string, keys: string) => MatchResult;
+
+// Handle CJS/ESM interop for pinyin-match
+const match = ((): MatchFunction | null => {
+  const p = PinyinMatch as unknown;
+  if (!p) return null;
+
+  // Check for .default.match (common in some ESM bundles)
+  const withDefault = p as { default?: { match?: MatchFunction } };
+  if (typeof withDefault.default?.match === 'function') {
+    return withDefault.default.match;
+  }
+
+  // Check for .match (defined in its typings)
+  const withMatch = p as { match?: MatchFunction };
+  if (typeof withMatch.match === 'function') {
+    return withMatch.match;
+  }
+
+  // Check if it's the function itself
+  if (typeof p === 'function') {
+    return p as MatchFunction;
+  }
+
+  return null;
+})();
 export interface SearchItem {
   id: string
   title: string
@@ -9,6 +35,7 @@ export interface SearchItem {
   category: 'page' | 'feature' | 'setting' | 'admin'
   keywords: string[]
   icon?: string
+  matchRange?: [number, number]
 }
 
 /**
@@ -482,17 +509,6 @@ export const searchData: SearchItem[] = [
 ]
 
 /**
- * 预计算的搜索索引
- * 在模块加载时一次性处理,避免每次搜索重复创建字符串
- */
-const searchIndex: Map<string, string> = new Map(
-  searchData.map((item) => [
-    item.id,
-    [item.title, item.description, ...item.keywords].join(' ').toLowerCase()
-  ])
-)
-
-/**
  * 搜索功能
  * @param query 搜索关键词
  * @param isAdmin 是否为管理员
@@ -510,10 +526,35 @@ export function searchItems(query: string, isAdmin: boolean = false): SearchItem
     return filteredData
   }
 
-  const lowerQuery = trimmedQuery.toLowerCase()
+  return filteredData.map(item => {
+    // 优先匹配标题
+    const titleMatch = typeof match === 'function' ? match(item.title, trimmedQuery) : null
+    if (titleMatch) {
+      return { ...item, matchRange: titleMatch as [number, number] }
+    }
 
-  return filteredData.filter((item) => {
-    const searchText = searchIndex.get(item.id)
-    return searchText ? searchText.includes(lowerQuery) : false
-  })
+    // 匹配描述
+    if (typeof match === 'function' && match(item.description, trimmedQuery)) {
+      return item
+    }
+
+    // 匹配关键词
+    if (item.keywords.some(keyword => typeof match === 'function' && match(keyword, trimmedQuery))) {
+      return item
+    }
+
+    return null
+  }).filter((item): item is SearchItem => item !== null)
+    .sort((a, b) => {
+      // 标题匹配优先
+      if (a.matchRange && !b.matchRange) return -1
+      if (!a.matchRange && b.matchRange) return 1
+      
+      // 如果都是标题匹配，按匹配位置排序
+      if (a.matchRange && b.matchRange) {
+        return a.matchRange[0] - b.matchRange[0]
+      }
+      
+      return 0
+    })
 }
