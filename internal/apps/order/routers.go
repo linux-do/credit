@@ -90,12 +90,9 @@ func ListTransactions(c *gin.Context) {
 		case model.OrderTypeReceive:
 			// receive 类型：查询当前用户作为收款方的 payment 订单
 			baseQuery = baseQuery.Where("orders.type = ? AND orders.payee_user_id = ?", model.OrderTypePayment, user.ID)
-		case model.OrderTypeCommunity, model.OrderTypeRedEnvelopeRefund:
-			// community、red_envelope_refund 类型：查询当前用户作为收款方的订单
+		case model.OrderTypeCommunity, model.OrderTypeRedEnvelopeRefund, model.OrderTypeRedEnvelopeReceive:
+			// community、red_envelope_refund、red_envelope_receive 类型：查询当前用户作为收款方的订单
 			baseQuery = baseQuery.Where("orders.type = ? AND orders.payee_user_id = ?", orderType, user.ID)
-		case model.OrderTypeRedEnvelopeReceive:
-			// red_envelope_receive 类型：查询当前用户作为付款方或收款方的订单
-			baseQuery = baseQuery.Where("orders.type = ? AND (orders.payer_user_id = ? OR orders.payee_user_id = ?)", orderType, user.ID, user.ID)
 		case model.OrderTypeOnline:
 			// online 类型：商家可查看自己 client_id 的所有订单，普通用户只能查看与自己相关的订单
 			if req.ClientID != "" {

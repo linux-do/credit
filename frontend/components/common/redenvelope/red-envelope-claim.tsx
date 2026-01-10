@@ -104,7 +104,7 @@ export function RedEnvelopeClaimPage({ id }: RedEnvelopeClaimProps) {
   const envelope = detail?.red_envelope
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col items-center justify-center bg-background p-2 sm:p-4">
+    <div className="relative h-screen w-full flex flex-col items-center justify-center bg-background p-2 sm:p-4 overflow-hidden">
       <div className="relative z-10 w-full h-full flex items-center justify-center">
         {/* 统一卡片容器 - 响应式尺寸 */}
         <motion.div
@@ -257,7 +257,7 @@ export function RedEnvelopeClaimPage({ id }: RedEnvelopeClaimProps) {
                   </div>
                 )}
 
-                <div className="px-3 py-2 sm:px-5 sm:py-4 flex-1 flex flex-col overflow-hidden">
+                <div className="px-3 py-2 sm:px-5 sm:py-4 flex-1 flex flex-col min-h-0">
                   <div className="flex justify-between items-center mb-2 sm:mb-3 text-[10px] sm:text-xs text-muted-foreground shrink-0">
                     <span>
                       {detail?.claims.length || 0}/{envelope?.total_count} 个红包已领取
@@ -267,7 +267,7 @@ export function RedEnvelopeClaimPage({ id }: RedEnvelopeClaimProps) {
                     </span>
                   </div>
 
-                  <ScrollArea className="flex-1">
+                  <ScrollArea className="flex-1 min-h-0">
                     <div className="space-y-1 sm:space-y-2">
                       {detail?.claims.map((claim: RedEnvelopeClaim) => (
                         <motion.div
