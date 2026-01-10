@@ -545,4 +545,16 @@ export function searchItems(query: string, isAdmin: boolean = false): SearchItem
 
     return null
   }).filter((item): item is SearchItem => item !== null)
+    .sort((a, b) => {
+      // 标题匹配优先
+      if (a.matchRange && !b.matchRange) return -1
+      if (!a.matchRange && b.matchRange) return 1
+      
+      // 如果都是标题匹配，按匹配位置排序
+      if (a.matchRange && b.matchRange) {
+        return a.matchRange[0] - b.matchRange[0]
+      }
+      
+      return 0
+    })
 }
