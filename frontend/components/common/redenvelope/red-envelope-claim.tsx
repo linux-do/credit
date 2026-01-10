@@ -251,7 +251,7 @@ export function RedEnvelopeClaimPage({ id }: RedEnvelopeClaimProps) {
                       animate={{ scale: 1 }}
                       transition={{ type: "spring", delay: 0.3 }}
                     >
-                      <p className="text-3xl sm:text-4xl font-bold text-red-500 mb-0.5 sm:mb-1">{claimedAmount}</p>
+                      <p className="text-3xl sm:text-4xl font-bold text-red-500 mb-0.5 sm:mb-1">{parseFloat(claimedAmount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2,})}</p>
                       <p className="text-muted-foreground text-[10px] sm:text-xs">LDC</p>
                     </motion.div>
                   </div>
@@ -285,7 +285,7 @@ export function RedEnvelopeClaimPage({ id }: RedEnvelopeClaimProps) {
                             </Avatar>
                             <span className="text-xs sm:text-sm font-medium truncate">{claim.username}</span>
                           </div>
-                          <span className="text-xs sm:text-sm font-semibold text-red-500 shrink-0">{claim.amount} LDC</span>
+                          <span className="text-xs sm:text-sm font-semibold text-red-500 shrink-0">{parseFloat(claim.amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2,})} LDC</span>
                         </motion.div>
                       ))}
                     </div>
