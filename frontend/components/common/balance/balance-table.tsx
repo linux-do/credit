@@ -128,7 +128,7 @@ const TransactionList = React.memo(function TransactionList({ type }: { type?: O
   React.useEffect(() => {
     fetchTransactions({
       page: 1,
-      type,
+      types: type ? [type] : undefined,
       startTime: lastParams.startTime,
       endTime: lastParams.endTime,
     })
