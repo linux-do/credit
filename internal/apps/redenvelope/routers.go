@@ -463,12 +463,24 @@ func List(c *gin.Context) {
 		Select("red_envelopes.*, users.username as creator_username, users.avatar_url as creator_avatar_url").
 		Joins("LEFT JOIN users ON red_envelopes.creator_id = users.id")
 
-	if req.Type == "sent" {
+	/*
+		if req.Type == "sent" {
+			query = query.Where("red_envelopes.creator_id = ?", currentUser.ID)
+		} else if req.Type == "received" {
+			query = query.Joins("INNER JOIN red_envelope_claims ON red_envelopes.id = red_envelope_claims.red_envelope_id").
+				Where("red_envelope_claims.user_id = ?", currentUser.ID)
+		} else {
+			query = query.Where("red_envelopes.creator_id = ?", currentUser.ID)
+		}
+	*/
+
+	switch req.Type {
+	case "sent":
 		query = query.Where("red_envelopes.creator_id = ?", currentUser.ID)
-	} else if req.Type == "received" {
+	case "received":
 		query = query.Joins("INNER JOIN red_envelope_claims ON red_envelopes.id = red_envelope_claims.red_envelope_id").
 			Where("red_envelope_claims.user_id = ?", currentUser.ID)
-	} else {
+	default:
 		query = query.Where("red_envelopes.creator_id = ?", currentUser.ID)
 	}
 
