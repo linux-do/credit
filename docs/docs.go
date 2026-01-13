@@ -1982,32 +1982,17 @@ const docTemplate = `{
                 "startTime": {
                     "type": "string"
                 },
-                "status": {
-                    "type": "string",
-                    "enum": [
-                        "success",
-                        "pending",
-                        "failed",
-                        "expired",
-                        "disputing",
-                        "refund",
-                        "refused"
-                    ]
+                "statuses": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
-                "type": {
-                    "type": "string",
-                    "enum": [
-                        "receive",
-                        "payment",
-                        "transfer",
-                        "community",
-                        "online",
-                        "test",
-                        "distribute",
-                        "red_envelope_send",
-                        "red_envelope_receive",
-                        "red_envelope_refund"
-                    ]
+                "types": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },

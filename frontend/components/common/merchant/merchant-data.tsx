@@ -92,8 +92,8 @@ function MerchantDataContent({ apiKey }: MerchantDataProps) {
     const params = {
       page: 1,
       page_size: 20,
-      type: selectedTypes[0] as OrderType | undefined,
-      status: selectedStatuses[0] as OrderStatus | undefined,
+      types: selectedTypes.length > 0 ? selectedTypes : undefined,
+      statuses: selectedStatuses.length > 0 ? selectedStatuses : undefined,
       startTime: dateRange ? formatLocalDate(dateRange.from) : undefined,
       endTime: dateRange ? (() => {
         const endDate = new Date(dateRange.to)
