@@ -229,7 +229,6 @@ func Create(c *gin.Context) {
 		order := model.Order{
 			OrderName:     "红包支出",
 			PayerUserID:   currentUser.ID,
-			PayerUsername: currentUser.Username,
 			PayeeUserID:   0,
 			Amount:        totalDeduction,
 			Status:        model.OrderStatusSuccess,
