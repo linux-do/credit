@@ -21,7 +21,8 @@ export const typeConfig: Record<OrderType, { label: string; color: string }> = {
   distribute: { label: '商户分发', color: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300' },
   test: { label: '应用测试', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300 font-bold' },
   red_envelope_send: { label: '红包支出', color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' },
-  red_envelope_receive: { label: '红包收入', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' }
+  red_envelope_receive: { label: '红包收入', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' },
+  red_envelope_refund: { label: '红包退款', color: 'bg-muted/50 text-gray-800 dark:bg-gray-900 dark:text-gray-300' }
 }
 
 /* 状态标签配置 */

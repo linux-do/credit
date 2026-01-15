@@ -51,6 +51,7 @@ const PAGE_COMPONENTS: Record<TabValue, React.ComponentType> = {
   test: () => null,
   red_envelope_send: RedEnvelope,
   red_envelope_receive: RedEnvelope,
+  red_envelope_refund: RedEnvelope,
   redenvelope: RedEnvelope,
   all: AllActivity,
 }
