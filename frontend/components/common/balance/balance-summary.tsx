@@ -41,7 +41,6 @@ export function BalanceSummary() {
 
   const available = parseFloat(user?.available_balance || '0')
   const total = available
-  const pending = 0
 
   const percentages = React.useMemo(
     () => calculatePercentages(available, total),
@@ -63,11 +62,6 @@ export function BalanceSummary() {
           style={{ width: `${ percentages.available }%` }}
           title={`可用: ${ percentages.available.toFixed(1) }%`}
         />
-        <div
-          className={`${ COLORS.pending } transition-all duration-300`}
-          style={{ width: `${ percentages.pending }%` }}
-          title={`未来积分: ${ percentages.pending.toFixed(1) }%`}
-        />
       </div>
 
       <div className="space-y-2">
@@ -85,24 +79,6 @@ export function BalanceSummary() {
             {loading ? "-" : (
               <CountingNumber
                 number={safeNumber(available)}
-                decimalPlaces={2}
-                initiallyStable={true}
-                inView={true}
-                inViewOnce={true}
-              />
-            )} LDC
-          </span>
-        </div>
-
-        <div className="flex justify-between items-center font-bold text-sm pb-2 border-b border-border/80">
-          <div className="flex items-center gap-2">
-            <div className={`size-2.5 ${ COLORS.pending } rounded-xs`} aria-hidden="true" />
-            <span>未来积分</span>
-          </div>
-          <span className="font-semibold">
-            {loading ? "-" : (
-              <CountingNumber
-                number={safeNumber(pending)}
                 decimalPlaces={2}
                 initiallyStable={true}
                 inView={true}
