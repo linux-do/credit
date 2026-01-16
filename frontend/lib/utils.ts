@@ -43,20 +43,20 @@ export function formatLocalDate(date: Date): string {
  * @returns 缓存键字符串
  */
 export function generateTransactionCacheKey(params: {
-  type?: string
-  status?: string
+  types?: string[]
+  statuses?: string[]
   client_id?: string
   page?: number
   page_size?: number
   startTime?: string
   endTime?: string
-  id?: number
+  id?: string
   order_name?: string
   payer_username?: string
   payee_username?: string
 }): string {
-  const typeKey = params.type || 'all'
-  const statusKey = params.status || 'all'
+  const typesKey = params.types?.length ? params.types.sort().join(',') : 'all'
+  const statusesKey = params.statuses?.length ? params.statuses.sort().join(',') : 'all'
   const clientIdKey = params.client_id || 'all'
   const startTimeKey = params.startTime || 'no-start'
   const endTimeKey = params.endTime || 'no-end'
@@ -65,5 +65,5 @@ export function generateTransactionCacheKey(params: {
   const payerKey = params.payer_username || 'no-payer'
   const payeeKey = params.payee_username || 'no-payee'
 
-  return `${ typeKey }_${ statusKey }_${ clientIdKey }_${ params.page }_${ params.page_size }_${ startTimeKey }_${ endTimeKey }_${ idKey }_${ orderNameKey }_${ payerKey }_${ payeeKey }`
+  return `${ typesKey }_${ statusesKey }_${ clientIdKey }_${ params.page }_${ params.page_size }_${ startTimeKey }_${ endTimeKey }_${ idKey }_${ orderNameKey }_${ payerKey }_${ payeeKey }`
 }

@@ -202,29 +202,14 @@ definitions:
         type: string
       startTime:
         type: string
-      status:
-        enum:
-        - success
-        - pending
-        - failed
-        - expired
-        - disputing
-        - refund
-        - refused
-        type: string
-      type:
-        enum:
-        - receive
-        - payment
-        - transfer
-        - community
-        - online
-        - test
-        - distribute
-        - red_envelope_send
-        - red_envelope_receive
-        - red_envelope_refund
-        type: string
+      statuses:
+        items:
+          type: string
+        type: array
+      types:
+        items:
+          type: string
+        type: array
     type: object
   payment.CreateOrderRequest:
     properties:

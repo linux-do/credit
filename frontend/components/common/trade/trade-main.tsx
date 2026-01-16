@@ -136,7 +136,7 @@ export function TradeMain() {
               {activeTab === 'redenvelope' ? (
                 <RedEnvelopeList refreshTrigger={refreshKey} />
               ) : (
-                <TradeTable type={getOrderType(activeTab)} />
+                <TradeTable key={activeTab} type={getOrderType(activeTab)} />
               )}
             </div>
           </div>
