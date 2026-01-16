@@ -402,7 +402,7 @@ export function RedEnvelopeList({ refreshTrigger }: { refreshTrigger?: number })
         { value: 'sent', label: '我发出的', color: 'bg-primary/10 text-primary' },
         { value: 'received', label: '我收到的', color: 'bg-primary/10 text-primary' }
       ]}
-      defaultTab="sent"
+      defaultTab="received"
       refreshTrigger={refreshTrigger}
     />
   )
