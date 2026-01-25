@@ -72,10 +72,10 @@ export interface TransactionQueryParams {
   page: number;
   /** 每页数量，1-100 */
   page_size: number;
-  /** 订单类型（可选） */
-  type?: OrderType;
-  /** 订单状态（可选） */
-  status?: OrderStatus;
+  /** 订单类型列表（可选） */
+  types?: OrderType[];
+  /** 订单状态列表（可选） */
+  statuses?: OrderStatus[];
   /** 客户端 ID（可选） */
   client_id?: string;
   /** 开始时间（可选） */

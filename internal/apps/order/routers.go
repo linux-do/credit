@@ -30,8 +30,8 @@ import (
 type TransactionListRequest struct {
 	Page          int        `json:"page" form:"page" binding:"min=1"`
 	PageSize      int        `json:"page_size" form:"page_size" binding:"min=1,max=100"`
-	Type          string     `json:"type" form:"type" binding:"omitempty,oneof=receive payment transfer community online test distribute red_envelope_send red_envelope_receive red_envelope_refund"`
-	Status        string     `json:"status" form:"status" binding:"omitempty,oneof=success pending failed expired disputing refund refused"`
+	Types         []string   `json:"types" form:"types" binding:"omitempty,dive,oneof=receive payment transfer community online test distribute red_envelope_send red_envelope_receive red_envelope_refund"`
+	Statuses      []string   `json:"statuses" form:"statuses" binding:"omitempty,dive,oneof=success pending failed expired disputing refund refused"`
 	ClientID      string     `json:"client_id" form:"client_id" binding:"omitempty"`
 	StartTime     *time.Time `json:"startTime" form:"startTime" binding:"omitempty"`
 	EndTime       *time.Time `json:"endTime" form:"endTime" binding:"omitempty,gtfield=StartTime"`
@@ -83,45 +83,65 @@ func ListTransactions(c *gin.Context) {
 		Joins("LEFT JOIN users as payee_user ON orders.payee_user_id = payee_user.id")
 
 	clientIDHandled := false
-	if req.Type != "" {
-		orderType := model.OrderType(req.Type)
+	if len(req.Types) > 0 {
+		// 使用 IN 查询支持多个类型
+		var conditions []string
+		var args []interface{}
 
-		switch orderType {
-		case model.OrderTypeReceive:
-			// receive 类型：查询当前用户作为收款方的 payment 订单
-			baseQuery = baseQuery.Where("orders.type = ? AND orders.payee_user_id = ?", model.OrderTypePayment, user.ID)
-		case model.OrderTypeCommunity, model.OrderTypeRedEnvelopeRefund, model.OrderTypeRedEnvelopeReceive:
-			// community、red_envelope_refund、red_envelope_receive 类型：查询当前用户作为收款方的订单
-			baseQuery = baseQuery.Where("orders.type = ? AND orders.payee_user_id = ?", orderType, user.ID)
-		case model.OrderTypeOnline:
-			// online 类型：商家可查看自己 client_id 的所有订单，普通用户只能查看与自己相关的订单
-			if req.ClientID != "" {
-				clientIDHandled = true
-				var count int64
-				if err := db.DB(c.Request.Context()).Model(&model.MerchantAPIKey{}).
-					Where("client_id = ? AND user_id = ?", req.ClientID, user.ID).
-					Count(&count).Error; err != nil {
-					c.JSON(http.StatusInternalServerError, util.Err(err.Error()))
-					return
-				}
-				if count > 0 {
-					baseQuery = baseQuery.Where("orders.type = ? AND orders.client_id = ?", orderType, req.ClientID)
+		for _, t := range req.Types {
+			orderType := model.OrderType(t)
+
+			switch orderType {
+			case model.OrderTypeReceive:
+				// receive 类型：查询当前用户作为收款方的 payment 订单
+				conditions = append(conditions, "(orders.type = ? AND orders.payee_user_id = ?)")
+				args = append(args, model.OrderTypePayment, user.ID)
+			case model.OrderTypeCommunity, model.OrderTypeRedEnvelopeRefund, model.OrderTypeRedEnvelopeReceive:
+				// community、red_envelope_refund、red_envelope_receive 类型：查询当前用户作为收款方的订单
+				conditions = append(conditions, "(orders.type = ? AND orders.payee_user_id = ?)")
+				args = append(args, orderType, user.ID)
+			case model.OrderTypeOnline:
+				// online 类型：商家可查看自己 client_id 的所有订单，普通用户只能查看与自己相关的订单
+				if req.ClientID != "" {
+					clientIDHandled = true
+					var count int64
+					if err := db.DB(c.Request.Context()).Model(&model.MerchantAPIKey{}).
+						Where("client_id = ? AND user_id = ?", req.ClientID, user.ID).
+						Count(&count).Error; err != nil {
+						c.JSON(http.StatusInternalServerError, util.Err(err.Error()))
+						return
+					}
+					if count > 0 {
+						conditions = append(conditions, "(orders.type = ? AND orders.client_id = ?)")
+						args = append(args, orderType, req.ClientID)
+					} else {
+						conditions = append(conditions, "(orders.type = ? AND orders.client_id = ? AND (orders.payer_user_id = ? OR orders.payee_user_id = ?))")
+						args = append(args, orderType, req.ClientID, user.ID, user.ID)
+					}
 				} else {
-					baseQuery = baseQuery.Where("orders.type = ? AND orders.client_id = ? AND (orders.payer_user_id = ? OR orders.payee_user_id = ?)", orderType, req.ClientID, user.ID, user.ID)
+					conditions = append(conditions, "(orders.type = ? AND (orders.payer_user_id = ? OR orders.payee_user_id = ?))")
+					args = append(args, orderType, user.ID, user.ID)
 				}
-			} else {
-				baseQuery = baseQuery.Where("orders.type = ? AND (orders.payer_user_id = ? OR orders.payee_user_id = ?)", orderType, user.ID, user.ID)
+			case model.OrderTypePayment, model.OrderTypeTransfer, model.OrderTypeTest, model.OrderTypeDistribute, model.OrderTypeRedEnvelopeSend:
+				// payment、transfer、test、distribute、red_envelope_send 类型：查询当前用户作为付款方的订单
+				conditions = append(conditions, "(orders.type = ? AND orders.payer_user_id = ?)")
+				args = append(args, orderType, user.ID)
 			}
-		case model.OrderTypePayment, model.OrderTypeTransfer, model.OrderTypeTest, model.OrderTypeDistribute, model.OrderTypeRedEnvelopeSend:
-			// payment、transfer、test、distribute、red_envelope_send 类型：查询当前用户作为付款方的订单
-			baseQuery = baseQuery.Where("orders.type = ? AND orders.payer_user_id = ?", orderType, user.ID)
+		}
+
+		if len(conditions) > 0 {
+			combinedCondition := conditions[0]
+			for i := 1; i < len(conditions); i++ {
+				combinedCondition += " OR " + conditions[i]
+			}
+			baseQuery = baseQuery.Where(combinedCondition, args...)
 		}
 	} else {
 		baseQuery = baseQuery.Where("orders.payee_user_id = ? OR orders.payer_user_id = ?", user.ID, user.ID)
 	}
 
-	if req.Status != "" {
-		baseQuery = baseQuery.Where("orders.status = ?", model.OrderStatus(req.Status))
+	if len(req.Statuses) > 0 {
+		baseQuery = baseQuery.Where("orders.status IN ?", req.Statuses)
 	}
 
 	if req.ClientID != "" && !clientIDHandled {
