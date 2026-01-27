@@ -147,6 +147,7 @@ type schedulerConfig struct {
 	AutoRefundExpiredDisputesTaskCron        string `mapstructure:"auto_refund_expired_disputes_task_cron"`
 	SyncOrdersToClickHouseTaskCron           string `mapstructure:"sync_orders_to_clickhouse_task_cron"`
 	RefundExpiredRedEnvelopesTaskCron        string `mapstructure:"refund_expired_red_envelopes_task_cron"`
+	CleanupUnusedUploadsTaskCron             string `mapstructure:"cleanup_unused_uploads_task_cron"`
 }
 
 // workerConfig 工作配置

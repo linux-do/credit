@@ -24,6 +24,7 @@ const (
 	MerchantPaymentNotifyTask             = "payment:merchant_notify"
 	SyncOrdersToClickHouseTask            = "order:sync_to_clickhouse"
 	RefundExpiredRedEnvelopesTask         = "redenvelope:refund_expired"
+	CleanupUnusedUploadsTask              = "upload:cleanup_unused"
 )
 
 const (

@@ -42,6 +42,29 @@ export function RedEnvelopeClaimPage({ id }: RedEnvelopeClaimProps) {
     }
   }, [id])
 
+  // 安全验证图片URL (防止XSS)
+  const sanitizeImageUrl = (url: string | undefined): string | undefined => {
+    if (!url) return undefined
+    
+    // 只允许相对路径且以 /uploads/redenvelope/ 开头
+    if (!url.startsWith('/uploads/redenvelope/')) {
+      console.warn('Invalid image URL detected:', url)
+      return undefined
+    }
+    
+    // 防止路径遍历
+    if (url.includes('..') || url.includes('//')) {
+      console.warn('Path traversal detected in URL:', url)
+      return undefined
+    }
+    
+    return url
+  }
+
+  // 从后端获取封面图片URL并进行安全验证
+  const coverImage = sanitizeImageUrl(detail?.red_envelope?.cover_image)
+  const heterotypicImage = sanitizeImageUrl(detail?.red_envelope?.heterotypic_image)
+
   useEffect(() => {
     loadDetail()
   }, [loadDetail])
@@ -106,13 +129,35 @@ export function RedEnvelopeClaimPage({ id }: RedEnvelopeClaimProps) {
   return (
     <div className="relative h-screen w-full flex flex-col items-center justify-center bg-background p-2 sm:p-4 overflow-hidden">
       <div className="relative z-10 w-full h-full flex items-center justify-center">
-        {/* 统一卡片容器 - 响应式尺寸 */}
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.3, ease: "easeOut" }}
-          className="relative w-72 h-[420px] sm:w-80 sm:h-[480px] md:w-[360px] md:h-[540px] rounded-3xl shadow-2xl overflow-hidden"
-        >
+        {/* 装饰图片容器 - 放置在红包后方 */}
+        <div className="relative w-72 h-[420px] sm:w-80 sm:h-[480px] md:w-[360px] md:h-[540px]">
+          {/* 异形装饰 - 背景装饰层，放置在信封后方 */}
+          {heterotypicImage && (
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="absolute inset-0 z-0 pointer-events-none flex items-center justify-center"
+            >
+              <img
+                src={heterotypicImage}
+                alt="红包装饰"
+                className="w-full h-full object-cover"
+                style={{
+                  transform: 'scale(1.2)',
+                  transformOrigin: 'center'
+                }}
+              />
+            </motion.div>
+          )}
+          
+          {/* 统一卡片容器 - 响应式尺寸 */}
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.3, ease: "easeOut", delay: 0.1 }}
+            className="relative w-full h-full rounded-3xl shadow-2xl overflow-hidden z-10"
+          >
           <AnimatePresence mode="wait">
             {(state === "ready" || state === "opening") && (
               <motion.div
@@ -120,17 +165,30 @@ export function RedEnvelopeClaimPage({ id }: RedEnvelopeClaimProps) {
                 initial={{ opacity: 1 }}
                 animate={{ opacity: 1 }}
                 exit={{ y: -40, opacity: 0, scale: 0.95, transition: { duration: 0.5, ease: "easeInOut" } }}
-                className="absolute inset-0 bg-gradient-to-br from-red-500 via-red-600 to-red-700"
+                className="absolute inset-0"
               >
-                <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-yellow-400/30 via-yellow-500/20 to-transparent" />
-
-                <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/30 to-transparent" />
-
-                <div className="absolute inset-0 opacity-10">
-                  <div className="absolute top-10 left-10 w-20 h-20 border-2 border-yellow-300 rounded-full" />
-                  <div className="absolute top-20 right-12 w-16 h-16 border-2 border-yellow-300 rounded-full" />
-                  <div className="absolute bottom-20 left-16 w-24 h-24 border-2 border-yellow-300 rounded-full" />
-                </div>
+                {/* 自定义背景封面或默认渐变背景 */}
+                {coverImage ? (
+                  <div className="absolute inset-0">
+                    <img
+                      src={coverImage}
+                      alt="红包封面"
+                      className="w-full h-full object-cover"
+                    />
+                    {/* 半透明遮罩以确保内容可读 */}
+                    <div className="absolute inset-0 bg-black/20" />
+                  </div>
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-red-500 via-red-600 to-red-700">
+                    <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-yellow-400/30 via-yellow-500/20 to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/30 to-transparent" />
+                    <div className="absolute inset-0 opacity-10">
+                      <div className="absolute top-10 left-10 w-20 h-20 border-2 border-yellow-300 rounded-full" />
+                      <div className="absolute top-20 right-12 w-16 h-16 border-2 border-yellow-300 rounded-full" />
+                      <div className="absolute bottom-20 left-16 w-24 h-24 border-2 border-yellow-300 rounded-full" />
+                    </div>
+                  </div>
+                )}
 
                 <div className="absolute top-12 left-0 right-0 text-center z-10">
                   <motion.div
@@ -220,11 +278,26 @@ export function RedEnvelopeClaimPage({ id }: RedEnvelopeClaimProps) {
                 transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
                 className="absolute inset-0 bg-card backdrop-blur-2xl flex flex-col"
               >
-                <div className="bg-gradient-to-br from-red-500 via-red-600 to-red-700 px-4 py-3 sm:px-6 sm:py-5 text-center relative overflow-hidden shrink-0">
-                  <div className="absolute inset-0 opacity-10">
-                    <div className="absolute top-4 left-4 w-12 h-12 border-2 border-yellow-300 rounded-full" />
-                    <div className="absolute bottom-4 right-4 w-16 h-16 border-2 border-yellow-300 rounded-full" />
-                  </div>
+                {/* 头部区域 - 使用自定义背景或默认渐变 */}
+                <div className="px-4 py-3 sm:px-6 sm:py-5 text-center relative overflow-hidden shrink-0">
+                  {/* 背景层 */}
+                  {coverImage ? (
+                    <div className="absolute inset-0">
+                      <img
+                        src={coverImage}
+                        alt="红包封面"
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/30" />
+                    </div>
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-red-500 via-red-600 to-red-700">
+                      <div className="absolute inset-0 opacity-10">
+                        <div className="absolute top-4 left-4 w-12 h-12 border-2 border-yellow-300 rounded-full" />
+                        <div className="absolute bottom-4 right-4 w-16 h-16 border-2 border-yellow-300 rounded-full" />
+                      </div>
+                    </div>
+                  )}
 
                   <motion.div
                     initial={{ scale: 0 }}
@@ -303,7 +376,8 @@ export function RedEnvelopeClaimPage({ id }: RedEnvelopeClaimProps) {
               </motion.div>
             )}
           </AnimatePresence>
-        </motion.div>
+          </motion.div>
+        </div>
       </div>
     </div>
   )

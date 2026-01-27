@@ -371,8 +371,14 @@ definitions:
     type: object
   redenvelope.CreateRequest:
     properties:
+      cover_image:
+        maxLength: 500
+        type: string
       greeting:
         maxLength: 100
+        type: string
+      heterotypic_image:
+        maxLength: 500
         type: string
       pay_key:
         maxLength: 10
@@ -1497,6 +1503,30 @@ paths:
             $ref: '#/definitions/util.ResponseAny'
       tags:
       - redenvelope
+  /api/v1/upload/redenvelope/cover:
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: 图片文件
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: 封面类型 (cover/heterotypic)
+        in: formData
+        name: type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - upload
   /api/v1/user/pay-key:
     put:
       consumes:
