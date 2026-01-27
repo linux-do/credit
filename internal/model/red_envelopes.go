@@ -50,6 +50,8 @@ type RedEnvelope struct {
 	RemainingCount   int               `json:"remaining_count" gorm:"not null"`
 	Greeting         string            `json:"greeting" gorm:"size:100"`
 	Status           RedEnvelopeStatus `json:"status" gorm:"type:varchar(20);not null"`
+	CoverImage       string            `json:"cover_image,omitempty" gorm:"size:500"`
+	HeterotypicImage string            `json:"heterotypic_image,omitempty" gorm:"size:500"`
 	ExpiresAt        time.Time         `json:"expires_at" gorm:"not null;index"`
 	CreatedAt        time.Time         `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt        time.Time         `json:"updated_at" gorm:"autoUpdateTime"`

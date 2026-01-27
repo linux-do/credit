@@ -43,6 +43,10 @@ export interface RedEnvelope {
   expires_at: string;
   /** 创建时间 */
   created_at: string;
+  /** 封面图片（背景） */
+  cover_image?: string;
+  /** 异形装饰图片 */
+  heterotypic_image?: string;
 }
 
 /**
@@ -79,6 +83,10 @@ export interface CreateRedEnvelopeRequest {
   greeting?: string;
   /** 支付密码（6-10位） */
   pay_key: string;
+  /** 封面图片（背景）base64 */
+  cover_image?: string;
+  /** 异形装饰图片 base64 */
+  heterotypic_image?: string;
 }
 
 /**

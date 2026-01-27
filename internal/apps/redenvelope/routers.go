@@ -20,7 +20,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -38,11 +40,13 @@ import (
 
 // CreateRequest 创建红包请求
 type CreateRequest struct {
-	Type        model.RedEnvelopeType `json:"type" binding:"required,oneof=fixed random"`
-	TotalAmount decimal.Decimal       `json:"total_amount" binding:"required"`
-	TotalCount  int                   `json:"total_count" binding:"required,min=1"`
-	Greeting    string                `json:"greeting" binding:"max=100"`
-	PayKey      string                `json:"pay_key" binding:"required,max=10"`
+	Type             model.RedEnvelopeType `json:"type" binding:"required,oneof=fixed random"`
+	TotalAmount      decimal.Decimal       `json:"total_amount" binding:"required"`
+	TotalCount       int                   `json:"total_count" binding:"required,min=1"`
+	Greeting         string                `json:"greeting" binding:"max=100"`
+	PayKey           string                `json:"pay_key" binding:"required,max=10"`
+	CoverImage       string                `json:"cover_image" binding:"omitempty,max=500"`
+	HeterotypicImage string                `json:"heterotypic_image" binding:"omitempty,max=500"`
 }
 
 // CreateResponse 创建红包响应
@@ -83,6 +87,45 @@ type ListResponse struct {
 	RedEnvelopes []model.RedEnvelope `json:"red_envelopes"`
 }
 
+// validateImageURL 验证图片URL的安全性
+func validateImageURL(url string) error {
+	if url == "" {
+		return nil // 空URL是允许的
+	}
+
+	// 必须以 /uploads/redenvelope/ 开头
+	if !strings.HasPrefix(url, "/uploads/redenvelope/") {
+		return errors.New(InvalidImageURL)
+	}
+
+	// 清理路径并检查路径遍历
+	cleanPath := filepath.Clean(url)
+	if cleanPath != url {
+		return errors.New(InvalidImageURLChars)
+	}
+
+	// 确保不包含 .. 或其他可疑模式
+	if strings.Contains(url, "..") || strings.Contains(url, "//") {
+		return errors.New(InvalidImageURLPath)
+	}
+
+	// 验证文件扩展名
+	ext := strings.ToLower(filepath.Ext(url))
+	allowedExts := []string{".jpg", ".jpeg", ".png", ".webp"}
+	validExt := false
+	for _, allowed := range allowedExts {
+		if ext == allowed {
+			validExt = true
+			break
+		}
+	}
+	if !validExt {
+		return errors.New(UnsupportedImageFormat)
+	}
+
+	return nil
+}
+
 // Create 创建红包
 // @Tags redenvelope
 // @Accept json
@@ -94,6 +137,18 @@ func Create(c *gin.Context) {
 	var req CreateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, util.Err(err.Error()))
+		return
+	}
+
+	// 验证封面图片URL
+	if err := validateImageURL(req.CoverImage); err != nil {
+		c.JSON(http.StatusBadRequest, util.Err(InvalidCoverImage+": "+err.Error()))
+		return
+	}
+
+	// 验证异形装饰图片URL
+	if err := validateImageURL(req.HeterotypicImage); err != nil {
+		c.JSON(http.StatusBadRequest, util.Err(InvalidHeterotypicImage+": "+err.Error()))
 		return
 	}
 
@@ -201,20 +256,34 @@ func Create(c *gin.Context) {
 
 		// 创建红包
 		redEnvelope = model.RedEnvelope{
-			ID:              idgen.NextUint64ID(),
-			CreatorID:       currentUser.ID,
-			Type:            req.Type,
-			TotalAmount:     req.TotalAmount,
-			RemainingAmount: req.TotalAmount,
-			TotalCount:      req.TotalCount,
-			RemainingCount:  req.TotalCount,
-			Greeting:        req.Greeting,
-			Status:          model.RedEnvelopeStatusActive,
-			ExpiresAt:       time.Now().Add(24 * time.Hour),
+			ID:               idgen.NextUint64ID(),
+			CreatorID:        currentUser.ID,
+			Type:             req.Type,
+			TotalAmount:      req.TotalAmount,
+			RemainingAmount:  req.TotalAmount,
+			TotalCount:       req.TotalCount,
+			RemainingCount:   req.TotalCount,
+			Greeting:         req.Greeting,
+			Status:           model.RedEnvelopeStatusActive,
+			CoverImage:       req.CoverImage,
+			HeterotypicImage: req.HeterotypicImage,
+			ExpiresAt:        time.Now().Add(24 * time.Hour),
 		}
 
 		if err := tx.Create(&redEnvelope).Error; err != nil {
 			return err
+		}
+
+		// 标记上传的图片为已使用
+		if req.CoverImage != "" {
+			tx.Model(&model.Upload{}).
+				Where("file_url = ? AND status = ?", req.CoverImage, model.UploadStatusPending).
+				Update("status", model.UploadStatusUsed)
+		}
+		if req.HeterotypicImage != "" {
+			tx.Model(&model.Upload{}).
+				Where("file_url = ? AND status = ?", req.HeterotypicImage, model.UploadStatusPending).
+				Update("status", model.UploadStatusUsed)
 		}
 
 		// 创建订单记录（红包支出）
