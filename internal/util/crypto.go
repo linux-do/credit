@@ -19,6 +19,7 @@ package util
 import (
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/ed25519"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/hex"
@@ -80,7 +81,7 @@ func encryptBytes(signKey string, plaintext []byte) (string, error) {
 	ciphertext := gcm.Seal(nonce, nonce, plaintext, nil)
 
 	// 返回 base64 编码的密文
-	return base64.StdEncoding.EncodeToString(ciphertext), nil
+	return Base64Encode(ciphertext), nil
 }
 
 // decryptBytes 解密函数，处理字节数据
@@ -95,7 +96,7 @@ func decryptBytes(signKey string, ciphertext string) ([]byte, error) {
 	}
 
 	// 解码 base64 密文
-	data, err := base64.StdEncoding.DecodeString(ciphertext)
+	data, err := Base64Decode(ciphertext)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode ciphertext: %w", err)
 	}
@@ -127,4 +128,31 @@ func decryptBytes(signKey string, ciphertext string) ([]byte, error) {
 	}
 
 	return plaintext, nil
+}
+
+// Base64Encode Base64编码
+func Base64Encode(data []byte) string {
+	return base64.StdEncoding.EncodeToString(data)
+}
+
+// Base64Decode Base64解码
+func Base64Decode(encoded string) ([]byte, error) {
+	return base64.StdEncoding.DecodeString(encoded)
+}
+
+// Ed25519Verify 验证 Ed25519 签名
+// publicKey: 32 字节的公钥（已解码的二进制格式）
+// message: 待验证的原始消息
+// signature: 64 字节的签名（已解码的二进制格式）
+// return: 签名是否有效
+func Ed25519Verify(publicKey, message, signature []byte) bool {
+	if len(publicKey) != ed25519.PublicKeySize {
+		return false
+	}
+
+	if len(signature) != ed25519.SignatureSize {
+		return false
+	}
+
+	return ed25519.Verify(publicKey, message, signature)
 }

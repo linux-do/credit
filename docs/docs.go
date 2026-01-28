@@ -1720,6 +1720,10 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 100
                 },
+                "public_key": {
+                    "type": "string",
+                    "maxLength": 100
+                },
                 "redirect_uri": {
                     "type": "string",
                     "maxLength": 100
@@ -1745,6 +1749,10 @@ const docTemplate = `{
                     "maxLength": 20
                 },
                 "notify_url": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "public_key": {
                     "type": "string",
                     "maxLength": 100
                 },
