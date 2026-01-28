@@ -150,8 +150,8 @@ func ParseOrderNo(c *gin.Context, orderNo string) (*OrderContext, error) {
 	return ctx, nil
 }
 
-// GenerateSignature 生成MD5签名
-func GenerateSignature(params map[string]string, secret string) string {
+// GenerateSignature 生成签名
+func GenerateSignature(params map[string]string, secret string, isMD5 bool) string {
 	// 按key排序
 	keys := make([]string, 0, len(params))
 	for k := range params {
@@ -180,13 +180,16 @@ func GenerateSignature(params map[string]string, secret string) string {
 	}
 	builder.WriteString(secret)
 
-	// MD5加密
-	hash := md5.Sum([]byte(builder.String()))
-	return fmt.Sprintf("%x", hash)
+	if isMD5 {
+		// MD5加密
+		hash := md5.Sum([]byte(builder.String()))
+		return fmt.Sprintf("%x", hash)
+	}
+	return builder.String()
 }
 
-// VerifySignature 验证MD5签名
-func VerifySignature(c *gin.Context, apiKey *model.MerchantAPIKey) (*CreateOrderRequest, error) {
+// VerifySignatureMD5 验证MD5签名
+func VerifySignatureMD5(c *gin.Context, apiKey *model.MerchantAPIKey) (*CreateOrderRequest, error) {
 	var req EPayRequest
 	if err := c.ShouldBind(&req); err != nil {
 		return nil, err
@@ -213,10 +216,10 @@ func VerifySignature(c *gin.Context, apiKey *model.MerchantAPIKey) (*CreateOrder
 	}
 
 	params["money"] = req.Amount.Truncate(2).StringFixed(2)
-	expectedSignFixed := GenerateSignature(params, apiKey.ClientSecret)
+	expectedSignFixed := GenerateSignature(params, apiKey.ClientSecret, true)
 
 	params["money"] = req.Amount.Truncate(2).String()
-	expectedSignTrimmed := GenerateSignature(params, apiKey.ClientSecret)
+	expectedSignTrimmed := GenerateSignature(params, apiKey.ClientSecret, true)
 
 	matchFixed := subtle.ConstantTimeCompare([]byte(strings.ToLower(expectedSignFixed)), []byte(strings.ToLower(req.Sign))) == 1
 	matchTrimmed := subtle.ConstantTimeCompare([]byte(strings.ToLower(expectedSignTrimmed)), []byte(strings.ToLower(req.Sign))) == 1
@@ -225,5 +228,49 @@ func VerifySignature(c *gin.Context, apiKey *model.MerchantAPIKey) (*CreateOrder
 		return nil, errors.New("签名验证失败")
 	}
 
-	return req.ToCreateOrderRequest(), nil
+	return NewCreateOrderRequest(req.OrderName, req.MerchantOrderNo, req.Amount, req.PayType), nil
+}
+
+// VerifySignatureEd25519 验证 Ed25519 签名
+func VerifySignatureEd25519(c *gin.Context, apiKey *model.MerchantAPIKey) (*CreateOrderRequest, error) {
+	var req LDCPayRequest
+	if err := c.ShouldBind(&req); err != nil {
+		return nil, err
+	}
+
+	// 验证金额
+	if err := util.ValidateAmount(req.Amount); err != nil {
+		return nil, err
+	}
+
+	if err := apiKey.GetByClientID(db.DB(c.Request.Context()), req.ClientID); err != nil {
+		return nil, err
+	}
+
+	if len(apiKey.PublicKey) == 0 {
+		return nil, errors.New("商户未配置公钥")
+	}
+
+	signatureBytes, err := util.Base64Decode(req.Sign)
+	if err != nil {
+		return nil, errors.New("签名格式错误")
+	}
+
+	// 构建签名参数
+	params := map[string]string{
+		"client_id":    req.ClientID,
+		"type":         req.PayType,
+		"out_trade_no": util.DerefString(req.MerchantOrderNo),
+		"order_name":   req.OrderName,
+		"money":        req.Amount.Truncate(2).StringFixed(2),
+	}
+
+	signatureParam := GenerateSignature(params, apiKey.ClientSecret, false)
+	validTrimmed := util.Ed25519Verify(apiKey.PublicKey, []byte(signatureParam), signatureBytes)
+
+	if !validTrimmed {
+		return nil, errors.New("签名验证失败")
+	}
+
+	return NewCreateOrderRequest(req.OrderName, req.MerchantOrderNo, req.Amount, req.PayType), nil
 }

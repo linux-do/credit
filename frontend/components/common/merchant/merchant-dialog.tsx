@@ -53,6 +53,7 @@ export function MerchantDialog({
     app_description: '',
     redirect_uri: '',
     notify_url: '',
+    public_key: '',
     test_mode: false,
   })
 
@@ -71,6 +72,7 @@ export function MerchantDialog({
         app_description: apiKey.app_description,
         redirect_uri: apiKey.redirect_uri,
         notify_url: apiKey.notify_url,
+        public_key: apiKey.public_key,
         test_mode: apiKey.test_mode,
       }
     }
@@ -177,8 +179,8 @@ export function MerchantDialog({
 
       setOpen(false)
     } catch (error) {
-      const errorMessage = (error as Error).message || `无法${ mode === 'create' ? '创建' : '更新' }应用`
-      toast.error(`${ mode === 'create' ? '创建' : '更新' }失败`, {
+      const errorMessage = (error as Error).message || `无法${mode === 'create' ? '创建' : '更新'}应用`
+      toast.error(`${mode === 'create' ? '创建' : '更新'}失败`, {
         description: errorMessage
       })
       throw error
@@ -326,6 +328,18 @@ export function MerchantDialog({
               maxLength={100}
               value={formData.redirect_uri}
               onChange={(e) => setFormData({ ...formData, redirect_uri: e.target.value })}
+              disabled={processing}
+            />
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="public_key">Ed25519 公钥 (Base64)</Label>
+            <Input
+              id="public_key"
+              placeholder="可选，用于请求签名验证，必须为 32 字节的 Ed25519 公钥（Base64 编码）"
+              maxLength={100}
+              value={formData.public_key || ''}
+              onChange={(e) => setFormData({ ...formData, public_key: e.target.value })}
               disabled={processing}
             />
           </div>
