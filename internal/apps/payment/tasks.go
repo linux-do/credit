@@ -74,10 +74,9 @@ func HandleMerchantPaymentNotify(ctx context.Context, t *asynq.Task) error {
 		"name":         order.OrderName,
 		"money":        order.Amount.Truncate(2).StringFixed(2),
 		"trade_status": "TRADE_SUCCESS",
-		"sign_type":    "MD5",
 	}
 
-	callbackParams["sign"] = GenerateSignature(callbackParams, apiKey.ClientSecret)
+	callbackParams["sign"] = GenerateSignature(callbackParams, apiKey.ClientSecret, true)
 
 	if err := sendCallbackRequest(ctx, apiKey.NotifyURL, callbackParams); err != nil {
 		retried, _ := asynq.GetRetryCount(ctx)
