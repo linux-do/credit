@@ -26,10 +26,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/hibiken/asynq"
 	"github.com/linux-do/credit/internal/common"
-	"github.com/linux-do/credit/internal/db"
 	"github.com/linux-do/credit/internal/logger"
 	"github.com/linux-do/credit/internal/task"
 	"github.com/linux-do/credit/internal/task/scheduler"
@@ -224,59 +222,46 @@ func (u *User) EnqueueBadgeScoreTask(ctx context.Context, delay time.Duration) e
 }
 
 // CreateWithInitialCredit 创建新用户并初始化积分、订单
-// 如果u不为空(u.ID != 0)，会先将当前用户标记为已注销，然后创建新用户
-func (u *User) CreateWithInitialCredit(ctx context.Context, oauthInfo *OAuthUserInfo) error {
-	return db.DB(ctx).Transaction(func(tx *gorm.DB) error {
-		// 如果当前用户不为空，先注销当前用户
-		if u.ID != 0 {
-			oldUsername := fmt.Sprintf("%s已注销: %s", u.Username, uuid.NewString())
-			if err := tx.Model(u).Updates(map[string]interface{}{
-				"username":  oldUsername,
-				"is_active": false,
-			}).Error; err != nil {
-				return err
-			}
-		}
+func (u *User) CreateWithInitialCredit(tx *gorm.DB, oauthInfo *OAuthUserInfo) error {
+	ctx := tx.Statement.Context
+	newUserInitialCredit, err := GetDecimalByKey(ctx, ConfigKeyNewUserInitialCredit, 2)
+	if err != nil {
+		return err
+	}
 
-		newUserInitialCredit, err := GetDecimalByKey(ctx, ConfigKeyNewUserInitialCredit, 2)
-		if err != nil {
-			return err
-		}
+	now := time.Now()
+	newUser := User{
+		ID:               oauthInfo.GetID(),
+		Username:         oauthInfo.Username,
+		Nickname:         oauthInfo.Name,
+		AvatarUrl:        oauthInfo.AvatarUrl,
+		IsActive:         oauthInfo.Active,
+		TrustLevel:       oauthInfo.TrustLevel,
+		SignKey:          util.GenerateUniqueIDSimple(),
+		TotalReceive:     newUserInitialCredit,
+		AvailableBalance: newUserInitialCredit,
+		LastLoginAt:      now,
+	}
+	if err = tx.Create(&newUser).Error; err != nil {
+		return err
+	}
 
-		now := time.Now()
-		newUser := User{
-			ID:               oauthInfo.GetID(),
-			Username:         oauthInfo.Username,
-			Nickname:         oauthInfo.Name,
-			AvatarUrl:        oauthInfo.AvatarUrl,
-			IsActive:         oauthInfo.Active,
-			TrustLevel:       oauthInfo.TrustLevel,
-			SignKey:          util.GenerateUniqueIDSimple(),
-			TotalReceive:     newUserInitialCredit,
-			AvailableBalance: newUserInitialCredit,
-			LastLoginAt:      now,
-		}
-		if err = tx.Create(&newUser).Error; err != nil {
-			return err
-		}
+	order := Order{
+		OrderName:   "新用户注册奖励",
+		PayerUserID: 0,
+		PayeeUserID: newUser.ID,
+		Amount:      newUserInitialCredit,
+		Status:      OrderStatusSuccess,
+		Type:        OrderTypeCommunity,
+		Remark:      fmt.Sprintf("新用户 %s 注册赠送初始积分 %s", newUser.Username, newUserInitialCredit.String()),
+		TradeTime:   now,
+		ExpiresAt:   now,
+	}
+	if err = tx.Create(&order).Error; err != nil {
+		return err
+	}
 
-		order := Order{
-			OrderName:   "新用户注册奖励",
-			PayerUserID: 0,
-			PayeeUserID: newUser.ID,
-			Amount:      newUserInitialCredit,
-			Status:      OrderStatusSuccess,
-			Type:        OrderTypeCommunity,
-			Remark:      fmt.Sprintf("新用户 %s 注册赠送初始积分 %s", newUser.Username, newUserInitialCredit.String()),
-			TradeTime:   now,
-			ExpiresAt:   now,
-		}
-		if err = tx.Create(&order).Error; err != nil {
-			return err
-		}
+	*u = newUser
 
-		*u = newUser
-
-		return u.EnqueueBadgeScoreTask(ctx, 0)
-	})
+	return u.EnqueueBadgeScoreTask(ctx, 0)
 }

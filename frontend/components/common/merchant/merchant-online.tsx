@@ -88,7 +88,7 @@ export function MerchantOnline() {
     <TransactionProvider
       defaultParams={{
         page_size: 20,
-        type: 'online',
+        types: ['online'],
         client_id: selectedKey?.client_id
       }}
     >
@@ -182,7 +182,7 @@ function MerchantOnlineContent({ apiKeys }: MerchantOnlineContentProps) {
       fetchTransactions({
         page: 1,
         page_size: 20,
-        type: 'online',
+        types: ['online'],
         client_id: selectedKey.client_id
       })
       setIsCreating(false)

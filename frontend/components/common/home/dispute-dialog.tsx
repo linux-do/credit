@@ -37,7 +37,6 @@ export function DisputeDialog({ mode, open, onOpenChange }: DisputeDialogProps) 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
 
-
   const fetchDisputes = useCallback(async (page: number = 1) => {
     try {
       setLoading(true)
@@ -54,7 +53,6 @@ export function DisputeDialog({ mode, open, onOpenChange }: DisputeDialogProps) 
           status: 'disputing'
         })
         filteredOrders = result.orders
-        // 去重
         const uniqueOrders = new Map()
         filteredOrders.forEach(order => uniqueOrders.set(order.id, order))
         filteredOrders = Array.from(uniqueOrders.values())
@@ -72,7 +70,6 @@ export function DisputeDialog({ mode, open, onOpenChange }: DisputeDialogProps) 
         })
 
         const allOrders = [...paymentResult.orders, ...onlineResult.orders]
-        // 去重
         const uniqueOrders = new Map()
         allOrders.forEach(order => uniqueOrders.set(order.id, order))
 
@@ -97,7 +94,6 @@ export function DisputeDialog({ mode, open, onOpenChange }: DisputeDialogProps) 
         }
       }
 
-      // 总是替换数据，不累加
       setDisputes(filteredOrders)
     } catch (err) {
       const error = err as Error
