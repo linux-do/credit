@@ -76,8 +76,8 @@ function TransactionList({ initialType }: { initialType?: OrderType }) {
     const params: TransactionQueryParams = {
       page: 1,
       page_size: pageSize,
-      type: selectedTypes.length > 0 ? selectedTypes[0] : undefined,
-      status: selectedStatuses.length > 0 ? selectedStatuses[0] : undefined,
+      types: selectedTypes.length > 0 ? selectedTypes : undefined,
+      statuses: selectedStatuses.length > 0 ? selectedStatuses : undefined,
       startTime: dateRange ? formatLocalDate(dateRange.from) : undefined,
       endTime: dateRange ? (() => {
         const endDate = new Date(dateRange.to)

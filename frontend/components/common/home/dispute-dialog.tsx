@@ -50,24 +50,19 @@ export function DisputeDialog({ mode, open, onOpenChange }: DisputeDialogProps) 
         result = await TransactionService.getTransactions({
           page,
           page_size: DISPUTE_PAGE_SIZE,
-          type: 'receive',
-          status: 'disputing'
+          types: ['receive'],
+          statuses: ['disputing']
         })
         filteredOrders = result.orders
       } else {
-        const paymentResult = await TransactionService.getTransactions({
+        const disputeResult = await TransactionService.getTransactions({
           page,
-          page_size: Math.ceil(DISPUTE_PAGE_SIZE / 2),
-          type: 'payment'
+          page_size: DISPUTE_PAGE_SIZE,
+          types: ['payment', 'online']
         })
 
-        const onlineResult = await TransactionService.getTransactions({
-          page,
-          page_size: Math.ceil(DISPUTE_PAGE_SIZE / 2),
-          type: 'online'
-        })
+        const allOrders = disputeResult.orders
 
-        const allOrders = [...paymentResult.orders, ...onlineResult.orders]
         filteredOrders = allOrders.filter((order: Order) =>
           order.status === 'disputing' || order.status === 'refused' || order.status === 'refund'
         )

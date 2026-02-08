@@ -212,8 +212,8 @@ function PaymentCard({ onViewAll }: { onViewAll: () => void }) {
       const response = await TransactionService.getTransactions({
         page: 1,
         page_size: 10,
-        type: 'payment',
-        status: 'success'
+        types: ['payment'],
+        statuses: ['success']
       })
       setPayments(response.orders)
       setTotal(response.total)
