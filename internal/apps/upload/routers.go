@@ -172,6 +172,8 @@ func UploadRedEnvelopeCover(c *gin.Context) {
 		return
 	}
 
+	urlPath := "/" + filepath.ToSlash(filepath.Join(uploadPath, filename))
+
 	// 完整文件路径 - 使用 filepath.Clean 防止路径遍历
 	fullPath := filepath.Clean(filepath.Join(uploadPath, filename))
 
@@ -187,9 +189,8 @@ func UploadRedEnvelopeCover(c *gin.Context) {
 	// 检查文件是否已存在
 	if _, err := os.Stat(fullPath); err == nil {
 		// 文件已存在，直接返回URL
-		url := "/" + strings.ReplaceAll(fullPath, "\\", "/")
 		c.JSON(http.StatusOK, util.OK(UploadResponse{
-			URL:      url,
+			URL:      urlPath,
 			Filename: filename,
 			Size:     file.Size,
 			Width:    imgConfig.Width,
@@ -203,9 +204,8 @@ func UploadRedEnvelopeCover(c *gin.Context) {
 	if err != nil {
 		if os.IsExist(err) {
 			// 文件已存在，返回现有文件
-			url := "/" + strings.ReplaceAll(fullPath, "\\", "/")
 			c.JSON(http.StatusOK, util.OK(UploadResponse{
-				URL:      url,
+				URL:      urlPath,
 				Filename: filename,
 				Size:     file.Size,
 				Width:    imgConfig.Width,
@@ -226,7 +226,7 @@ func UploadRedEnvelopeCover(c *gin.Context) {
 	}
 
 	// 返回文件URL
-	url := "/" + strings.ReplaceAll(fullPath, "\\", "/")
+	url := urlPath
 
 	// 记录上传信息到数据库
 	upload := model.Upload{

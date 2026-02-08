@@ -1,5 +1,6 @@
 import { BaseService } from '../core/base.service';
 import type { UploadImageResponse } from './types';
+import type { InternalAxiosRequestConfig } from 'axios';
 
 /**
  * 上传服务
@@ -44,7 +45,11 @@ export class UploadService extends BaseService {
     formData.append('file', file);
     formData.append('type', type);
 
-    return this.post<UploadImageResponse>('/redenvelope/cover', formData);
+    return this.post<UploadImageResponse>('/redenvelope/cover', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    } as InternalAxiosRequestConfig);
   }
 
   /**
@@ -62,11 +67,11 @@ export class UploadService extends BaseService {
     // 将 base64 转换为 Blob
     const response = await fetch(base64);
     const blob = await response.blob();
-    
+
     // 创建 File 对象，确保正确的 MIME 类型
     const mimeType = base64.match(/data:([^;]+);/)?.[1] || 'image/png';
     const file = new File([blob], filename, { type: mimeType });
-    
+
     // 上传文件
     return this.uploadRedEnvelopeCover(file, type);
   }

@@ -17,7 +17,11 @@ limitations under the License.
 package router
 
 import (
+	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -69,5 +73,30 @@ func loggerMiddleware() gin.HandlerFunc {
 			span := trace.SpanFromContext(ctx)
 			span.SetStatus(codes.Error, strconv.Itoa(c.Writer.Status()))
 		}
+	}
+}
+
+func uploadsStaticHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		relPath := strings.TrimPrefix(c.Param("filepath"), "/")
+		if relPath == "" {
+			c.AbortWithStatus(http.StatusForbidden)
+			return
+		}
+
+		cleanRelPath := filepath.Clean(relPath)
+		if cleanRelPath == "." || strings.HasPrefix(cleanRelPath, "..") {
+			c.AbortWithStatus(http.StatusForbidden)
+			return
+		}
+
+		fullPath := filepath.Join("uploads", filepath.FromSlash(cleanRelPath))
+		info, err := os.Stat(fullPath)
+		if err != nil || info.IsDir() {
+			c.AbortWithStatus(http.StatusForbidden)
+			return
+		}
+
+		c.File(fullPath)
 	}
 }

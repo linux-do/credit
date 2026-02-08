@@ -114,7 +114,8 @@ func Serve() {
 	r.POST("/pay/distribute", payment.RequireMerchantAuth(), payment.MerchantDistribute)
 
 	// Serve static files for uploads
-	r.Static("/uploads", "./uploads")
+	r.Any("/uploads", uploadsStaticHandler())
+	r.Any("/uploads/*filepath", uploadsStaticHandler())
 
 	apiGroup := r.Group(config.Config.App.APIPrefix)
 	{

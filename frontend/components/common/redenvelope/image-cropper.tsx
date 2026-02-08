@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useState, useCallback } from "react"
 import Cropper from "react-easy-crop"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
@@ -107,13 +108,13 @@ export function ImageCropper({ isOpen, onOpenChange, onCropComplete, coverType }
 
     // 验证文件类型
     if (!file.type.startsWith('image/')) {
-      alert('请选择图片文件')
+      toast.error('请选择图片文件')
       return
     }
 
     // 验证文件大小 (最大 2MB)
     if (file.size > 2 * 1024 * 1024) {
-      alert('图片大小不能超过 2MB')
+      toast.error('图片大小不能超过 2MB')
       return
     }
 
@@ -143,7 +144,7 @@ export function ImageCropper({ isOpen, onOpenChange, onCropComplete, coverType }
       handleClose()
     } catch (error) {
       console.error('裁剪失败:', error)
-      alert('裁剪失败，请重试')
+      toast.error('裁剪失败，请重试')
     }
   }
 
@@ -162,20 +163,20 @@ export function ImageCropper({ isOpen, onOpenChange, onCropComplete, coverType }
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Crop className="size-5 text-primary" />
+          <DialogTitle className="flex items-center gap-2 text-sm sm:text-base">
+            <Crop className="size-4 sm:size-5 text-primary" />
             裁剪{coverType === 'cover' ? '封面' : '装饰'}图片
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-xs sm:text-sm">
             {recommendedSize.label} - 推荐尺寸: {recommendedSize.width}×{recommendedSize.height}px
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           {!image ? (
-            <div className="border-2 border-dashed rounded-lg p-12 text-center">
+            <div className="border-2 border-dashed rounded-lg p-6 sm:p-12 text-center">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -188,12 +189,12 @@ export function ImageCropper({ isOpen, onOpenChange, onCropComplete, coverType }
                 htmlFor="image-upload"
                 className="cursor-pointer flex flex-col items-center gap-4"
               >
-                <div className="size-16 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Crop className="size-8 text-primary" />
+                <div className="size-12 sm:size-16 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Crop className="size-6 sm:size-8 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium">点击上传图片</p>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs sm:text-sm font-medium">点击上传图片</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
                     支持 JPG、PNG、WEBP 格式，最大 2MB
                   </p>
                 </div>
@@ -202,7 +203,7 @@ export function ImageCropper({ isOpen, onOpenChange, onCropComplete, coverType }
           ) : (
             <>
               {/* 裁剪区域 */}
-              <div className="relative w-full h-[400px] bg-muted rounded-lg overflow-hidden">
+              <div className="relative w-full h-[250px] sm:h-[400px] bg-muted rounded-lg overflow-hidden touch-none">
                 <Cropper
                   image={image}
                   crop={crop}
@@ -219,12 +220,12 @@ export function ImageCropper({ isOpen, onOpenChange, onCropComplete, coverType }
               </div>
 
               {/* 控制面板 */}
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {/* 缩放控制 */}
-                <div className="space-y-2">
+                <div className="space-y-1.5 sm:space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label className="text-xs text-muted-foreground">缩放</Label>
-                    <span className="text-xs text-muted-foreground">{Math.round(zoom * 100)}%</span>
+                    <Label className="text-[10px] sm:text-xs text-muted-foreground">缩放</Label>
+                    <span className="text-[10px] sm:text-xs text-muted-foreground">{Math.round(zoom * 100)}%</span>
                   </div>
                   <Slider
                     value={[zoom]}
@@ -237,10 +238,10 @@ export function ImageCropper({ isOpen, onOpenChange, onCropComplete, coverType }
                 </div>
 
                 {/* 旋转控制 */}
-                <div className="space-y-2">
+                <div className="space-y-1.5 sm:space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label className="text-xs text-muted-foreground">旋转</Label>
-                    <span className="text-xs text-muted-foreground">{rotation}°</span>
+                    <Label className="text-[10px] sm:text-xs text-muted-foreground">旋转</Label>
+                    <span className="text-[10px] sm:text-xs text-muted-foreground">{rotation}°</span>
                   </div>
                   <Slider
                     value={[rotation]}
@@ -253,14 +254,16 @@ export function ImageCropper({ isOpen, onOpenChange, onCropComplete, coverType }
                 </div>
 
                 {/* 快捷按钮 */}
-                <div className="flex items-center justify-end gap-2 pt-2">
+                <div className="flex items-center justify-end gap-1.5 sm:gap-2 pt-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setRotation((prev) => (prev + 90) % 360)}
+                    className="text-xs h-8"
                   >
-                    <RotateCw className="size-4 mr-2" />
-                    旋转 90°
+                    <RotateCw className="size-3 sm:size-4 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">旋转 90°</span>
+                    <span className="sm:hidden">旋转</span>
                   </Button>
 
                   <Button
@@ -272,9 +275,11 @@ export function ImageCropper({ isOpen, onOpenChange, onCropComplete, coverType }
                         fileInputRef.current.value = ''
                       }
                     }}
+                    className="text-xs h-8"
                   >
-                    <X className="size-4 mr-2" />
-                    重新选择
+                    <X className="size-3 sm:size-4 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">重新选择</span>
+                    <span className="sm:hidden">重选</span>
                   </Button>
                 </div>
               </div>
@@ -282,14 +287,14 @@ export function ImageCropper({ isOpen, onOpenChange, onCropComplete, coverType }
           )}
         </div>
 
-        <DialogFooter>
-          <Button variant="ghost" onClick={handleClose}>
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button variant="ghost" onClick={handleClose} className="text-xs sm:text-sm h-8 sm:h-10">
             取消
           </Button>
-          <Button 
-            onClick={handleCrop} 
+          <Button
+            onClick={handleCrop}
             disabled={!image}
-            className="bg-red-500 hover:bg-red-600"
+            className="bg-red-500 hover:bg-red-600 text-xs sm:text-sm h-8 sm:h-10"
           >
             确认裁剪
           </Button>
