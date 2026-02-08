@@ -54,6 +54,10 @@ export function DisputeDialog({ mode, open, onOpenChange }: DisputeDialogProps) 
           status: 'disputing'
         })
         filteredOrders = result.orders
+        // 去重
+        const uniqueOrders = new Map()
+        filteredOrders.forEach(order => uniqueOrders.set(order.id, order))
+        filteredOrders = Array.from(uniqueOrders.values())
       } else {
         const paymentResult = await TransactionService.getTransactions({
           page,
@@ -68,7 +72,11 @@ export function DisputeDialog({ mode, open, onOpenChange }: DisputeDialogProps) 
         })
 
         const allOrders = [...paymentResult.orders, ...onlineResult.orders]
-        filteredOrders = allOrders.filter((order: Order) =>
+        // 去重
+        const uniqueOrders = new Map()
+        allOrders.forEach(order => uniqueOrders.set(order.id, order))
+
+        filteredOrders = Array.from(uniqueOrders.values()).filter((order: Order) =>
           order.status === 'disputing' || order.status === 'refused' || order.status === 'refund'
         )
 
