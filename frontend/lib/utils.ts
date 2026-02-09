@@ -37,6 +37,28 @@ export function formatLocalDate(date: Date): string {
   return `${ year }-${ month }-${ day }T${ hours }:${ minutes }:${ seconds }+08:00`
 }
 
+type Base64Buffer = {
+  from: (input: string, encoding: 'utf-8') => { toString: (encoding: 'base64') => string }
+}
+
+/**
+ * Base64 编码
+ * @param value 待编码字符串
+ * @returns Base64 编码后的字符串
+ */
+export function encodeBase64(value: string): string {
+  if (typeof globalThis.btoa === 'function') {
+    return globalThis.btoa(value)
+  }
+
+  const bufferConstructor = (globalThis as typeof globalThis & { Buffer?: Base64Buffer }).Buffer
+  if (bufferConstructor) {
+    return bufferConstructor.from(value, 'utf-8').toString('base64')
+  }
+
+  throw new Error('当前环境不支持 Base64 编码')
+}
+
 /**
  * 生成交易缓存的唯一键
  * @param params 交易查询参数

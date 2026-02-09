@@ -221,7 +221,7 @@ export function MerchantInfo({ apiKey, onUpdate, onDelete, updateAPIKey }: Merch
             }
           />
 
-          <DistributeDialog />
+          <DistributeDialog apiKey={apiKey} />
 
           <AlertDialog>
             <AlertDialogTrigger asChild>
