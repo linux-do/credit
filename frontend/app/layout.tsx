@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/layout/theme-provider";
 import { CustomThemeProvider } from "@/lib/theme";
 import { BellRingProvider } from "@/contexts/bell-ring-context";
+import { NotificationSettingsProvider } from "@/contexts/notification-settings-context";
 import "./globals.css";
 
 const inter = Inter({
@@ -50,10 +51,12 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <CustomThemeProvider>
-            <BellRingProvider>
-              {children}
-              <Toaster position="top-center" />
-            </BellRingProvider>
+            <NotificationSettingsProvider>
+              <BellRingProvider>
+                {children}
+                <Toaster position="top-center" />
+              </BellRingProvider>
+            </NotificationSettingsProvider>
           </CustomThemeProvider>
         </ThemeProvider>
       </body>
