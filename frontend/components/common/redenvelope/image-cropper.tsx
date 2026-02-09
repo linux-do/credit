@@ -93,9 +93,20 @@ export function ImageCropper({ isOpen, onOpenChange, onCropComplete, coverType }
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
 
-  // 根据封面类型设置裁剪比例
-  const aspect = coverType === 'cover' ? 2 / 3 : 2 / 3
-  const cropShape = coverType === 'cover' ? 'rect' : 'rect'
+  const resetCropState = () => {
+    setImage(null)
+    setCrop({ x: 0, y: 0 })
+    setZoom(1)
+    setRotation(0)
+    setCroppedAreaPixels(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  // 裁剪比例配置 - 2:3 比例和矩形裁剪
+  const aspect = 2 / 3
+  const cropShape = 'rect'
 
   const recommendedSize = coverType === 'cover'
     ? { width: 360, height: 540, label: "背景封面 (2:3 比例)" }
@@ -120,11 +131,8 @@ export function ImageCropper({ isOpen, onOpenChange, onCropComplete, coverType }
 
     const reader = new FileReader()
     reader.onload = (e) => {
+      resetCropState()
       setImage(e.target?.result as string)
-      // 重置裁剪参数
-      setCrop({ x: 0, y: 0 })
-      setZoom(1)
-      setRotation(0)
     }
     reader.readAsDataURL(file)
   }
@@ -150,14 +158,7 @@ export function ImageCropper({ isOpen, onOpenChange, onCropComplete, coverType }
 
   // 关闭对话框
   const handleClose = () => {
-    setImage(null)
-    setCrop({ x: 0, y: 0 })
-    setZoom(1)
-    setRotation(0)
-    setCroppedAreaPixels(null)
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-    }
+    resetCropState()
     onOpenChange(false)
   }
 
@@ -270,10 +271,7 @@ export function ImageCropper({ isOpen, onOpenChange, onCropComplete, coverType }
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      setImage(null)
-                      if (fileInputRef.current) {
-                        fileInputRef.current.value = ''
-                      }
+                      resetCropState()
                     }}
                     className="text-xs h-8"
                   >
