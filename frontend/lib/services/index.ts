@@ -30,6 +30,7 @@ import { ConfigService } from './config';
 import { DashboardService } from './dashboard';
 import { LeaderboardService } from './leaderboard';
 import { RedEnvelopeService } from './redenvelope';
+import { UploadService } from './upload';
 
 /**
  * 服务对象
@@ -59,6 +60,8 @@ const services = {
   leaderboard: LeaderboardService,
   /** 红包服务 */
   redEnvelope: RedEnvelopeService,
+  /** 上传服务 */
+  upload: UploadService,
 } as const;
 
 export default services;
@@ -203,3 +206,7 @@ export type {
   UserRankInfo,
   UserRankResponse,
 } from './leaderboard';
+
+// 上传服务
+export { UploadService } from './upload';
+export type { UploadImageResponse } from './upload';

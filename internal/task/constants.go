@@ -24,6 +24,7 @@ const (
 	MerchantPaymentNotifyTask             = "payment:merchant_notify"
 	SyncOrdersToClickHouseTask            = "order:sync_to_clickhouse"
 	RefundExpiredRedEnvelopesTask         = "redenvelope:refund_expired"
+	CleanupUnusedUploadsTask              = "upload:cleanup_unused"
 )
 
 const (
@@ -38,6 +39,7 @@ const (
 	TaskTypeUserGamification  = "user_gamification"
 	TaskTypeDisputeRefund     = "dispute_auto_refund"
 	TaskTypeRedEnvelopeRefund = "redenvelope_auto_refund"
+	TaskTypeCleanupUploads    = "cleanup_unused_uploads"
 )
 
 // TaskMeta 任务元数据
@@ -87,6 +89,15 @@ var DispatchableTasks = []TaskMeta{
 		Description:  "处理过期红包的自动退款",
 		SupportsTime: false,
 		MaxRetry:     5,
+		Queue:        QueueDefault,
+	},
+	{
+		Type:         TaskTypeCleanupUploads,
+		AsynqTask:    CleanupUnusedUploadsTask,
+		Name:         "清理未使用上传",
+		Description:  "清理超过1小时未使用的上传文件",
+		SupportsTime: false,
+		MaxRetry:     3,
 		Queue:        QueueDefault,
 	},
 }

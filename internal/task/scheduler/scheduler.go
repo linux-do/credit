@@ -92,6 +92,16 @@ func StartScheduler() error {
 			return
 		}
 
+		// 清理未使用的上传文件任务
+		if _, err = scheduler.Register(
+			config.Config.Scheduler.CleanupUnusedUploadsTaskCron,
+			asynq.NewTask(task.CleanupUnusedUploadsTask, nil),
+			asynq.Unique(23*time.Hour),
+			asynq.MaxRetry(3),
+		); err != nil {
+			return
+		}
+
 		// 启动调度器
 		err = scheduler.Run()
 	})

@@ -1561,6 +1561,43 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/upload/redenvelope/cover": {
+            "post": {
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "upload"
+                ],
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "图片文件",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "封面类型 (cover/heterotypic)",
+                        "name": "type",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/util.ResponseAny"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/user/pay-key": {
             "put": {
                 "consumes": [
@@ -2206,9 +2243,17 @@ const docTemplate = `{
                 "type"
             ],
             "properties": {
+                "cover_upload_id": {
+                    "type": "string",
+                    "example": "0"
+                },
                 "greeting": {
                     "type": "string",
                     "maxLength": 100
+                },
+                "heterotypic_upload_id": {
+                    "type": "string",
+                    "example": "0"
                 },
                 "pay_key": {
                     "type": "string",

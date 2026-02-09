@@ -28,4 +28,6 @@ const (
 	AmountTooSmall            = "每个红包金额不能小于0.01"
 	RedEnvelopeTooPopular     = "太火爆啦，稍后再试试吧~"
 	InvalidRedEnvelopeID      = "红包ID格式错误"
+	InvalidCoverImage         = "无效的封面图片"
+	InvalidHeterotypicImage   = "无效的装饰图片"
 )
