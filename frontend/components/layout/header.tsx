@@ -19,15 +19,26 @@ import { SearchDialog } from "@/components/layout/search-dialog"
 const BellButton = memo(function BellButton() {
   const { isRinging } = useBellRing()
   const { showBell, isMounted } = useNotificationSettings()
+  const [isClickAnimating, setIsClickAnimating] = useState(false)
 
   if (!isMounted) return null
   if (!showBell) return null
 
+  const handleClick = () => {
+    setIsClickAnimating(true)
+    setTimeout(() => setIsClickAnimating(false), 600)
+  }
+
   return (
-    <Button variant="ghost" size="icon" className="size-9 text-muted-foreground hover:text-foreground">
+    <Button 
+      variant="ghost" 
+      size="icon" 
+      className="size-9 text-muted-foreground hover:text-foreground"
+      onClick={handleClick}
+    >
       <Bell 
         className="size-[18px]" 
-        style={isRinging ? { animation: 'var(--animate-bell-ring)', transformOrigin: 'top center' } : undefined} 
+        style={(isRinging || isClickAnimating) ? { animation: 'var(--animate-bell-ring)', transformOrigin: 'top center' } : undefined} 
       />
       <span className="sr-only">通知</span>
     </Button>
