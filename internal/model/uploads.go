@@ -38,7 +38,7 @@ type Upload struct {
 	FileSize  int64        `json:"file_size" gorm:"not null"`                      // 文件大小（字节）
 	MimeType  string       `json:"mime_type" gorm:"size:100;not null"`             // MIME类型
 	Purpose   string       `json:"purpose" gorm:"size:50;not null;index"`          // 用途 (red_envelope_cover, red_envelope_heterotypic)
-	Status    UploadStatus `json:"status" gorm:"type:varchar(20);not null;index"`  // 状态
-	CreatedAt time.Time    `json:"created_at" gorm:"autoCreateTime;index"`
+	Status    UploadStatus `json:"status" gorm:"type:varchar(20);not null"`        // 状态
+	CreatedAt time.Time    `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt time.Time    `json:"updated_at" gorm:"autoUpdateTime"`
 }
