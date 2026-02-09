@@ -1,14 +1,49 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, memo } from "react"
 import { AnimatePresence, motion } from "motion/react"
 import { Button } from "@/components/ui/button"
 import { Bell, Plus, Settings, Search, Moon, Sun, Maximize2, Minimize2 } from "lucide-react"
 import { useUser } from "@/contexts/user-context"
+import { useBellRing } from "@/contexts/bell-ring-context"
+import { useNotificationSettings } from "@/contexts/notification-settings-context"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { useTheme } from "next-themes"
 import { useRouter } from "next/navigation"
 import { SearchDialog } from "@/components/layout/search-dialog"
+
+
+/**
+ * 铃铛按钮组件
+ */
+const BellButton = memo(function BellButton() {
+  const { isRinging } = useBellRing()
+  const { showBell, isMounted } = useNotificationSettings()
+  const [isClickAnimating, setIsClickAnimating] = useState(false)
+
+  if (!isMounted) return null
+  if (!showBell) return null
+
+  const handleClick = () => {
+    setIsClickAnimating(true)
+    setTimeout(() => setIsClickAnimating(false), 600)
+  }
+
+  return (
+    <Button 
+      variant="ghost" 
+      size="icon" 
+      className="size-9 text-muted-foreground hover:text-foreground"
+      onClick={handleClick}
+    >
+      <Bell 
+        className="size-[18px]" 
+        style={(isRinging || isClickAnimating) ? { animation: 'var(--animate-bell-ring)', transformOrigin: 'top center' } : undefined} 
+      />
+      <span className="sr-only">通知</span>
+    </Button>
+  )
+})
 
 
 /**
@@ -52,10 +87,7 @@ export function SiteHeader({ isFullWidth = false, onToggleFullWidth }: { isFullW
               <Search className="size-[18px]" />
               <span className="sr-only">搜索</span>
             </Button>
-            <Button variant="ghost" size="icon" className="size-9 text-muted-foreground hover:text-foreground">
-              <Bell className="size-[18px]" />
-              <span className="sr-only">通知</span>
-            </Button>
+            <BellButton />
             <Button variant="ghost" size="icon" className="size-9 text-muted-foreground hover:text-foreground" onClick={() => router.push('/settings')}>
               <Settings className="size-[18px]" />
               <span className="sr-only">设置</span>
@@ -75,10 +107,7 @@ export function SiteHeader({ isFullWidth = false, onToggleFullWidth }: { isFullW
           </div>
 
           <div className="ml-auto flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="size-9 text-muted-foreground hover:text-foreground">
-              <Bell className="size-[18px]" />
-              <span className="sr-only">通知</span>
-            </Button>
+            <BellButton />
             <Button variant="ghost" size="icon" className="size-9 text-muted-foreground hover:text-foreground" onClick={() => router.push('/settings')}>
               <Settings className="size-[18px]" />
               <span className="sr-only">设置</span>

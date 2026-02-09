@@ -174,4 +174,23 @@
     0% { transform: translateY(0) scale(1); opacity: 1; }
     100% { transform: translateY(-100px) scale(0); opacity: 0; }
   }
+
+  /*
+   * 铃铛响铃动画配置
+   * 使用微妙的摆动效果，优雅且不过度
+   */
+  --animate-bell-ring: bell-ring 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+
+  @keyframes bell-ring {
+    0% { transform: rotate(0deg); }
+    10% { transform: rotate(14deg); }
+    20% { transform: rotate(-12deg); }
+    30% { transform: rotate(10deg); }
+    40% { transform: rotate(-8deg); }
+    50% { transform: rotate(6deg); }
+    60% { transform: rotate(-4deg); }
+    70% { transform: rotate(2deg); }
+    80% { transform: rotate(-1deg); }
+    100% { transform: rotate(0deg); }
+  }
 }
