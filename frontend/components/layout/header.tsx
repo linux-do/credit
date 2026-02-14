@@ -132,17 +132,17 @@ function AppBanner() {
           transition={{ duration: 0.3, ease: "easeInOut" }}
           className="relative flex w-full items-center justify-center bg-muted/50 overflow-hidden"
         >
-          <div className="flex w-full items-center justify-center px-4 py-2 text-xs md:text-[13px] font-medium text-muted-foreground">
-            <p>
+          <div className="flex w-full items-center justify-center px-4 pr-10 py-2 text-xs md:text-[13px] font-medium text-muted-foreground">
+            <p className="flex flex-wrap items-center justify-center gap-x-2 text-center">
               <span className="text-foreground">「LINUX DO Credit」实时积分收入脚本已发布</span>
-              <a href="https://linux.do/t/topic/1365853" target="_blank" className="ml-2 underline underline-offset-4 hover:text-foreground">
+              <a href="https://linux.do/t/topic/1365853" target="_blank" className="underline underline-offset-4 hover:text-foreground">
                 查看详情
               </a>
             </p>
             <Button
               variant="ghost"
               size="icon"
-              className="absolute right-2 top-1/2 size-6 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute right-2 top-1/2 size-6 -translate-y-1/2 text-muted-foreground hover:text-foreground shrink-0"
               onClick={handleDismiss}
             >
               <span className="sr-only">Dismiss</span>
