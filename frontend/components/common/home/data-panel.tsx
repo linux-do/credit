@@ -180,10 +180,11 @@ export function DataPanel() {
       </div>
 
       {/* 统计数据区域 - 移动端在下方并排展示，桌面端在右侧垂直展示 */}
-      <div className="md:col-span-1 flex flex-row md:flex-col order-2 md:order-none gap-8 md:gap-0">
-        <div className="flex-1 md:border-b md:pb-4 border-r md:border-r-0 border-border pr-8 md:pr-0">
+      <div className="md:col-span-1 flex flex-row flex-wrap md:flex-col order-2 md:order-none gap-8 md:gap-0">
+        <div className="flex-1 min-w-[120px] md:border-b md:pb-4 border-r md:border-r-0 border-border pr-8 md:pr-0">
           <div className="text-sm text-muted-foreground font-medium flex items-center gap-1 whitespace-nowrap">
-            可用 LINUX DO Credits
+            <span className="min-[400px]:hidden">可用LDC</span>
+            <span className="hidden min-[400px]:inline">可用 LINUX DO Credits</span>
             <Popover>
               <PopoverTrigger asChild>
                 <button type="button" aria-label="查看详情">
@@ -200,8 +201,8 @@ export function DataPanel() {
           </div>
         </div>
 
-        <div className="flex-1 md:pt-4 pl-0 md:pl-0">
-          <div className="text-sm text-muted-foreground font-medium flex items-center gap-1 whitespace-nowrap">
+        <div className="flex-1 min-w-[120px] md:pt-4 pl-0 md:pl-0">
+          <div className="text-sm text-muted-foreground font-medium flex items-center gap-1">
             今日剩余额度
             <Popover>
               <PopoverTrigger asChild>
