@@ -1,4 +1,6 @@
+import { AxiosHeaders, type InternalAxiosRequestConfig } from 'axios';
 import { BaseService } from '../core/base.service';
+import { encodeBase64 } from '../../utils';
 import type {
   MerchantAPIKey,
   CreateAPIKeyRequest,
@@ -456,7 +458,7 @@ export class MerchantService extends BaseService {
    * @example
    * ```typescript
    * const result = await MerchantService.distribute({
-   *   user_id: '123',
+  *   user_id: 123,
    *   username: 'alice',
    *   amount: 100,
    *   out_trade_no: 'DIST20251231001',
@@ -466,16 +468,24 @@ export class MerchantService extends BaseService {
    * ```
    * 
    * @remarks
-   * - 使用 POST 请求调用 `/pay/distribute` 接口
+   * - 使用 POST 请求调用 `/pay/distribute` 接口（前端通过 `/lpay/distribute` 代理）
    * - 需要通过 Basic Auth 提供商户凭证
    * - 不能分发给商户自己
    * - 商户余额必须充足
    * - 分发会扣除分发费率（根据商户的支付等级）
    */
   static async distribute(
-    request: MerchantDistributeRequest
+    request: MerchantDistributeRequest,
+    auth?: { client_id: string; client_secret: string }
   ): Promise<MerchantDistributeResponse> {
-    return this.rawPost<MerchantDistributeResponse>('/pay/distribute', request);
+    const config: InternalAxiosRequestConfig | undefined = auth
+      ? {
+          headers: new AxiosHeaders({
+            Authorization: `Basic ${encodeBase64(`${auth.client_id}:${auth.client_secret}`)}`,
+          }),
+        }
+      : undefined;
+    
+    return this.rawPost<MerchantDistributeResponse>('/lpay/distribute', request, config);
   }
 }
-
