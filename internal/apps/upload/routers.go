@@ -146,6 +146,13 @@ func UploadRedEnvelopeCover(c *gin.Context) {
 	relPath := filepath.ToSlash(filepath.Join(uploadPath, filename))
 	diskPath := filepath.Join(uploadPath, filename)
 
+	// 验证路径安全性
+	safeDiskPath, err := ValidatePath(UploadDir, diskPath)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, util.Err(ErrInvalidImage))
+		return
+	}
+
 	var recordID uint64
 
 	if err := db.DB(c.Request.Context()).Transaction(func(tx *gorm.DB) error {
@@ -158,11 +165,11 @@ func UploadRedEnvelopeCover(c *gin.Context) {
 		}
 
 		fileCreated := false
-		if _, err := os.Stat(diskPath); err != nil {
+		if _, err := os.Stat(safeDiskPath); err != nil {
 			if !os.IsNotExist(err) {
 				return errors.New(ErrSaveFileFailed)
 			}
-			dst, err := os.OpenFile(diskPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0640)
+			dst, err := os.OpenFile(safeDiskPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0640)
 			if err != nil {
 				if !os.IsExist(err) {
 					return errors.New(ErrSaveFileFailed)
@@ -171,11 +178,11 @@ func UploadRedEnvelopeCover(c *gin.Context) {
 				fileCreated = true
 				if _, err := io.Copy(dst, src); err != nil {
 					dst.Close()
-					os.Remove(diskPath)
+					os.Remove(safeDiskPath)
 					return errors.New(ErrSaveFileFailed)
 				}
 				if err := dst.Close(); err != nil {
-					os.Remove(diskPath)
+					os.Remove(safeDiskPath)
 					return errors.New(ErrSaveFileFailed)
 				}
 			}
@@ -185,7 +192,6 @@ func UploadRedEnvelopeCover(c *gin.Context) {
 			ID:       idgen.NextUint64ID(),
 			UserID:   currentUser.ID,
 			FilePath: relPath,
-			FileURL:  "",
 			FileSize: file.Size,
 			Type:     coverType,
 			Status:   model.UploadStatusPending,
@@ -193,7 +199,7 @@ func UploadRedEnvelopeCover(c *gin.Context) {
 
 		if err := tx.Create(&upload).Error; err != nil {
 			if fileCreated {
-				os.Remove(diskPath)
+				os.Remove(safeDiskPath)
 			}
 			return errors.New(ErrSaveUploadRecordFailed)
 		}

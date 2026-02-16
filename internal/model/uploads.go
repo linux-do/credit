@@ -40,7 +40,6 @@ type Upload struct {
 	ID        uint64       `json:"id,string" gorm:"primaryKey"`
 	UserID    uint64       `json:"user_id,string" gorm:"index;not null"`
 	FilePath  string       `json:"file_path" gorm:"size:500;not null;uniqueIndex"` // 文件路径
-	FileURL   string       `json:"file_url" gorm:"size:500;not null"`              // 访问URL
 	FileSize  int64        `json:"file_size" gorm:"not null"`                      // 文件大小（字节）
 	Type      string       `json:"type" gorm:"column:type;size:50;not null;index"` // 类型 (cover, heterotypic)
 	Status    UploadStatus `json:"status" gorm:"type:varchar(20);not null"`        // 状态
