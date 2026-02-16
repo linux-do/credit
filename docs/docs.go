@@ -1470,6 +1470,33 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/redenvelope/covers": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "redenvelope"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "封面类型 (cover/heterotypic)",
+                        "name": "type",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/util.ResponseAny"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/redenvelope/create": {
             "post": {
                 "consumes": [

@@ -1463,6 +1463,23 @@ paths:
             $ref: '#/definitions/util.ResponseAny'
       tags:
       - redenvelope
+  /api/v1/redenvelope/covers:
+    get:
+      parameters:
+      - description: 封面类型 (cover/heterotypic)
+        in: query
+        name: type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - redenvelope
   /api/v1/redenvelope/create:
     post:
       consumes:
