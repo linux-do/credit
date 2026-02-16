@@ -7,7 +7,6 @@ import { motion, AnimatePresence } from "motion/react"
 import { toast } from "sonner"
 import { Gift } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import services from "@/lib/services"
 import { formatDateTime } from "@/lib/utils"
 import type { RedEnvelopeDetailResponse, RedEnvelopeClaim } from "@/lib/services"
@@ -25,6 +24,12 @@ export function RedEnvelopeClaimPage({ id }: RedEnvelopeClaimProps) {
   const [detail, setDetail] = useState<RedEnvelopeDetailResponse | null>(null)
   const [claimedAmount, setClaimedAmount] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const truncateText = (value: string | undefined, maxChars: number) => {
+    if (!value) return ""
+    const chars = Array.from(value)
+    if (chars.length <= maxChars) return value
+    return `${ chars.slice(0, maxChars).join("") }…`
+  }
 
   const bestClaimId = React.useMemo(() => {
     const claims = detail?.claims
@@ -176,6 +181,12 @@ export function RedEnvelopeClaimPage({ id }: RedEnvelopeClaimProps) {
   }
 
   const envelope = detail?.red_envelope
+  const claimedCount = detail?.claims?.length ?? 0
+  const totalCount = envelope?.total_count ?? claimedCount
+  const totalAmount = parseFloat(envelope?.total_amount || "0").toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })
 
   return (
     <div className="relative h-screen w-full flex flex-col items-center justify-center bg-background p-2 sm:p-4 overflow-hidden">
@@ -262,24 +273,29 @@ export function RedEnvelopeClaimPage({ id }: RedEnvelopeClaimProps) {
                   </div>
 
                   {/* 个人信息 */}
-                  <div className="flex flex-col items-center justify-center mt-6 shrink-0">
+                  <div className="flex flex-col items-center justify-center mt-4 shrink-0">
                     <div className="flex items-center gap-2 mb-2">
-                      <Avatar className="h-6 w-6 rounded border border-white/20">
-                        <AvatarImage src={envelope?.creator_avatar_url} alt={envelope?.creator_username} />
-                        <AvatarFallback className="bg-[#E75240] text-white text-[10px]">
+                      <Avatar className="h-6 w-6 rounded-md border border-white/20">
+                        <AvatarImage className="rounded-md" src={envelope?.creator_avatar_url} alt={envelope?.creator_username} />
+                        <AvatarFallback className="bg-[#E75240] text-white text-[10px] rounded-md">
                           {envelope?.creator_username?.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-sm font-medium text-foreground/80">{envelope?.creator_username} 发出的红包</span>
+                      <div className="flex items-center gap-1 min-w-0 flex-1">
+                        <span className="text-sm font-medium text-foreground/80 truncate">
+                          {truncateText(envelope?.creator_username, 12)}
+                        </span>
+                        <span className="text-sm font-medium text-foreground/80 whitespace-nowrap">发出的红包</span>
+                      </div>
                       {envelope?.type === 'random' && (
                         <span className="bg-[#E1B876] text-white text-[10px] px-1 rounded">拼</span>
                       )}
                     </div>
-                    <p className="text-gray-400 text-xs">{envelope?.greeting || "新年快乐，恭喜发财"}</p>
+                    <p className="text-muted-foreground text-xs">{envelope?.greeting || "新年快乐，恭喜发财"}</p>
                   </div>
 
                   {/* 金额区域 */}
-                  <div className="bg-white pt-3 pb-6 px-4 text-center shrink-0">
+                  <div className="bg-white pt-3 pb-4 px-4 text-center shrink-0">
                     {claimedAmount ? (
                       <div>
                         <div className="text-center">
@@ -290,7 +306,7 @@ export function RedEnvelopeClaimPage({ id }: RedEnvelopeClaimProps) {
                         </div>
                       </div>
                     ) : (
-                      <div className="py-4">
+                      <div className="py-2">
                         <p className="text-2xl font-medium text-foreground/80">手慢了，红包派完了</p>
                       </div>
                     )}
@@ -298,38 +314,48 @@ export function RedEnvelopeClaimPage({ id }: RedEnvelopeClaimProps) {
 
                   {/* 列表区域 */}
                   <div className="flex-1 bg-white flex flex-col min-h-0">
-                    <div className="px-4 py-1 bg-white text-xs text-gray-400">
-                      {detail?.claims.length || 0}个红包共{parseFloat(envelope?.total_amount || "0").toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} LDC，{
-                        envelope?.remaining_count === 0 ? "已被抢光" : "继续等待领取"
-                      }
+                    <div className="px-4 py-1 bg-white text-xs text-muted-foreground flex items-center justify-between">
+                      <div className="whitespace-nowrap">
+                        共 {totalAmount} LDC
+                      </div>
+                      <div className="flex items-baseline gap-1">
+                        <span className="font-semibold tabular-nums">{claimedCount}</span>
+                        <span>/</span>
+                        <span className="font-semibold tabular-nums">{totalCount}</span>
+                        <span>个</span>
+                      </div>
                     </div>
                     <div className="border-t border-border/30" />
-                    <ScrollArea className="flex-1 bg-white">
+                    <div className="flex-1 bg-white overflow-y-auto overscroll-contain">
                       <div className="divide-y divide-border/30">
                         {detail?.claims.map((claim: RedEnvelopeClaim) => (
                           <div
                             key={claim.id}
-                            className="flex items-start justify-between px-4 py-3"
+                            className="flex items-start justify-between px-4 py-2 gap-3"
                           >
-                            <div className="flex gap-3">
-                              <Avatar className="h-9 w-9 rounded border border-border/10 mt-0.5">
-                                <AvatarImage src={claim.avatar_url} alt={claim.username} />
-                                <AvatarFallback className="text-xs bg-muted">
+                            <div className="flex gap-3 min-w-0 flex-1">
+                              <Avatar className="h-9 w-9 rounded-md border border-border/10 mt-0.5">
+                                <AvatarImage className="rounded-md" src={claim.avatar_url} alt={claim.username} />
+                                <AvatarFallback className="text-xs bg-muted rounded-md">
                                   {claim.username.charAt(0).toUpperCase()}
                                 </AvatarFallback>
                               </Avatar>
-                              <div className="flex flex-col items-start gap-0.5">
-                                <span className="text-sm font-medium text-foreground/90">{claim.username}</span>
-                                <span className="text-xs text-gray-400">
+                              <div className="flex flex-col items-start gap-0.5 min-w-0">
+                                <span className="text-[13px] font-medium text-foreground/90 truncate max-w-[160px] sm:max-w-[200px]">
+                                  {truncateText(claim.username, 12)}
+                                </span>
+                                <span className="text-[11px] text-muted-foreground">
                                   {formatClaimedAt(claim.claimed_at)}
                                 </span>
                               </div>
                             </div>
-                            <div className="flex flex-col items-end gap-0.5">
-                              <span className="text-sm font-bold text-foreground/90">{parseFloat(claim.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} LDC</span>
+                            <div className="flex flex-col items-end gap-0.5 shrink-0 min-w-[96px] text-right">
+                              <span className="text-[13px] font-semibold text-foreground tabular-nums whitespace-nowrap">
+                                {parseFloat(claim.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} LDC
+                              </span>
                               {/* 最佳手气 */}
                               {bestClaimId === claim.id && (
-                                <div className="flex items-center gap-1 text-[#E1B876] text-[10px]">
+                                <div className="flex items-center gap-1 text-[#E1B876] text-[9px]">
                                   <span>手气最佳</span>
                                 </div>
                               )}
@@ -337,7 +363,7 @@ export function RedEnvelopeClaimPage({ id }: RedEnvelopeClaimProps) {
                           </div>
                         ))}
                       </div>
-                    </ScrollArea>
+                    </div>
                   </div>
                 </motion.div>
               )}
