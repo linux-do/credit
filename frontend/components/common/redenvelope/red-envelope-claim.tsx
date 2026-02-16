@@ -11,6 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import services from "@/lib/services"
 import { formatDateTime } from "@/lib/utils"
 import type { RedEnvelopeDetailResponse, RedEnvelopeClaim } from "@/lib/services"
+import { getFileUrl } from "@/lib/services/upload/upload.service"
 import { RedEnvelopeCard } from "./red-envelope-card"
 
 interface RedEnvelopeClaimProps {
@@ -93,11 +94,11 @@ export function RedEnvelopeClaimPage({ id }: RedEnvelopeClaimProps) {
   }, [id])
 
   // 安全验证图片URL (防止XSS)
-  const sanitizeImageUrl = (url: string | undefined): string | undefined => {
+  const sanitizeImageUrl = (url: string | null | undefined): string | undefined => {
     if (!url) return undefined
 
-    // 只允许相对路径且以 /uploads/redenvelope/ 开头
-    if (!url.startsWith('/uploads/redenvelope/')) {
+    // 允许相对路径且以 /f/ 开头
+    if (!url.startsWith('/f/')) {
       console.warn('Invalid image URL detected:', url)
       return undefined
     }
@@ -112,8 +113,8 @@ export function RedEnvelopeClaimPage({ id }: RedEnvelopeClaimProps) {
   }
 
   // 从后端获取封面图片URL并进行安全验证
-  const coverImage = sanitizeImageUrl(detail?.red_envelope?.cover_image_url)
-  const heterotypicImage = sanitizeImageUrl(detail?.red_envelope?.heterotypic_image_url)
+  const coverImage = sanitizeImageUrl(getFileUrl(detail?.red_envelope?.cover_upload_id))
+  const heterotypicImage = sanitizeImageUrl(getFileUrl(detail?.red_envelope?.heterotypic_upload_id))
 
   useEffect(() => {
     loadDetail()
@@ -198,6 +199,8 @@ export function RedEnvelopeClaimPage({ id }: RedEnvelopeClaimProps) {
                   transform: 'scale(1.2)',
                   transformOrigin: 'center'
                 }}
+                unoptimized
+                loading="eager"
               />
             </motion.div>
           )}
@@ -251,6 +254,7 @@ export function RedEnvelopeClaimPage({ id }: RedEnvelopeClaimProps) {
                             fill
                             className="object-cover opacity-50"
                             style={{ transform: "scale(1.1)", transformOrigin: "center" }}
+                            unoptimized
                           />
                         </div>
                       )}

@@ -18,15 +18,12 @@ package upload
 
 const (
 	// 上传目录
-	UploadDir = "uploads/redenvelope"
+	UploadDir = "uploads"
 
-	// 允许的图片类型
-	AllowedImageTypes = "image/jpeg,image/png,image/jpg,image/webp"
+	// 封面类型
+	CoverTypeCover       = "cover"
+	CoverTypeHeterotypic = "heterotypic"
 
 	// 最大文件大小 (2MB)
 	MaxFileSize = 2 * 1024 * 1024
-
-	// 最大图片尺寸
-	MaxImageWidth  = 4096
-	MaxImageHeight = 4096
 )

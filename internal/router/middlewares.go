@@ -17,11 +17,7 @@ limitations under the License.
 package router
 
 import (
-	"io"
-	"net/http"
-	"path"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -73,44 +69,5 @@ func loggerMiddleware() gin.HandlerFunc {
 			span := trace.SpanFromContext(ctx)
 			span.SetStatus(codes.Error, strconv.Itoa(c.Writer.Status()))
 		}
-	}
-}
-
-func uploadsStaticHandler() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		relPath := strings.TrimPrefix(c.Param("filepath"), "/")
-		if relPath == "" {
-			c.AbortWithStatus(http.StatusForbidden)
-			return
-		}
-
-		cleanRelPath := path.Clean(relPath)
-		if cleanRelPath == "." || strings.HasPrefix(cleanRelPath, "..") {
-			c.AbortWithStatus(http.StatusForbidden)
-			return
-		}
-
-		fs := http.Dir("uploads")
-		file, err := fs.Open(cleanRelPath)
-		if err != nil {
-			c.AbortWithStatus(http.StatusForbidden)
-			return
-		}
-		defer file.Close()
-
-		info, err := file.Stat()
-		if err != nil || info.IsDir() {
-			c.AbortWithStatus(http.StatusForbidden)
-			return
-		}
-
-		reader, ok := file.(io.ReadSeeker)
-		if !ok {
-			c.AbortWithStatus(http.StatusForbidden)
-			return
-		}
-
-		c.Header("Cache-Control", "public, max-age=604800, immutable")
-		http.ServeContent(c.Writer, c.Request, info.Name(), info.ModTime(), reader)
 	}
 }

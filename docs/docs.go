@@ -1657,6 +1657,30 @@ const docTemplate = `{
                 }
             }
         },
+        "/f/{id}": {
+            "get": {
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "upload"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Upload ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/pay/distribute": {
             "post": {
                 "consumes": [

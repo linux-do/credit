@@ -113,9 +113,8 @@ func Serve() {
 	// 商户分发接口
 	r.POST("/pay/distribute", payment.RequireMerchantAuth(), payment.MerchantDistribute)
 
-	// Serve static files for uploads
-	r.Any("/uploads", uploadsStaticHandler())
-	r.Any("/uploads/*filepath", uploadsStaticHandler())
+	// Serve files by ID
+	r.GET("/f/:id", upload.ServeFileByID)
 
 	apiGroup := r.Group(config.Config.App.APIPrefix)
 	{

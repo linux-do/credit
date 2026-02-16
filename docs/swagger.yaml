@@ -1564,6 +1564,21 @@ paths:
             $ref: '#/definitions/util.ResponseAny'
       tags:
       - user
+  /f/{id}:
+    get:
+      parameters:
+      - description: Upload ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+      tags:
+      - upload
   /pay/distribute:
     post:
       consumes:

@@ -24,8 +24,8 @@ const nextConfig: NextConfig = {
       },
       // 上传文件静态资源
       {
-        source: '/uploads/:path*',
-        destination: `${ backendUrl }/uploads/:path*`,
+        source: '/f/:id',
+        destination: `${ backendUrl }/f/:id`,
       },
       // 标准 RESTful API 接口
       {

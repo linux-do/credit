@@ -30,6 +30,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/linux-do/credit/internal/apps/oauth"
@@ -42,18 +43,7 @@ import (
 
 // UploadResponse 上传响应
 type UploadResponse struct {
-	ID       uint64 `json:"id,string"`
-	URL      string `json:"url"`
-	Filename string `json:"filename,omitempty"`
-	Size     int64  `json:"size,omitempty"`
-	Width    int    `json:"width,omitempty"`
-	Height   int    `json:"height,omitempty"`
-}
-
-// purposeMap 封面类型到用途的映射
-var purposeMap = map[string]string{
-	"cover":       model.UploadPurposeCover,
-	"heterotypic": model.UploadPurposeHeterotypic,
+	ID uint64 `json:"id,string"`
 }
 
 // UploadRedEnvelopeCover 上传红包封面
@@ -76,21 +66,14 @@ func UploadRedEnvelopeCover(c *gin.Context) {
 
 	// 获取封面类型
 	coverType := c.PostForm("type")
-	if coverType != "cover" && coverType != "heterotypic" {
+	if coverType != CoverTypeCover && coverType != CoverTypeHeterotypic {
 		c.JSON(http.StatusBadRequest, util.Err(ErrInvalidCoverType))
 		return
 	}
 
 	// 验证文件大小
-	if file.Size > MaxFileSize {
+	if file.Size > int64(MaxFileSize) {
 		c.JSON(http.StatusBadRequest, util.Err(ErrFileTooLarge))
-		return
-	}
-
-	// 验证文件类型 (Content-Type)
-	contentType := file.Header.Get("Content-Type")
-	if !strings.Contains(AllowedImageTypes, contentType) {
-		c.JSON(http.StatusBadRequest, util.Err(ErrUnsupportedFormat))
 		return
 	}
 
@@ -103,24 +86,25 @@ func UploadRedEnvelopeCover(c *gin.Context) {
 	defer src.Close()
 
 	// 验证文件确实是图片并获取尺寸
-	imgConfig, format, err := image.DecodeConfig(src)
+	_, format, err := image.DecodeConfig(src)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, util.Err(ErrInvalidImage))
 		return
 	}
 
-	// 防止图片炸弹攻击 - 检查解码后的图片尺寸
-	if imgConfig.Width > MaxImageWidth || imgConfig.Height > MaxImageHeight {
-		c.JSON(http.StatusBadRequest, util.Err(ErrImageTooLarge))
+	// 验证图片类型
+	norm := strings.ToLower(format)
+	if norm == "jpeg" {
+		norm = "jpg"
+	}
+	var sc model.SystemConfig
+	if err := sc.GetByKey(c.Request.Context(), model.ConfigKeyUploadAllowedExtensions); err != nil || strings.TrimSpace(sc.Value) == "" {
+		c.JSON(http.StatusInternalServerError, util.Err(ErrUploadExtensionsNotConfigured))
 		return
 	}
-
-	// 验证文件格式是否匹配 Content-Type (防止扩展名欺骗)
-	expectedFormat := strings.TrimPrefix(contentType, "image/")
-	if expectedFormat == "jpg" {
-		expectedFormat = "jpeg"
-	}
-	if format != expectedFormat && !(format == "jpeg" && expectedFormat == "jpeg") {
+	v := strings.ToLower(strings.ReplaceAll(sc.Value, " ", ""))
+	v = strings.ReplaceAll(v, "jpeg", "jpg")
+	if !strings.Contains(","+v+",", ","+norm+",") {
 		c.JSON(http.StatusBadRequest, util.Err(ErrUnsupportedFormat))
 		return
 	}
@@ -151,136 +135,82 @@ func UploadRedEnvelopeCover(c *gin.Context) {
 	}
 	filename := fmt.Sprintf("%d_%s_%s%s", currentUser.ID, coverType, md5Sum, safeExt)
 
-	// 创建上传目录 (使用更安全的权限)
-	uploadPath := UploadDir
+	// 创建上传目录，格式: uploads/2026/01/01/userid
+	now := time.Now()
+	uploadPath := filepath.Join(UploadDir, now.Format("2006/01/02"), fmt.Sprintf("%d", currentUser.ID))
 	if err := os.MkdirAll(uploadPath, 0750); err != nil {
 		c.JSON(http.StatusInternalServerError, util.Err(ErrCreateDirFailed))
 		return
 	}
 
-	urlPath := "/" + filepath.ToSlash(filepath.Join(uploadPath, filename))
+	relPath := filepath.ToSlash(filepath.Join(uploadPath, filename))
+	diskPath := filepath.Join(uploadPath, filename)
 
-	// 完整文件路径 - 使用 filepath.Clean 防止路径遍历
-	fullPath := filepath.Clean(filepath.Join(uploadPath, filename))
+	var recordID uint64
 
-	// 验证路径安全性并获取经过验证的安全路径
-	safePath, err := ValidatePath(uploadPath, fullPath)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, util.Err(ErrInvalidFilePath))
-		return
-	}
-	// 使用经过验证的安全路径
-	fullPath = safePath
-
-	ensureUploadRecord := func() (uint64, error) {
+	if err := db.DB(c.Request.Context()).Transaction(func(tx *gorm.DB) error {
 		var existing model.Upload
-		if err := db.DB(c.Request.Context()).
-			Where("file_path = ?", fullPath).
-			First(&existing).Error; err == nil {
-			return existing.ID, nil
+		if err := tx.Where("file_path = ?", relPath).First(&existing).Error; err == nil {
+			recordID = existing.ID
+			return nil
 		} else if !errors.Is(err, gorm.ErrRecordNotFound) {
-			return 0, err
+			return err
+		}
+
+		fileCreated := false
+		if _, err := os.Stat(diskPath); err != nil {
+			if !os.IsNotExist(err) {
+				return errors.New(ErrSaveFileFailed)
+			}
+			dst, err := os.OpenFile(diskPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0640)
+			if err != nil {
+				if !os.IsExist(err) {
+					return errors.New(ErrSaveFileFailed)
+				}
+			} else {
+				fileCreated = true
+				if _, err := io.Copy(dst, src); err != nil {
+					dst.Close()
+					os.Remove(diskPath)
+					return errors.New(ErrSaveFileFailed)
+				}
+				if err := dst.Close(); err != nil {
+					os.Remove(diskPath)
+					return errors.New(ErrSaveFileFailed)
+				}
+			}
 		}
 
 		upload := model.Upload{
 			ID:       idgen.NextUint64ID(),
 			UserID:   currentUser.ID,
-			FilePath: fullPath,
-			FileURL:  urlPath,
+			FilePath: relPath,
+			FileURL:  "",
 			FileSize: file.Size,
-			MimeType: contentType,
-			Purpose:  purposeMap[coverType],
+			Type:     coverType,
 			Status:   model.UploadStatusPending,
 		}
 
-		tx := db.DB(c.Request.Context()).Begin()
 		if err := tx.Create(&upload).Error; err != nil {
-			tx.Rollback()
-			if err := db.DB(c.Request.Context()).
-				Where("file_path = ?", fullPath).
-				First(&existing).Error; err == nil {
-				return existing.ID, nil
+			if fileCreated {
+				os.Remove(diskPath)
 			}
-			return 0, err
-		}
-		if err := tx.Commit().Error; err != nil {
-			return 0, err
+			return errors.New(ErrSaveUploadRecordFailed)
 		}
 
-		return upload.ID, nil
-	}
-
-	// 检查文件是否已存在
-	if _, err := os.Stat(fullPath); err == nil {
-		recordID, err := ensureUploadRecord()
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, util.Err(ErrSaveUploadRecordFailed))
+		recordID = upload.ID
+		return nil
+	}); err != nil {
+		if err.Error() == ErrSaveFileFailed {
+			c.JSON(http.StatusInternalServerError, util.Err(ErrSaveFileFailed))
 			return
 		}
-
-		response := UploadResponse{
-			ID:       recordID,
-			URL:      urlPath,
-			Filename: filename,
-			Size:     file.Size,
-			Width:    imgConfig.Width,
-			Height:   imgConfig.Height,
-		}
-
-		// 文件已存在，直接返回URL
-		c.JSON(http.StatusOK, util.OK(response))
-		return
-	}
-
-	// 使用 O_CREATE|O_EXCL 原子性创建文件，防止竞态条件
-	dst, err := os.OpenFile(fullPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0640)
-	if err != nil {
-		if os.IsExist(err) {
-			recordID, err := ensureUploadRecord()
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, util.Err(ErrSaveUploadRecordFailed))
-				return
-			}
-
-			response := UploadResponse{
-				ID:       recordID,
-				URL:      urlPath,
-				Filename: filename,
-				Size:     file.Size,
-				Width:    imgConfig.Width,
-				Height:   imgConfig.Height,
-			}
-
-			// 文件已存在，返回现有文件
-			c.JSON(http.StatusOK, util.OK(response))
-			return
-		}
-		c.JSON(http.StatusInternalServerError, util.Err(ErrSaveFileFailed))
-		return
-	}
-	defer dst.Close()
-
-	if _, err := io.Copy(dst, src); err != nil {
-		// 保存失败，删除部分文件
-		os.Remove(fullPath)
-		c.JSON(http.StatusInternalServerError, util.Err(ErrSaveFileFailed))
-		return
-	}
-
-	recordID, err := ensureUploadRecord()
-	if err != nil {
-		os.Remove(fullPath)
 		c.JSON(http.StatusInternalServerError, util.Err(ErrSaveUploadRecordFailed))
 		return
 	}
 
 	c.JSON(http.StatusOK, util.OK(UploadResponse{
-		ID:       recordID,
-		URL:      urlPath,
-		Filename: filename,
-		Size:     file.Size,
-		Width:    imgConfig.Width,
-		Height:   imgConfig.Height,
+		ID: recordID,
 	}))
 }
 
@@ -294,34 +224,26 @@ func ListRedEnvelopeCovers(c *gin.Context) {
 	currentUser, _ := util.GetFromContext[*model.User](c, oauth.UserObjKey)
 
 	coverType := c.Query("type")
-	purpose, ok := purposeMap[coverType]
-	if !ok {
+	if coverType != CoverTypeCover && coverType != CoverTypeHeterotypic {
 		c.JSON(http.StatusBadRequest, util.Err(ErrInvalidCoverType))
 		return
 	}
 
 	var uploads []model.Upload
 	if err := db.DB(c.Request.Context()).
-		Where("user_id = ? AND status = ? AND purpose = ?",
-			currentUser.ID, model.UploadStatusUsed, purpose).
+		Where("user_id = ? AND status = ? AND type = ?",
+			currentUser.ID, model.UploadStatusUsed, coverType).
 		Order("created_at DESC").
 		Limit(20).
 		Find(&uploads).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, util.Err("查询历史封面失败"))
+		c.JSON(http.StatusInternalServerError, util.Err(ErrQueryHistoryCoverFailed))
 		return
 	}
 
-	// 按 file_url 去重
-	seen := make(map[string]bool)
 	var results []UploadResponse
 	for _, u := range uploads {
-		if seen[u.FileURL] {
-			continue
-		}
-		seen[u.FileURL] = true
 		results = append(results, UploadResponse{
-			ID:  u.ID,
-			URL: u.FileURL,
+			ID: u.ID,
 		})
 	}
 

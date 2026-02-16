@@ -43,10 +43,6 @@ export interface RedEnvelope {
   cover_upload_id?: string;
   /** 装饰上传记录 ID */
   heterotypic_upload_id?: string;
-  /** 封面图片URL */
-  cover_image_url?: string;
-  /** 异形装饰图片URL */
-  heterotypic_image_url?: string;
   /** 过期时间 */
   expires_at: string;
   /** 创建时间 */

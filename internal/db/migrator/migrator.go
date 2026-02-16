@@ -130,6 +130,11 @@ func initSystemConfigs() {
 			Value:       "600",
 			Description: "用户余额统计缓存过期时间（秒）",
 		},
+		{
+			Key:         model.ConfigKeyUploadAllowedExtensions,
+			Value:       "jpg,png,webp",
+			Description: "允许上传的图片扩展名（逗号分隔）",
+		},
 	}
 
 	if err := tx.Create(&defaultConfigs).Error; err != nil {

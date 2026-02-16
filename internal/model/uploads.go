@@ -29,10 +29,10 @@ const (
 	UploadStatusDeleted UploadStatus = "deleted" // 已删除
 )
 
-// UploadPurpose 上传用途常量
+// UploadType 上传类型常量
 const (
-	UploadPurposeCover       = "red_envelope_cover"       // 红包背景封面
-	UploadPurposeHeterotypic = "red_envelope_heterotypic" // 红包异形装饰
+	UploadTypeCover       = "cover"       // 红包背景封面
+	UploadTypeHeterotypic = "heterotypic" // 红包异形装饰
 )
 
 // Upload 上传文件记录
@@ -42,8 +42,7 @@ type Upload struct {
 	FilePath  string       `json:"file_path" gorm:"size:500;not null;uniqueIndex"` // 文件路径
 	FileURL   string       `json:"file_url" gorm:"size:500;not null"`              // 访问URL
 	FileSize  int64        `json:"file_size" gorm:"not null"`                      // 文件大小（字节）
-	MimeType  string       `json:"mime_type" gorm:"size:100;not null"`             // MIME类型
-	Purpose   string       `json:"purpose" gorm:"size:50;not null;index"`          // 用途 (red_envelope_cover, red_envelope_heterotypic)
+	Type      string       `json:"type" gorm:"column:type;size:50;not null;index"` // 类型 (cover, heterotypic)
 	Status    UploadStatus `json:"status" gorm:"type:varchar(20);not null"`        // 状态
 	CreatedAt time.Time    `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt time.Time    `json:"updated_at" gorm:"autoUpdateTime"`

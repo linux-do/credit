@@ -3,6 +3,16 @@ import type { UploadImageResponse } from './types';
 import type { InternalAxiosRequestConfig } from 'axios';
 
 /**
+ * 根据上传ID构造文件访问URL
+ * @param id - 上传记录ID
+ * @returns 文件访问URL
+ */
+export function getFileUrl(id: string | number | null | undefined): string | null {
+  if (!id) return null;
+  return `/f/${id}`;
+}
+
+/**
  * 上传服务
  * 处理文件上传相关的 API 请求
  */

@@ -52,13 +52,6 @@ type CreateResponse struct {
 	ID uint64 `json:"id,string"`
 }
 
-// RedEnvelopeView 红包视图（包含上传URL）
-type RedEnvelopeView struct {
-	model.RedEnvelope
-	CoverImageURL       string `json:"cover_image_url,omitempty"`
-	HeterotypicImageURL string `json:"heterotypic_image_url,omitempty"`
-}
-
 // ClaimRequest 领取红包请求
 type ClaimRequest struct {
 	ID uint64 `json:"id,string" binding:"required"`
@@ -66,13 +59,13 @@ type ClaimRequest struct {
 
 // ClaimResponse 领取红包响应
 type ClaimResponse struct {
-	Amount      decimal.Decimal  `json:"amount"`
-	RedEnvelope *RedEnvelopeView `json:"red_envelope"`
+	Amount      decimal.Decimal   `json:"amount"`
+	RedEnvelope model.RedEnvelope `json:"red_envelope"`
 }
 
 // DetailResponse 红包详情响应
 type DetailResponse struct {
-	RedEnvelope *RedEnvelopeView         `json:"red_envelope"`
+	RedEnvelope model.RedEnvelope        `json:"red_envelope"`
 	Claims      []model.RedEnvelopeClaim `json:"claims"`
 	UserClaimed *model.RedEnvelopeClaim  `json:"user_claimed,omitempty"`
 }
@@ -86,10 +79,10 @@ type ListRequest struct {
 
 // ListResponse 红包列表响应
 type ListResponse struct {
-	Total        int64             `json:"total"`
-	Page         int               `json:"page"`
-	PageSize     int               `json:"page_size"`
-	RedEnvelopes []RedEnvelopeView `json:"red_envelopes"`
+	Total        int64               `json:"total"`
+	Page         int                 `json:"page"`
+	PageSize     int                 `json:"page_size"`
+	RedEnvelopes []model.RedEnvelope `json:"red_envelopes"`
 }
 
 // Create 创建红包
@@ -202,7 +195,7 @@ func Create(c *gin.Context) {
 
 		if req.CoverUploadID != nil {
 			var coverUpload model.Upload
-			if err := tx.Where("id = ? AND status IN (?, ?) AND user_id = ? AND purpose = ?", *req.CoverUploadID, model.UploadStatusPending, model.UploadStatusUsed, currentUser.ID, model.UploadPurposeCover).
+			if err := tx.Where("id = ? AND status IN (?, ?) AND user_id = ? AND type = ?", *req.CoverUploadID, model.UploadStatusPending, model.UploadStatusUsed, currentUser.ID, model.UploadTypeCover).
 				First(&coverUpload).Error; err != nil {
 				return errors.New(InvalidCoverImage)
 			}
@@ -219,7 +212,7 @@ func Create(c *gin.Context) {
 
 		if req.HeterotypicUploadID != nil {
 			var heterotypicUpload model.Upload
-			if err := tx.Where("id = ? AND status IN (?, ?) AND user_id = ? AND purpose = ?", *req.HeterotypicUploadID, model.UploadStatusPending, model.UploadStatusUsed, currentUser.ID, model.UploadPurposeHeterotypic).
+			if err := tx.Where("id = ? AND status IN (?, ?) AND user_id = ? AND type = ?", *req.HeterotypicUploadID, model.UploadStatusPending, model.UploadStatusUsed, currentUser.ID, model.UploadTypeHeterotypic).
 				First(&heterotypicUpload).Error; err != nil {
 				return errors.New(InvalidHeterotypicImage)
 			}
@@ -432,13 +425,11 @@ func Claim(c *gin.Context) {
 		return
 	}
 
-	var redEnvelopeView RedEnvelopeView
+	var redEnvelopeView model.RedEnvelope
 	if err := db.DB(c.Request.Context()).
 		Model(&model.RedEnvelope{}).
-		Select("red_envelopes.*, users.username as creator_username, users.avatar_url as creator_avatar_url, cover_upload.file_url as cover_image_url, heterotypic_upload.file_url as heterotypic_image_url").
+		Select("red_envelopes.*, users.username as creator_username, users.avatar_url as creator_avatar_url").
 		Joins("LEFT JOIN users ON red_envelopes.creator_id = users.id").
-		Joins("LEFT JOIN uploads as cover_upload ON cover_upload.id = red_envelopes.cover_upload_id").
-		Joins("LEFT JOIN uploads as heterotypic_upload ON heterotypic_upload.id = red_envelopes.heterotypic_upload_id").
 		Where("red_envelopes.id = ?", redEnvelope.ID).First(&redEnvelopeView).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, util.Err(err.Error()))
 		return
@@ -446,7 +437,7 @@ func Claim(c *gin.Context) {
 
 	c.JSON(http.StatusOK, util.OK(ClaimResponse{
 		Amount:      claimedAmount,
-		RedEnvelope: &redEnvelopeView,
+		RedEnvelope: redEnvelopeView,
 	}))
 }
 
@@ -466,13 +457,11 @@ func GetDetail(c *gin.Context) {
 
 	currentUser, _ := util.GetFromContext[*model.User](c, oauth.UserObjKey)
 
-	var redEnvelope RedEnvelopeView
+	var redEnvelope model.RedEnvelope
 	if err := db.DB(c.Request.Context()).
 		Model(&model.RedEnvelope{}).
-		Select("red_envelopes.*, users.username as creator_username, users.avatar_url as creator_avatar_url, cover_upload.file_url as cover_image_url, heterotypic_upload.file_url as heterotypic_image_url").
+		Select("red_envelopes.*, users.username as creator_username, users.avatar_url as creator_avatar_url").
 		Joins("LEFT JOIN users ON red_envelopes.creator_id = users.id").
-		Joins("LEFT JOIN uploads as cover_upload ON cover_upload.id = red_envelopes.cover_upload_id").
-		Joins("LEFT JOIN uploads as heterotypic_upload ON heterotypic_upload.id = red_envelopes.heterotypic_upload_id").
 		Where("red_envelopes.id = ?", redEnvelopeID).First(&redEnvelope).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusNotFound, util.Err(RedEnvelopeNotFound))
@@ -501,7 +490,7 @@ func GetDetail(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, util.OK(DetailResponse{
-		RedEnvelope: &redEnvelope,
+		RedEnvelope: redEnvelope,
 		Claims:      claims,
 		UserClaimed: userClaimed,
 	}))
@@ -524,10 +513,8 @@ func List(c *gin.Context) {
 	currentUser, _ := util.GetFromContext[*model.User](c, oauth.UserObjKey)
 
 	query := db.DB(c.Request.Context()).Model(&model.RedEnvelope{}).
-		Select("red_envelopes.*, users.username as creator_username, users.avatar_url as creator_avatar_url, cover_upload.file_url as cover_image_url, heterotypic_upload.file_url as heterotypic_image_url").
-		Joins("LEFT JOIN users ON red_envelopes.creator_id = users.id").
-		Joins("LEFT JOIN uploads as cover_upload ON cover_upload.id = red_envelopes.cover_upload_id").
-		Joins("LEFT JOIN uploads as heterotypic_upload ON heterotypic_upload.id = red_envelopes.heterotypic_upload_id")
+		Select("red_envelopes.*, users.username as creator_username, users.avatar_url as creator_avatar_url").
+		Joins("LEFT JOIN users ON red_envelopes.creator_id = users.id")
 	switch req.Type {
 	case "sent":
 		query = query.Where("red_envelopes.creator_id = ?", currentUser.ID)
@@ -541,7 +528,7 @@ func List(c *gin.Context) {
 	var total int64
 	query.Count(&total)
 
-	var redEnvelopes []RedEnvelopeView
+	var redEnvelopes []model.RedEnvelope
 	query.Order("red_envelopes.created_at DESC").
 		Offset((req.Page - 1) * req.PageSize).
 		Limit(req.PageSize).

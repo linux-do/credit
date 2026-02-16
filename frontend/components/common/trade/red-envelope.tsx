@@ -6,6 +6,7 @@ import Image from "next/image"
 import { toast } from "sonner"
 import { Gift, Copy, Check, ExternalLink, Pencil, X, ImagePlus, History } from "lucide-react"
 import type { UploadImageResponse } from "@/lib/services"
+import { getFileUrl } from "@/lib/services/upload/upload.service"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
@@ -221,9 +222,8 @@ export function RedEnvelope({ onSuccess }: { onSuccess?: () => void }) {
 
   /* 处理封面裁剪完成 */
   const handleCropComplete = async (croppedImage: string, coverType: 'cover' | 'heterotypic') => {
+    const uploadingToast = toast.loading(`正在上传${ coverType === 'cover' ? '背景封面' : '装饰图片' }...`)
     try {
-      const uploadingToast = toast.loading(`正在上传${ coverType === 'cover' ? '背景封面' : '装饰图片' }...`)
-
       const result = await services.upload.uploadBase64Image(
         croppedImage,
         coverType,
@@ -232,13 +232,14 @@ export function RedEnvelope({ onSuccess }: { onSuccess?: () => void }) {
 
       setCover(prev => ({
         ...prev,
-        [coverType === 'cover' ? 'coverImageUrl' : 'heterotypicImageUrl']: result.url,
+        [coverType === 'cover' ? 'coverImageUrl' : 'heterotypicImageUrl']: getFileUrl(result.id),
         [coverType === 'cover' ? 'coverUploadId' : 'heterotypicUploadId']: result.id
       }))
 
       toast.dismiss(uploadingToast)
       toast.success(`${ coverType === 'cover' ? '背景封面' : '装饰图片' }已设置`)
     } catch (error) {
+      toast.dismiss(uploadingToast)
       const errorMessage = error instanceof Error ? error.message : '上传失败'
       toast.error(`上传${ coverType === 'cover' ? '背景封面' : '装饰图片' }失败`, {
         description: errorMessage
@@ -277,7 +278,7 @@ export function RedEnvelope({ onSuccess }: { onSuccess?: () => void }) {
 
     setCover(prev => ({
       ...prev,
-      [type === 'cover' ? 'coverImageUrl' : 'heterotypicImageUrl']: item.url,
+      [type === 'cover' ? 'coverImageUrl' : 'heterotypicImageUrl']: getFileUrl(item.id),
       [type === 'cover' ? 'coverUploadId' : 'heterotypicUploadId']: item.id
     }))
     toast.success(`已选择历史${ type === 'cover' ? '背景封面' : '装饰图片' }`)
@@ -546,7 +547,7 @@ export function RedEnvelope({ onSuccess }: { onSuccess?: () => void }) {
                                     }`}
                                 >
                                   <Image
-                                    src={item.url}
+                                    src={getFileUrl(item.id) || ''}
                                     alt="背景"
                                     fill
                                     className="object-cover"
@@ -572,7 +573,7 @@ export function RedEnvelope({ onSuccess }: { onSuccess?: () => void }) {
                                     }`}
                                 >
                                   <Image
-                                    src={item.url}
+                                    src={getFileUrl(item.id) || ''}
                                     alt="装饰"
                                     fill
                                     className="object-cover"

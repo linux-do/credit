@@ -55,6 +55,8 @@ export function RedEnvelopeCard({
               alt="红包封面"
               fill
               className="object-cover"
+              unoptimized
+              loading="eager"
             />
             {/* 半透明遮罩以确保内容可读 */}
             <div className="absolute inset-0 bg-black/10" />
