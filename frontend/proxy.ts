@@ -105,7 +105,7 @@ export function proxy(request: NextRequest) {
 
   /* 页面请求：公共路由放行 */
   const publicRoutes = ['/', '/login', '/callback', '/privacy', '/terms']
-  const publicPrefixes = ['/docs/', '/epay/']
+  const publicPrefixes = ['/docs/', '/epay/', '/redenvelope/']
 
   if (publicRoutes.includes(pathname) || publicPrefixes.some(p => pathname.startsWith(p))) {
     return NextResponse.next()

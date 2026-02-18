@@ -59,7 +59,7 @@ export function RedEnvelopeCard({
               loading="eager"
             />
             {/* 半透明遮罩以确保内容可读 */}
-            <div className="absolute inset-0 bg-black/10" />
+            <div className="absolute inset-0 bg-black/30 dark:bg-black/50" />
           </div>
         ) : null}
 

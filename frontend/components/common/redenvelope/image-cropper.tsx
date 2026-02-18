@@ -65,7 +65,7 @@ async function getCroppedImg(
     Math.round(0 - safeArea / 2 + image.height * 0.5 - pixelCrop.y)
   )
 
-  return canvas.toDataURL('image/png')
+  return canvas.toDataURL('image/webp')
 }
 
 /**

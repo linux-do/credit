@@ -192,24 +192,21 @@ export function RedEnvelopeClaimPage({ id }: RedEnvelopeClaimProps) {
     <div className="relative h-screen w-full flex flex-col items-center justify-center bg-background p-2 sm:p-4 overflow-hidden">
       <div className="relative z-10 w-full h-full flex items-center justify-center">
         {/* 装饰图片容器 */}
-        <div className="relative w-72 h-[420px] sm:w-80 sm:h-[480px] md:w-[360px] md:h-[540px]">
+        <div className="relative w-full max-w-[320px] aspect-[3/5] h-auto flex items-center justify-center">
           {/* 异形装饰 */}
           {heterotypicImage && (
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              className="absolute inset-0 z-0 pointer-events-none flex items-center justify-center"
+              className="absolute inset-0 z-0 pointer-events-none flex items-center justify-center scale-[1.2]"
+              aria-hidden="true"
             >
               <Image
                 src={heterotypicImage}
                 alt="红包装饰"
                 fill
-                className="object-cover"
-                style={{
-                  transform: 'scale(1.2)',
-                  transformOrigin: 'center'
-                }}
+                className="object-cover object-center"
                 unoptimized
                 loading="eager"
               />
@@ -221,7 +218,7 @@ export function RedEnvelopeClaimPage({ id }: RedEnvelopeClaimProps) {
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.3, ease: "easeOut", delay: 0.1 }}
-            className="relative w-full max-w-[320px] mx-auto h-auto max-h-[85vh] aspect-[3/5] rounded-xl shadow-2xl overflow-hidden z-10"
+            className="relative w-full h-full mx-auto rounded-xl shadow-2xl overflow-hidden z-10"
           >
             <AnimatePresence mode="wait">
               {(state === "ready" || state === "opening") && (
@@ -244,7 +241,7 @@ export function RedEnvelopeClaimPage({ id }: RedEnvelopeClaimProps) {
                   initial={{ y: 30, opacity: 0, scale: 0.98 }}
                   animate={{ y: 0, opacity: 1, scale: 1 }}
                   transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-                  className="absolute inset-0 bg-white flex flex-col"
+                  className="absolute inset-0 bg-background flex flex-col"
                 >
                   {/* 顶部区域 */}
                   <div className="relative shrink-0">
@@ -295,7 +292,7 @@ export function RedEnvelopeClaimPage({ id }: RedEnvelopeClaimProps) {
                   </div>
 
                   {/* 金额区域 */}
-                  <div className="bg-white pt-3 pb-4 px-4 text-center shrink-0">
+                  <div className="bg-background pt-3 pb-4 px-4 text-center shrink-0">
                     {claimedAmount ? (
                       <div>
                         <div className="text-center">
@@ -313,8 +310,8 @@ export function RedEnvelopeClaimPage({ id }: RedEnvelopeClaimProps) {
                   </div>
 
                   {/* 列表区域 */}
-                  <div className="flex-1 bg-white flex flex-col min-h-0">
-                    <div className="px-4 py-1 bg-white text-xs text-muted-foreground flex items-center justify-between">
+                  <div className="flex-1 bg-background flex flex-col min-h-0">
+                    <div className="px-4 py-1 bg-background text-xs text-muted-foreground flex items-center justify-between">
                       <div className="whitespace-nowrap">
                         共 {totalAmount} LDC
                       </div>
@@ -326,7 +323,7 @@ export function RedEnvelopeClaimPage({ id }: RedEnvelopeClaimProps) {
                       </div>
                     </div>
                     <div className="border-t border-border/30" />
-                    <div className="flex-1 bg-white overflow-y-auto overscroll-contain">
+                    <div className="flex-1 bg-background overflow-y-auto overscroll-contain">
                       <div className="divide-y divide-border/30">
                         {detail?.claims.map((claim: RedEnvelopeClaim) => (
                           <div
