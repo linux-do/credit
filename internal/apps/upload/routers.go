@@ -38,6 +38,7 @@ import (
 	"github.com/linux-do/credit/internal/db/idgen"
 	"github.com/linux-do/credit/internal/model"
 	"github.com/linux-do/credit/internal/util"
+	_ "golang.org/x/image/webp"
 	"gorm.io/gorm"
 )
 

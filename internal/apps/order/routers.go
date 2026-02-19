@@ -137,7 +137,11 @@ func ListTransactions(c *gin.Context) {
 			baseQuery = baseQuery.Where(combinedCondition, args...)
 		}
 	} else {
-		baseQuery = baseQuery.Where("orders.payee_user_id = ? OR orders.payer_user_id = ?", user.ID, user.ID)
+		// 查询所有与当前用户相关的订单，但排除用户作为payer的red_envelope_receive订单
+		baseQuery = baseQuery.Where(
+			"orders.payee_user_id = ? OR (orders.payer_user_id = ? AND orders.type != ?)",
+			user.ID, user.ID, model.OrderTypeRedEnvelopeReceive,
+		)
 	}
 
 	if len(req.Statuses) > 0 {
