@@ -52,13 +52,23 @@ type EPayRequest struct {
 	SignType        string          `form:"sign_type"`
 }
 
-// ToCreateOrderRequest 转换为通用创建订单请求
-func (r *EPayRequest) ToCreateOrderRequest() *CreateOrderRequest {
+// LDCPayRequest LDC支付请求
+type LDCPayRequest struct {
+	ClientID        string          `form:"client_id" binding:"required"`
+	OrderName       string          `form:"order_name" binding:"required,max=64"`
+	MerchantOrderNo *string         `form:"out_trade_no" binding:"required,min=1,max=64"`
+	Amount          decimal.Decimal `form:"money" binding:"required"`
+	PayType         string          `form:"type" binding:"required"`
+	Sign            string          `form:"sign" binding:"required"`
+}
+
+// NewCreateOrderRequest 从支付请求创建通用订单请求
+func NewCreateOrderRequest(orderName string, merchantOrderNo *string, amount decimal.Decimal, payType string) *CreateOrderRequest {
 	return &CreateOrderRequest{
-		OrderName:       r.OrderName,
-		MerchantOrderNo: r.MerchantOrderNo,
-		Amount:          r.Amount,
-		PaymentType:     r.PayType,
+		OrderName:       orderName,
+		MerchantOrderNo: merchantOrderNo,
+		Amount:          amount,
+		PaymentType:     payType,
 	}
 }
 
@@ -116,20 +126,28 @@ func RequireSignatureAuth() gin.HandlerFunc {
 		PayType := c.Request.FormValue("type")
 
 		var apiKey model.MerchantAPIKey
+		var createOrderReq *CreateOrderRequest
+		var err error
 
 		switch PayType {
-		case common.PayTypeEPay:
-			if createOrderReq, err := VerifySignature(c, &apiKey); err != nil {
+		case common.PayTypeLDCPay:
+			createOrderReq, err = VerifySignatureEd25519(c, &apiKey)
+			if err != nil {
 				c.AbortWithStatusJSON(http.StatusUnauthorized, util.Err(err.Error()))
 				return
-			} else {
-				util.SetToContext(c, CreateOrderRequestKey, createOrderReq)
+			}
+		case common.PayTypeEPay:
+			createOrderReq, err = VerifySignatureMD5(c, &apiKey)
+			if err != nil {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, util.Err(err.Error()))
+				return
 			}
 		default:
 			c.AbortWithStatusJSON(http.StatusBadRequest, util.Err("不支持的请求类型"))
 			return
 		}
 
+		util.SetToContext(c, CreateOrderRequestKey, createOrderReq)
 		util.SetToContext(c, APIKeyObjKey, &apiKey)
 
 		c.Next()

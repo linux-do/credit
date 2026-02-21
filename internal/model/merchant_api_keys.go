@@ -33,6 +33,7 @@ type MerchantAPIKey struct {
 	AppDescription string         `json:"app_description" gorm:"size:100"`
 	RedirectURI    string         `json:"redirect_uri" gorm:"size:100"`
 	NotifyURL      string         `json:"notify_url" gorm:"size:100;not null"`
+	PublicKey      []byte         `json:"public_key" gorm:"type:bytea"`
 	TestMode       bool           `json:"test_mode" gorm:"default:false"`
 	CreatedAt      time.Time      `json:"created_at" gorm:"autoCreateTime;index:idx_merchant_api_keys_user_created,priority:2"`
 	UpdatedAt      time.Time      `json:"updated_at" gorm:"autoUpdateTime"`
