@@ -351,7 +351,7 @@ export function RedEnvelopeClaimPage({ id }: RedEnvelopeClaimProps) {
                                 {parseFloat(claim.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} LDC
                               </span>
                               {/* 最佳手气 */}
-                              {bestClaimId === claim.id && (
+                              {envelope?.type === 'random' && bestClaimId === claim.id && (
                                 <div className="flex items-center gap-1 text-[#E1B876] text-[9px]">
                                   <span>手气最佳</span>
                                 </div>
