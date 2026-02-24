@@ -39,6 +39,10 @@ export interface RedEnvelope {
   greeting: string;
   /** 红包状态 */
   status: RedEnvelopeStatus;
+  /** 封面上传记录 ID */
+  cover_upload_id?: string;
+  /** 装饰上传记录 ID */
+  heterotypic_upload_id?: string;
   /** 过期时间 */
   expires_at: string;
   /** 创建时间 */
@@ -79,6 +83,10 @@ export interface CreateRedEnvelopeRequest {
   greeting?: string;
   /** 支付密码（6-10位） */
   pay_key: string;
+  /** 封面上传记录 ID */
+  cover_upload_id?: string;
+  /** 异形装饰上传记录 ID */
+  heterotypic_upload_id?: string;
 }
 
 /**

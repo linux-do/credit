@@ -1470,6 +1470,33 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/redenvelope/covers": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "redenvelope"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "封面类型 (cover/heterotypic)",
+                        "name": "type",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/util.ResponseAny"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/redenvelope/create": {
             "post": {
                 "consumes": [
@@ -1561,6 +1588,43 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/upload/redenvelope/cover": {
+            "post": {
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "upload"
+                ],
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "图片文件",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "封面类型 (cover/heterotypic)",
+                        "name": "type",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/util.ResponseAny"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/user/pay-key": {
             "put": {
                 "consumes": [
@@ -1589,6 +1653,30 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/util.ResponseAny"
                         }
+                    }
+                }
+            }
+        },
+        "/f/{id}": {
+            "get": {
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "upload"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Upload ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
                     }
                 }
             }
@@ -1990,32 +2078,17 @@ const docTemplate = `{
                 "startTime": {
                     "type": "string"
                 },
-                "status": {
-                    "type": "string",
-                    "enum": [
-                        "success",
-                        "pending",
-                        "failed",
-                        "expired",
-                        "disputing",
-                        "refund",
-                        "refused"
-                    ]
+                "statuses": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
-                "type": {
-                    "type": "string",
-                    "enum": [
-                        "receive",
-                        "payment",
-                        "transfer",
-                        "community",
-                        "online",
-                        "test",
-                        "distribute",
-                        "red_envelope_send",
-                        "red_envelope_receive",
-                        "red_envelope_refund"
-                    ]
+                "types": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -2229,9 +2302,17 @@ const docTemplate = `{
                 "type"
             ],
             "properties": {
+                "cover_upload_id": {
+                    "type": "string",
+                    "example": "0"
+                },
                 "greeting": {
                     "type": "string",
                     "maxLength": 100
+                },
+                "heterotypic_upload_id": {
+                    "type": "string",
+                    "example": "0"
                 },
                 "pay_key": {
                     "type": "string",

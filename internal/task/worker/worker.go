@@ -27,6 +27,7 @@ import (
 	"github.com/linux-do/credit/internal/apps/order"
 	"github.com/linux-do/credit/internal/apps/payment"
 	"github.com/linux-do/credit/internal/apps/redenvelope"
+	"github.com/linux-do/credit/internal/apps/upload"
 	"github.com/linux-do/credit/internal/apps/user"
 	"github.com/linux-do/credit/internal/config"
 	"github.com/linux-do/credit/internal/task"
@@ -79,6 +80,7 @@ func StartWorker() error {
 	mux.HandleFunc(task.MerchantPaymentNotifyTask, payment.HandleMerchantPaymentNotify)
 	mux.HandleFunc(task.SyncOrdersToClickHouseTask, order.HandleSyncOrdersToClickHouse)
 	mux.HandleFunc(task.RefundExpiredRedEnvelopesTask, redenvelope.HandleRefundExpiredRedEnvelopes)
+	mux.HandleFunc(task.CleanupUnusedUploadsTask, upload.HandleCleanupUnusedUploads)
 	// 启动服务器
 	return asynqServer.Run(mux)
 }

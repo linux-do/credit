@@ -37,3 +37,6 @@ go.work
 go.work.sum
 /credit
 main
+
+# upload
+uploads/*

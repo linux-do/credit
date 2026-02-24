@@ -170,6 +170,7 @@ export class BaseService {
    * @template T - 响应数据类型
    * @param url - 完整 URL
    * @param data - 请求数据
+   * @param config - 额外的请求配置
    * @returns 响应数据（不经过 response.data.data 解包）
    * 
    * @remarks
@@ -178,8 +179,9 @@ export class BaseService {
   protected static async rawPost<T>(
     url: string,
     data?: unknown,
+    config?: InternalAxiosRequestConfig,
   ): Promise<T> {
-    const response = await apiClient.post<T>(url, data);
+    const response = await apiClient.post<T>(url, data, config);
     return response.data;
   }
 }

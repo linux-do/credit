@@ -68,9 +68,19 @@ function PayConfigDetailPanel({
             <p className="text-xs text-muted-foreground">{config ? formatDateTime(config.created_at) : ''}</p>
           </div>
 
-          <div className="px-3 py-2 flex items-center justify-between">
+          <div className="px-3 py-2 flex items-center justify-between border-b border-dashed">
             <label className="text-xs font-medium text-muted-foreground">更新时间</label>
             <p className="text-xs text-muted-foreground">{config ? formatDateTime(config.updated_at) : ''}</p>
+          </div>
+
+          <div className="px-3 py-2 flex items-center justify-between border-b border-dashed last:border-b-0" aria-hidden="true">
+            <span className="text-xs text-muted-foreground">&nbsp;</span>
+            <span className="text-xs text-muted-foreground">&nbsp;</span>
+          </div>
+
+          <div className="px-3 py-2 flex items-center justify-between border-b border-dashed last:border-b-0" aria-hidden="true">
+            <span className="text-xs text-muted-foreground">&nbsp;</span>
+            <span className="text-xs text-muted-foreground">&nbsp;</span>
           </div>
         </div>
 
@@ -209,6 +219,42 @@ function PayConfigDetailPanel({
             </div>
           </div>
 
+          <div className="px-3 py-2 flex items-center justify-between border-b border-dashed last:border-b-0">
+            <label className="text-xs font-medium text-muted-foreground">分发费率</label>
+            <div className="flex items-right gap-1">
+              <Input
+                type="number"
+                step="1"
+                min="0"
+                max="100"
+                value={
+                  editData.distribute_rate !== undefined
+                    ? (parseFloat(editData.distribute_rate.toString()) * 100).toString()
+                    : (config?.distribute_rate ? (parseFloat(config.distribute_rate.toString()) * 100).toString() : '')
+                }
+                placeholder={editData.distribute_rate === undefined && !config?.distribute_rate ? '必需' : ''}
+                onChange={(e) => {
+                  const value = e.target.value
+                  if (value === '') {
+                    onEditDataChange('distribute_rate', '0')
+                    return
+                  }
+
+                  const numValue = parseInt(value)
+                  if (isNaN(numValue)) {
+                    return
+                  }
+
+                  if (numValue >= 0 && numValue <= 100) {
+                    onEditDataChange('distribute_rate', (numValue / 100).toString())
+                  }
+                }}
+                className="text-xs text-right h-4 w-16 px-0 mr-3 rounded-none border-none shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-[12px]"
+              />
+              <p className="text-xs text-muted-foreground">%</p>
+            </div>
+          </div>
+
           <div className="px-3 py-2 flex items-center justify-between">
             <label className="text-xs font-medium text-muted-foreground">每日支付上限</label>
             <div className="flex items-center gap-1">
@@ -315,6 +361,7 @@ export function UserPayConfigs() {
         { header: "每日限额", cell: (item) => item.daily_limit ? `LDC ${ item.daily_limit.toLocaleString() }` : "无限制", width: "min-w-[200px]", align: "left" },
         { header: "费率", cell: (item) => `${ (Number(item.fee_rate) * 100).toFixed(2) }%`, width: "min-w-[200px]", align: "left" },
         { header: "分数转化率", cell: (item) => `${ (Number(item.score_rate) * 100).toFixed(2) }%`, width: "min-w-[200px]", align: "left" },
+        { header: "分发费率", cell: (item) => `${ (Number(item.distribute_rate) * 100).toFixed(2) }%`, width: "min-w-[200px]", align: "left" },
         { header: "更新时间", cell: (item) => <span className="text-muted-foreground">{formatDateTime(item.updated_at)}</span>, width: "min-w-[200px]", align: "left" },
       ]}
       renderDetail={({ selected, hovered, editData, onEditDataChange, onSave, saving }) => (

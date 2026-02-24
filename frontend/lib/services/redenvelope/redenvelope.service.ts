@@ -1,4 +1,5 @@
 import { BaseService } from '../core/base.service';
+import type { UploadImageResponse } from '../upload/types';
 import type {
   CreateRedEnvelopeRequest,
   CreateRedEnvelopeResponse,
@@ -72,7 +73,7 @@ export class RedEnvelopeService extends BaseService {
    * ```
    */
   static async getDetail(id: string): Promise<RedEnvelopeDetailResponse> {
-    return this.get<RedEnvelopeDetailResponse>(`/${id}`);
+    return this.get<RedEnvelopeDetailResponse>(`/${ id }`);
   }
 
   /**
@@ -92,5 +93,16 @@ export class RedEnvelopeService extends BaseService {
    */
   static async getList(params: RedEnvelopeListParams): Promise<RedEnvelopeListResponse> {
     return this.post<RedEnvelopeListResponse>('/list', params);
+  }
+
+  /**
+   * 获取用户历史红包封面
+   * @param type - 封面类型 (cover: 背景封面, heterotypic: 异形装饰)
+   * @returns 历史封面列表
+   */
+  static async listCovers(
+    type: 'cover' | 'heterotypic'
+  ): Promise<UploadImageResponse[]> {
+    return this.get<UploadImageResponse[]>('/covers', { type });
   }
 }

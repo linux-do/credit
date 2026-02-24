@@ -340,7 +340,7 @@ export interface RefundMerchantOrderResponse {
  */
 export interface MerchantDistributeRequest {
   /** 接收用户 ID (必填) */
-  user_id: string;
+  user_id: number;
   /** 接收用户名,用于验证 (必填) */
   username: string;
   /** 分发金额 (必填) */

@@ -22,6 +22,11 @@ const nextConfig: NextConfig = {
         source: '/lpay/distribute',
         destination: `${ backendUrl }/pay/distribute`,
       },
+      // 上传文件静态资源
+      {
+        source: '/f/:id',
+        destination: `${ backendUrl }/f/:id`,
+      },
       // 标准 RESTful API 接口
       {
         source: '/api/:path*',

@@ -39,20 +39,22 @@ const (
 
 // RedEnvelope 红包
 type RedEnvelope struct {
-	ID               uint64            `json:"id,string" gorm:"primaryKey"`
-	CreatorID        uint64            `json:"creator_id,string" gorm:"index;not null"`
-	CreatorUsername  string            `json:"creator_username" gorm:"-:migration;->"`
-	CreatorAvatarURL string            `json:"creator_avatar_url" gorm:"-:migration;->"`
-	Type             RedEnvelopeType   `json:"type" gorm:"type:varchar(20);not null"`
-	TotalAmount      decimal.Decimal   `json:"total_amount" gorm:"type:numeric(20,2);not null"`
-	RemainingAmount  decimal.Decimal   `json:"remaining_amount" gorm:"type:numeric(20,2);not null"`
-	TotalCount       int               `json:"total_count" gorm:"not null"`
-	RemainingCount   int               `json:"remaining_count" gorm:"not null"`
-	Greeting         string            `json:"greeting" gorm:"size:100"`
-	Status           RedEnvelopeStatus `json:"status" gorm:"type:varchar(20);not null"`
-	ExpiresAt        time.Time         `json:"expires_at" gorm:"not null;index"`
-	CreatedAt        time.Time         `json:"created_at" gorm:"autoCreateTime"`
-	UpdatedAt        time.Time         `json:"updated_at" gorm:"autoUpdateTime"`
+	ID                  uint64            `json:"id,string" gorm:"primaryKey"`
+	CreatorID           uint64            `json:"creator_id,string" gorm:"index;not null"`
+	CreatorUsername     string            `json:"creator_username" gorm:"-:migration;->"`
+	CreatorAvatarURL    string            `json:"creator_avatar_url" gorm:"-:migration;->"`
+	Type                RedEnvelopeType   `json:"type" gorm:"type:varchar(20);not null"`
+	TotalAmount         decimal.Decimal   `json:"total_amount" gorm:"type:numeric(20,2);not null"`
+	RemainingAmount     decimal.Decimal   `json:"remaining_amount" gorm:"type:numeric(20,2);not null"`
+	TotalCount          int               `json:"total_count" gorm:"not null"`
+	RemainingCount      int               `json:"remaining_count" gorm:"not null"`
+	Greeting            string            `json:"greeting" gorm:"size:100"`
+	Status              RedEnvelopeStatus `json:"status" gorm:"type:varchar(20);not null"`
+	CoverUploadID       *uint64           `json:"cover_upload_id,string,omitempty" gorm:"index"`
+	HeterotypicUploadID *uint64           `json:"heterotypic_upload_id,string,omitempty" gorm:"index"`
+	ExpiresAt           time.Time         `json:"expires_at" gorm:"not null;index"`
+	CreatedAt           time.Time         `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt           time.Time         `json:"updated_at" gorm:"autoUpdateTime"`
 }
 
 // RedEnvelopeClaim 红包领取记录

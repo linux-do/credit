@@ -36,6 +36,7 @@ import (
 	"github.com/linux-do/credit/internal/apps/merchant/api_key"
 	"github.com/linux-do/credit/internal/apps/merchant/link"
 	"github.com/linux-do/credit/internal/apps/redenvelope"
+	"github.com/linux-do/credit/internal/apps/upload"
 	"github.com/linux-do/credit/internal/listener"
 	"github.com/linux-do/credit/internal/util"
 
@@ -112,6 +113,9 @@ func Serve() {
 	// 商户分发接口
 	r.POST("/pay/distribute", payment.RequireMerchantAuth(), payment.MerchantDistribute)
 
+	// Serve files by ID
+	r.GET("/f/:id", upload.ServeFileByID)
+
 	apiGroup := r.Group(config.Config.App.APIPrefix)
 	{
 		if !config.Config.App.IsProduction() {
@@ -179,10 +183,18 @@ func Serve() {
 			// Red Envelope
 			redEnvelopeRouter := apiV1Router.Group("/redenvelope")
 			{
+				redEnvelopeRouter.GET("/covers", oauth.LoginRequired(), upload.ListRedEnvelopeCovers)
 				redEnvelopeRouter.GET("/:id", oauth.LoginRequired(), redenvelope.CheckRedEnvelopeEnabled(), redenvelope.GetDetail)
 				redEnvelopeRouter.POST("/create", oauth.LoginRequired(), redenvelope.CheckRedEnvelopeEnabled(), redenvelope.Create)
 				redEnvelopeRouter.POST("/claim", oauth.LoginRequired(), redenvelope.CheckRedEnvelopeEnabled(), redenvelope.Claim)
 				redEnvelopeRouter.POST("/list", oauth.LoginRequired(), redenvelope.CheckRedEnvelopeEnabled(), redenvelope.List)
+			}
+
+			// Upload
+			uploadRouter := apiV1Router.Group("/upload")
+			uploadRouter.Use(oauth.LoginRequired())
+			{
+				uploadRouter.POST("/redenvelope/cover", upload.UploadRedEnvelopeCover)
 			}
 
 			// Config (public)

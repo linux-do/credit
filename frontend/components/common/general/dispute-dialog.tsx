@@ -353,6 +353,40 @@ export function ViewDisputeHistoryDialog({ order }: { order: Order }) {
   const [disputeHistory, setDisputeHistory] = useState<Dispute | null>(null)
   const [fetchingHistory, setFetchingHistory] = useState(false)
 
+  const disputeConfig = React.useMemo(() => {
+    switch (order.status) {
+      case 'refused':
+        return {
+          tooltip: '争议已拒绝，点击查看',
+          timelineText: '服务方驳回争议',
+          isRed: true,
+          showTimestamp: true,
+          showContent: false,
+          content: null
+        }
+      case 'refund':
+        return {
+          tooltip: '争议已退款',
+          timelineText: '服务方已退款',
+          isRed: false,
+          showTimestamp: true,
+          showContent: true,
+          content: '退款已完成'
+        }
+      case 'disputing':
+        return {
+          tooltip: '争议处理中，点击查看',
+          timelineText: '争议进行中，等待服务方处理',
+          isRed: false,
+          showTimestamp: false,
+          showContent: false,
+          content: null
+        }
+    }
+  }, [order.status])
+
+  if (!disputeConfig) return null
+
   const resetForm = () => {
     setDisputeHistory(null)
   }
@@ -417,7 +451,7 @@ export function ViewDisputeHistoryDialog({ order }: { order: Order }) {
           </Button>
         </TooltipTrigger>
         <TooltipContent side="top">
-          <p>争议已拒绝，点击查看</p>
+          <p>{disputeConfig.tooltip}</p>
         </TooltipContent>
       </Tooltip>
       <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -447,15 +481,30 @@ export function ViewDisputeHistoryDialog({ order }: { order: Order }) {
               </div>
 
               <div className="relative">
-                <div className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-destructive ring-4 ring-background" />
+                <div className={`absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full ${ disputeConfig.isRed ? 'bg-destructive' : 'bg-primary' } ring-4 ring-background`} />
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-destructive">服务方驳回争议</span>
-                    <span className="text-xs text-muted-foreground">{formatDateTime(disputeHistory.updated_at)}</span>
+                    <span className={`text-sm font-medium ${ disputeConfig.isRed ? 'text-destructive' : '' }`}>
+                      {disputeConfig.timelineText}
+                    </span>
+                    {disputeConfig.showTimestamp && (
+                      <span className="text-xs text-muted-foreground">
+                        {formatDateTime(disputeHistory.updated_at)}
+                      </span>
+                    )}
                   </div>
-                  <div className="text-sm text-muted-foreground bg-destructive/5 border border-destructive/10 p-3 rounded-md">
-                    {parseDisputeReason(disputeHistory.reason).merchantReason || "未提供拒绝理由"}
-                  </div>
+
+                  {order.status === 'refused' && (
+                    <div className="text-sm text-muted-foreground bg-destructive/5 border border-destructive/10 p-3 rounded-md">
+                      {parseDisputeReason(disputeHistory.reason).merchantReason || "未提供拒绝理由"}
+                    </div>
+                  )}
+
+                  {order.status === 'refund' && disputeConfig.showContent && disputeConfig.content && (
+                    <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
+                      {disputeConfig.content}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

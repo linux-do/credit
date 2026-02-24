@@ -38,11 +38,13 @@ import (
 
 // CreateRequest 创建红包请求
 type CreateRequest struct {
-	Type        model.RedEnvelopeType `json:"type" binding:"required,oneof=fixed random"`
-	TotalAmount decimal.Decimal       `json:"total_amount" binding:"required"`
-	TotalCount  int                   `json:"total_count" binding:"required,min=1"`
-	Greeting    string                `json:"greeting" binding:"max=100"`
-	PayKey      string                `json:"pay_key" binding:"required,max=10"`
+	Type                model.RedEnvelopeType `json:"type" binding:"required,oneof=fixed random"`
+	TotalAmount         decimal.Decimal       `json:"total_amount" binding:"required"`
+	TotalCount          int                   `json:"total_count" binding:"required,min=1"`
+	Greeting            string                `json:"greeting" binding:"max=100"`
+	PayKey              string                `json:"pay_key" binding:"required,max=10"`
+	CoverUploadID       *uint64               `json:"cover_upload_id,string" binding:"omitempty"`
+	HeterotypicUploadID *uint64               `json:"heterotypic_upload_id,string" binding:"omitempty"`
 }
 
 // CreateResponse 创建红包响应
@@ -57,13 +59,13 @@ type ClaimRequest struct {
 
 // ClaimResponse 领取红包响应
 type ClaimResponse struct {
-	Amount      decimal.Decimal    `json:"amount"`
-	RedEnvelope *model.RedEnvelope `json:"red_envelope"`
+	Amount      decimal.Decimal   `json:"amount"`
+	RedEnvelope model.RedEnvelope `json:"red_envelope"`
 }
 
 // DetailResponse 红包详情响应
 type DetailResponse struct {
-	RedEnvelope *model.RedEnvelope       `json:"red_envelope"`
+	RedEnvelope model.RedEnvelope        `json:"red_envelope"`
 	Claims      []model.RedEnvelopeClaim `json:"claims"`
 	UserClaimed *model.RedEnvelopeClaim  `json:"user_claimed,omitempty"`
 }
@@ -188,6 +190,43 @@ func Create(c *gin.Context) {
 	var redEnvelope model.RedEnvelope
 
 	if err := db.DB(c.Request.Context()).Transaction(func(tx *gorm.DB) error {
+		var coverUploadID *uint64
+		var heterotypicUploadID *uint64
+
+		if req.CoverUploadID != nil {
+			var coverUpload model.Upload
+			if err := tx.Where("id = ? AND status IN (?, ?) AND user_id = ? AND type = ?", *req.CoverUploadID, model.UploadStatusPending, model.UploadStatusUsed, currentUser.ID, model.UploadTypeCover).
+				First(&coverUpload).Error; err != nil {
+				return errors.New(InvalidCoverImage)
+			}
+
+			if coverUpload.Status == model.UploadStatusPending {
+				if err := tx.Model(&model.Upload{}).
+					Where("id = ? AND status = ?", coverUpload.ID, model.UploadStatusPending).
+					Update("status", model.UploadStatusUsed).Error; err != nil {
+					return err
+				}
+			}
+			coverUploadID = &coverUpload.ID
+		}
+
+		if req.HeterotypicUploadID != nil {
+			var heterotypicUpload model.Upload
+			if err := tx.Where("id = ? AND status IN (?, ?) AND user_id = ? AND type = ?", *req.HeterotypicUploadID, model.UploadStatusPending, model.UploadStatusUsed, currentUser.ID, model.UploadTypeHeterotypic).
+				First(&heterotypicUpload).Error; err != nil {
+				return errors.New(InvalidHeterotypicImage)
+			}
+
+			if heterotypicUpload.Status == model.UploadStatusPending {
+				if err := tx.Model(&model.Upload{}).
+					Where("id = ? AND status = ?", heterotypicUpload.ID, model.UploadStatusPending).
+					Update("status", model.UploadStatusUsed).Error; err != nil {
+					return err
+				}
+			}
+			heterotypicUploadID = &heterotypicUpload.ID
+		}
+
 		// 扣减发送者余额并更新total_payment
 		if err := service.UpdateBalance(tx, service.BalanceUpdateOptions{
 			UserID:       currentUser.ID,
@@ -201,16 +240,18 @@ func Create(c *gin.Context) {
 
 		// 创建红包
 		redEnvelope = model.RedEnvelope{
-			ID:              idgen.NextUint64ID(),
-			CreatorID:       currentUser.ID,
-			Type:            req.Type,
-			TotalAmount:     req.TotalAmount,
-			RemainingAmount: req.TotalAmount,
-			TotalCount:      req.TotalCount,
-			RemainingCount:  req.TotalCount,
-			Greeting:        req.Greeting,
-			Status:          model.RedEnvelopeStatusActive,
-			ExpiresAt:       time.Now().Add(24 * time.Hour),
+			ID:                  idgen.NextUint64ID(),
+			CreatorID:           currentUser.ID,
+			Type:                req.Type,
+			TotalAmount:         req.TotalAmount,
+			RemainingAmount:     req.TotalAmount,
+			TotalCount:          req.TotalCount,
+			RemainingCount:      req.TotalCount,
+			Greeting:            req.Greeting,
+			Status:              model.RedEnvelopeStatusActive,
+			CoverUploadID:       coverUploadID,
+			HeterotypicUploadID: heterotypicUploadID,
+			ExpiresAt:           time.Now().Add(24 * time.Hour),
 		}
 
 		if err := tx.Create(&redEnvelope).Error; err != nil {
@@ -242,6 +283,8 @@ func Create(c *gin.Context) {
 	}); err != nil {
 		if err.Error() == common.InsufficientBalance {
 			c.JSON(http.StatusBadRequest, util.Err(common.InsufficientBalance))
+		} else if err.Error() == InvalidCoverImage || err.Error() == InvalidHeterotypicImage {
+			c.JSON(http.StatusBadRequest, util.Err(err.Error()))
 		} else {
 			c.JSON(http.StatusInternalServerError, util.Err(err.Error()))
 		}
@@ -382,9 +425,19 @@ func Claim(c *gin.Context) {
 		return
 	}
 
+	var redEnvelopeView model.RedEnvelope
+	if err := db.DB(c.Request.Context()).
+		Model(&model.RedEnvelope{}).
+		Select("red_envelopes.*, users.username as creator_username, users.avatar_url as creator_avatar_url").
+		Joins("LEFT JOIN users ON red_envelopes.creator_id = users.id").
+		Where("red_envelopes.id = ?", redEnvelope.ID).First(&redEnvelopeView).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, util.Err(err.Error()))
+		return
+	}
+
 	c.JSON(http.StatusOK, util.OK(ClaimResponse{
 		Amount:      claimedAmount,
-		RedEnvelope: &redEnvelope,
+		RedEnvelope: redEnvelopeView,
 	}))
 }
 
@@ -406,6 +459,7 @@ func GetDetail(c *gin.Context) {
 
 	var redEnvelope model.RedEnvelope
 	if err := db.DB(c.Request.Context()).
+		Model(&model.RedEnvelope{}).
 		Select("red_envelopes.*, users.username as creator_username, users.avatar_url as creator_avatar_url").
 		Joins("LEFT JOIN users ON red_envelopes.creator_id = users.id").
 		Where("red_envelopes.id = ?", redEnvelopeID).First(&redEnvelope).Error; err != nil {
@@ -436,7 +490,7 @@ func GetDetail(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, util.OK(DetailResponse{
-		RedEnvelope: &redEnvelope,
+		RedEnvelope: redEnvelope,
 		Claims:      claims,
 		UserClaimed: userClaimed,
 	}))

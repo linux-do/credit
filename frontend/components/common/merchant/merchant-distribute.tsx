@@ -19,18 +19,20 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Spinner } from "@/components/ui/spinner"
-import { MerchantService } from "@/lib/services"
+import { MerchantService, type MerchantAPIKey } from "@/lib/services"
 
 interface DistributeDialogProps {
   /** 自定义触发器 */
   trigger?: React.ReactNode
+  /** 商户凭证 */
+  apiKey?: Pick<MerchantAPIKey, "client_id" | "client_secret">
 }
 
 /**
  * 商户分发对话框
  * 商户向用户分发积分
  */
-export function DistributeDialog({ trigger }: DistributeDialogProps) {
+export function DistributeDialog({ trigger, apiKey }: DistributeDialogProps) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
 
@@ -88,11 +90,19 @@ export function DistributeDialog({ trigger }: DistributeDialogProps) {
     try {
       setLoading(true)
 
+      if (!apiKey?.client_id || !apiKey?.client_secret) {
+        toast.error('缺少应用凭证', { description: '请先创建应用并确认凭证可用' })
+        return
+      }
+
       const result = await MerchantService.distribute({
-        user_id: userId.trim(),
+        user_id: Number(userId.trim()),
         username: username.trim(),
         amount: amountNum,
         remark: remark.trim() || undefined,
+      }, {
+        client_id: apiKey.client_id,
+        client_secret: apiKey.client_secret,
       })
 
       toast.success('分发成功', {
