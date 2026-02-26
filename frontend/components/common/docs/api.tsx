@@ -19,14 +19,113 @@ export const DOCS_LAST_UPDATED = "2026-01-07"
 export const apiSections: PolicySection[] = [
   {
     value: "official-service",
-    title: "1. 官方服务接口",
+    title: "1. 官方 LDC 接口",
     content: (
       <div className="space-y-4 text-sm leading-relaxed">
-        <div className="bg-muted/50 border border-border/50 rounded-lg px-3 py-2">
-          <p className="text-muted-foreground m-0">官方服务接口暂未上线，敬请期待</p>
+        <div className="bg-muted/50 border border-border/50 rounded-lg px-3 py-2 mb-6">
+          <p className="text-muted-foreground m-0">官方原生接口，使用 Ed25519 签名算法，安全性更高</p>
         </div>
+
+        <h3 id="1-1-overview" className="text-base md:text-lg font-semibold text-foreground mt-6 md:mt-8 mb-3 md:mb-4">1.1 概览</h3>
+        <ul className="list-disc pl-4 md:pl-5 space-y-2">
+          <li><strong>协议：</strong>官方 LDC 支付协议</li>
+          <li><strong>服务类型：</strong>支持 <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">type=ldcpay</code></li>
+          <li><strong>网关基址：</strong><code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">https://credit.linux.do/epay</code></li>
+          <li><strong>签名方式：</strong>Ed25519 非对称加密</li>
+        </ul>
+
+        <h3 id="1-2-flow" className="text-base md:text-lg font-semibold text-foreground mt-6 md:mt-8 mb-3 md:mb-4">1.2 对接流程</h3>
+        <ol className="list-decimal pl-4 md:pl-5 space-y-2">
+          <li>控制台创建应用，配置 <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">client_id</code> 并在应用设置中上传商户 Ed25519 公钥</li>
+          <li>根据“签名算法”及商户私钥生成 <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">sign</code></li>
+          <li>调用 <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">/pay/submit</code> 发起积分流转请求</li>
+          <li>认证完成后，通过异步回调或轮询接口同步状态</li>
+        </ol>
+
+        <h3 id="1-3-auth-sign" className="text-base md:text-lg font-semibold text-foreground mt-6 md:mt-8 mb-3 md:mb-4">1.3 鉴权与签名</h3>
+        <h4 className="font-medium text-foreground mt-3 md:mt-4 mb-2">1.3.1 签名算法</h4>
+        <div className="space-y-4">
+          <ol className="list-decimal pl-4 md:pl-5 space-y-2">
+            <li>取除 <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">sign</code> 以外的所有非空请求参数</li>
+            <li>将参数按参数名 ASCII 码从到大排序（字典序）</li>
+            <li>使用 <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">k1=v1&k2=v2...</code> 格式拼接成字符串</li>
+            <li>将 <strong>应用密钥 (Client Secret)</strong> 直接追加到字符串末尾</li>
+            <li>使用商户私钥对最终字符串进行 <strong>Ed25519</strong> 签名</li>
+            <li>将签名结果转换成 Base64 编码作为 <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">sign</code> 参数</li>
+          </ol>
+          <CodeBlock
+            code={`// 示例：client_id=1&money=10.00&order_name=Test&out_trade_no=M1&type=ldcpay{SECRET}
+data = "client_id=1&money=10.00&order_name=Test&out_trade_no=M1&type=ldcpay" + client_secret
+signature = ed25519.Sign(privateKey, []byte(data))
+signBase64 = base64.StdEncoding.EncodeToString(signature)`}
+            language="javascript"
+          />
+        </div>
+
+        <h3 id="1-4-submit" className="text-base md:text-lg font-semibold text-foreground mt-6 md:mt-8 mb-3 md:mb-4">1.4 积分流转服务</h3>
+        <ul className="list-disc pl-4 md:pl-5 space-y-2 mb-6">
+          <li><strong>方法：</strong>POST <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">/pay/submit.php</code></li>
+          <li><strong>编码：</strong><code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">application/json</code> 或 <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">application/x-www-form-urlencoded</code></li>
+        </ul>
+
+        <DocsTable>
+          <DocsTableHeader>
+            <DocsTableRow>
+              <DocsTableHead>参数</DocsTableHead>
+              <DocsTableHead>必填</DocsTableHead>
+              <DocsTableHead>说明</DocsTableHead>
+            </DocsTableRow>
+          </DocsTableHeader>
+          <DocsTableBody>
+            <DocsTableRow>
+              <DocsTableCell className="font-mono text-xs">client_id</DocsTableCell>
+              <DocsTableCell>是</DocsTableCell>
+              <DocsTableCell>应用客户端 ID</DocsTableCell>
+            </DocsTableRow>
+            <DocsTableRow>
+              <DocsTableCell className="font-mono text-xs">type</DocsTableCell>
+              <DocsTableCell>是</DocsTableCell>
+              <DocsTableCell>固定 <code className="bg-muted px-1 rounded text-xs before:content-none after:content-none">ldcpay</code></DocsTableCell>
+            </DocsTableRow>
+            <DocsTableRow>
+              <DocsTableCell className="font-mono text-xs">out_trade_no</DocsTableCell>
+              <DocsTableCell>是</DocsTableCell>
+              <DocsTableCell>业务单号</DocsTableCell>
+            </DocsTableRow>
+            <DocsTableRow>
+              <DocsTableCell className="font-mono text-xs">money</DocsTableCell>
+              <DocsTableCell>是</DocsTableCell>
+              <DocsTableCell>积分数量，必须保留两位小数（比如，10.00）</DocsTableCell>
+            </DocsTableRow>
+            <DocsTableRow>
+              <DocsTableCell className="font-mono text-xs">order_name</DocsTableCell>
+              <DocsTableCell>是</DocsTableCell>
+              <DocsTableCell>商品名称</DocsTableCell>
+            </DocsTableRow>
+            <DocsTableRow>
+              <DocsTableCell className="font-mono text-xs">sign</DocsTableCell>
+              <DocsTableCell>是</DocsTableCell>
+              <DocsTableCell>按“签名算法”生成的 Base64 签名串</DocsTableCell>
+            </DocsTableRow>
+          </DocsTableBody>
+        </DocsTable>
+
+        <h3 id="1-5-others" className="text-base md:text-lg font-semibold text-foreground mt-6 md:mt-8 mb-3 md:mb-4">1.5 其他接口</h3>
+        <p className="text-muted-foreground mb-4">其他接口定义请参考 <a href="#3-common-services" className="text-primary underline underline-offset-4">3. 其他接口</a>。</p>
+        <ul className="list-disc pl-4 md:pl-5 space-y-2">
+          <li><strong>订单查询：</strong>详见 <a href="#3-1-order" className="text-primary underline underline-offset-4">3.1 订单查询</a></li>
+          <li><strong>订单退款：</strong>详见 <a href="#3-2-refund" className="text-primary underline underline-offset-4">3.2 订单退款</a></li>
+          <li><strong>异步通知：</strong>详见 <a href="#3-3-notify" className="text-primary underline underline-offset-4">3.3 异步通知</a></li>
+        </ul>
       </div>
     ),
+    children: [
+      { value: "1-1-overview", title: "1.1 概览" },
+      { value: "1-2-flow", title: "1.2 对接流程" },
+      { value: "1-3-auth-sign", title: "1.3 鉴权与签名" },
+      { value: "1-4-submit", title: "1.4 积分流转服务" },
+      { value: "1-5-others", title: "1.5 其他接口" },
+    ]
   },
   {
     value: "epay-compatibility",
@@ -90,7 +189,7 @@ sign=$(echo -n "\${payload}\${SECRET}" | md5)  # 输出小写`}
         <h3 id="2-5-submit" className="text-base md:text-lg font-semibold text-foreground mt-6 md:mt-8 mb-3 md:mb-4">2.5 积分流转服务</h3>
         <ul className="list-disc pl-4 md:pl-5 space-y-2 mb-6">
           <li><strong>方法：</strong>POST <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">/pay/submit.php</code></li>
-          <li><strong>编码：</strong><code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">application/x-www-form-urlencoded</code></li>
+          <li><strong>编码：</strong><code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">application/json</code> 或 <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">application/x-www-form-urlencoded</code></li>
           <li><strong>成功：</strong>验签通过后，平台自动创建积分流转服务，并跳转到认证界面（Location=<code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">https://credit.linux.do/paying?order_no=...</code>）</li>
           <li><strong>失败：</strong>返回 JSON <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">{`{"error_msg":"...", "data":null}`}</code></li>
         </ul>
@@ -171,7 +270,34 @@ sign=$(echo -n "\${payload}\${SECRET}" | md5)  # 输出小写`}
           language="bash"
         />
 
-        <h3 id="2-6-order" className="text-base md:text-lg font-semibold text-foreground mt-6 md:mt-8 mb-3 md:mb-4">2.6 订单查询</h3>
+        <h3 id="2-6-others" className="text-base md:text-lg font-semibold text-foreground mt-6 md:mt-8 mb-3 md:mb-4">2.6 其他接口</h3>
+        <p className="text-muted-foreground mb-4">其他接口定义请参考 <a href="#3-common-services" className="text-primary underline underline-offset-4">3. 其他接口</a>。</p>
+        <ul className="list-disc pl-4 md:pl-5 space-y-2">
+          <li><strong>订单查询：</strong>详见 <a href="#3-1-order" className="text-primary underline underline-offset-4">3.1 订单查询</a></li>
+          <li><strong>订单退款：</strong>详见 <a href="#3-2-refund" className="text-primary underline underline-offset-4">3.2 订单退款</a></li>
+          <li><strong>异步通知：</strong>详见 <a href="#3-3-notify" className="text-primary underline underline-offset-4">3.3 异步通知</a></li>
+        </ul>
+      </div>
+    ),
+    children: [
+      { value: "2-1-overview", title: "2.1 概览" },
+      { value: "2-2-common-errors", title: "2.2 常见错误" },
+      { value: "2-3-flow", title: "2.3 对接流程" },
+      { value: "2-4-auth-sign", title: "2.4 鉴权与签名" },
+      { value: "2-5-submit", title: "2.5 积分流转服务" },
+      { value: "2-6-others", title: "2.6 其他接口" },
+    ]
+  },
+  {
+    value: "common-services",
+    title: "3. 其他接口",
+    content: (
+      <div className="space-y-4 text-sm leading-relaxed">
+        <div className="bg-muted/50 border border-border/50 rounded-lg px-3 py-2 mb-6">
+          <p className="text-muted-foreground m-0">官方接口与易支付兼容接口公用接口。</p>
+        </div>
+
+        <h3 id="3-1-order" className="text-base md:text-lg font-semibold text-foreground mt-6 md:mt-8 mb-3 md:mb-4">3.1 订单查询</h3>
         <ul className="list-disc pl-4 md:pl-5 space-y-2 mb-6">
           <li><strong>方法：</strong>GET <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">/api.php</code></li>
           <li><strong>认证：</strong><code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">pid</code> + <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">key</code></li>
@@ -229,7 +355,7 @@ sign=$(echo -n "\${payload}\${SECRET}" | md5)  # 输出小写`}
         />
         <p className="text-muted-foreground text-xs"><strong className="text-foreground">补充：</strong><code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">status</code> 1=成功，0=失败/处理中；不存在会返回 HTTP 404 且 <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">{`{"code":-1,"msg":"服务不存在或已完成"}`}</code>。</p>
 
-        <h3 id="2-7-refund" className="text-base md:text-lg font-semibold text-foreground mt-6 md:mt-8 mb-3 md:mb-4">2.7 订单退款</h3>
+        <h3 id="3-2-refund" className="text-base md:text-lg font-semibold text-foreground mt-6 md:mt-8 mb-3 md:mb-4">3.2 订单退款</h3>
         <ul className="list-disc pl-4 md:pl-5 space-y-2 mb-6">
           <li><strong>方法：</strong>POST <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">/api.php</code></li>
           <li><strong>编码：</strong><code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">application/json</code> 或 <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">application/x-www-form-urlencoded</code></li>
@@ -280,7 +406,7 @@ sign=$(echo -n "\${payload}\${SECRET}" | md5)  # 输出小写`}
         <p className="text-muted-foreground text-xs"><strong className="text-foreground">常见失败：</strong>服务不存在/未认证、金额不合法（&lt;=0 或小数超过 2 位）。</p>
 
 
-        <h3 id="2-8-notify" className="text-base md:text-lg font-semibold text-foreground mt-6 md:mt-8 mb-3 md:mb-4">2.8 异步通知（认证成功）</h3>
+        <h3 id="3-3-notify" className="text-base md:text-lg font-semibold text-foreground mt-6 md:mt-8 mb-3 md:mb-4">3.3 异步通知</h3>
         <ul className="list-disc pl-4 md:pl-5 space-y-2 mb-6">
           <li><strong>触发：</strong>认证成功后；失败自动重试，最多 5 次（单次 30s 超时）</li>
           <li><strong>目标：</strong>创建应用时设置的 notify_url</li>
@@ -325,10 +451,6 @@ sign=$(echo -n "\${payload}\${SECRET}" | md5)  # 输出小写`}
                 <DocsTableCell>固定 <code className="bg-muted px-1 rounded text-xs before:content-none after:content-none">TRADE_SUCCESS</code></DocsTableCell>
               </DocsTableRow>
               <DocsTableRow>
-                <DocsTableCell className="font-mono text-xs">sign_type</DocsTableCell>
-                <DocsTableCell><code className="bg-muted px-1 rounded text-xs before:content-none after:content-none">MD5</code></DocsTableCell>
-              </DocsTableRow>
-              <DocsTableRow>
                 <DocsTableCell className="font-mono text-xs">sign</DocsTableCell>
                 <DocsTableCell>按“签名算法”生成</DocsTableCell>
               </DocsTableRow>
@@ -336,17 +458,58 @@ sign=$(echo -n "\${payload}\${SECRET}" | md5)  # 输出小写`}
           </DocsTable>
         </div>
         <p className="text-muted-foreground text-xs">应用需返回 HTTP 200 且响应体为 <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">success</code>（大小写不敏感），否则视为失败并继续重试。</p>
+
+        <h3 id="3-4-distribute" className="text-base md:text-lg font-semibold text-foreground mt-6 md:mt-8 mb-3 md:mb-4">3.4 商户分发接口</h3>
+        <ul className="list-disc pl-4 md:pl-5 space-y-2 mb-6">
+          <li><strong>方法：</strong>POST <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">/pay/distribute</code></li>
+          <li><strong>编码：</strong><code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">application/json</code></li>
+          <li><strong>认证：</strong>Basic Auth (使用 <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">client_id:client_secret</code> 进行 Base64 编码)</li>
+        </ul>
+
+        <DocsTable>
+          <DocsTableHeader>
+            <DocsTableRow>
+              <DocsTableHead>参数</DocsTableHead>
+              <DocsTableHead>必填</DocsTableHead>
+              <DocsTableHead>说明</DocsTableHead>
+            </DocsTableRow>
+          </DocsTableHeader>
+          <DocsTableBody>
+            <DocsTableRow>
+              <DocsTableCell className="font-mono text-xs">user_id</DocsTableCell>
+              <DocsTableCell>是</DocsTableCell>
+              <DocsTableCell>收款人用户 ID (数字)</DocsTableCell>
+            </DocsTableRow>
+            <DocsTableRow>
+              <DocsTableCell className="font-mono text-xs">username</DocsTableCell>
+              <DocsTableCell>是</DocsTableCell>
+              <DocsTableCell>收款人用户名 (用于二次校验)</DocsTableCell>
+            </DocsTableRow>
+            <DocsTableRow>
+              <DocsTableCell className="font-mono text-xs">amount</DocsTableCell>
+              <DocsTableCell>是</DocsTableCell>
+              <DocsTableCell>分发积分数量，最多 2 位小数</DocsTableCell>
+            </DocsTableRow>
+            <DocsTableRow>
+              <DocsTableCell className="font-mono text-xs">out_trade_no</DocsTableCell>
+              <DocsTableCell>否</DocsTableCell>
+              <DocsTableCell>商户自定义单号</DocsTableCell>
+            </DocsTableRow>
+            <DocsTableRow>
+              <DocsTableCell className="font-mono text-xs">remark</DocsTableCell>
+              <DocsTableCell>否</DocsTableCell>
+              <DocsTableCell>分发备注</DocsTableCell>
+            </DocsTableRow>
+          </DocsTableBody>
+        </DocsTable>
+        <p className="text-muted-foreground text-xs"><strong className="text-foreground">成功响应：</strong><code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">{`{"code":1, "data":{"trade_no":"...", "out_trade_no":"..."}}`}</code></p>
       </div>
     ),
     children: [
-      { value: "2-1-overview", title: "2.1 概览" },
-      { value: "2-2-common-errors", title: "2.2 常见错误" },
-      { value: "2-3-flow", title: "2.3 对接流程" },
-      { value: "2-4-auth-sign", title: "2.4 鉴权与签名" },
-      { value: "2-5-submit", title: "2.5 积分流转服务" },
-      { value: "2-6-order", title: "2.6 订单查询" },
-      { value: "2-7-refund", title: "2.7 订单退款" },
-      { value: "2-8-notify", title: "2.8 异步通知" },
+      { value: "3-1-order", title: "3.1 订单查询" },
+      { value: "3-2-refund", title: "3.2 订单退款" },
+      { value: "3-3-notify", title: "3.3 异步通知" },
+      { value: "3-4-distribute", title: "3.4 商户分发接口" },
     ]
   },
 ]

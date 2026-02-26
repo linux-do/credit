@@ -22,6 +22,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/linux-do/credit/internal/apps/merchant"
 	"github.com/linux-do/credit/internal/apps/oauth"
+	"github.com/linux-do/credit/internal/apps/payment"
 	"github.com/linux-do/credit/internal/db"
 	"github.com/linux-do/credit/internal/model"
 	"github.com/linux-do/credit/internal/util"
@@ -33,6 +34,7 @@ type CreateAPIKeyRequest struct {
 	AppDescription string `json:"app_description" binding:"max=100"`
 	RedirectURI    string `json:"redirect_uri" binding:"omitempty,max=100,url"`
 	NotifyURL      string `json:"notify_url" binding:"required,max=100,url"`
+	PublicKey      string `json:"public_key" binding:"omitempty,max=100"`
 	TestMode       bool   `json:"test_mode"`
 }
 
@@ -42,6 +44,7 @@ type UpdateAPIKeyRequest struct {
 	AppDescription string `json:"app_description" binding:"omitempty,max=100"`
 	RedirectURI    string `json:"redirect_uri" binding:"omitempty,max=100,url"`
 	NotifyURL      string `json:"notify_url" binding:"omitempty,max=100,url"`
+	PublicKey      string `json:"public_key" binding:"omitempty,max=100"`
 	TestMode       bool   `json:"test_mode"`
 }
 
@@ -76,6 +79,19 @@ func CreateAPIKey(c *gin.Context) {
 		RedirectURI:    req.RedirectURI,
 		NotifyURL:      req.NotifyURL,
 		TestMode:       req.TestMode,
+	}
+
+	if len(req.PublicKey) > 0 {
+		publicKeyBytes, err := util.Base64Decode(req.PublicKey)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, util.Err(payment.InvalidPublicKeyFormat))
+			return
+		}
+		if len(publicKeyBytes) != 32 {
+			c.JSON(http.StatusBadRequest, util.Err(payment.InvalidPublicKeyLength))
+			return
+		}
+		apiKey.PublicKey = publicKeyBytes
 	}
 
 	if err := db.DB(c.Request.Context()).Create(&apiKey).Error; err != nil {
@@ -141,6 +157,19 @@ func UpdateAPIKey(c *gin.Context) {
 		"redirect_uri":     req.RedirectURI,
 		"notify_url":       req.NotifyURL,
 		"test_mode":        req.TestMode,
+	}
+
+	if len(req.PublicKey) > 0 {
+		publicKeyBytes, err := util.Base64Decode(req.PublicKey)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, util.Err(payment.InvalidPublicKeyFormat))
+			return
+		}
+		if len(publicKeyBytes) != 32 {
+			c.JSON(http.StatusBadRequest, util.Err(payment.InvalidPublicKeyLength))
+			return
+		}
+		updates["public_key"] = publicKeyBytes
 	}
 
 	if err := db.DB(c.Request.Context()).

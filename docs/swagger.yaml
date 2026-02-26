@@ -13,6 +13,9 @@ definitions:
       notify_url:
         maxLength: 100
         type: string
+      public_key:
+        maxLength: 100
+        type: string
       redirect_uri:
         maxLength: 100
         type: string
@@ -35,6 +38,9 @@ definitions:
         maxLength: 20
         type: string
       notify_url:
+        maxLength: 100
+        type: string
+      public_key:
         maxLength: 100
         type: string
       redirect_uri:

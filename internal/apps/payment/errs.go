@@ -17,12 +17,14 @@ limitations under the License.
 package payment
 
 const (
-	OrderNotFound        = "订单不存在或已完成"
-	OrderStatusInvalid   = "订单状态不允许支付"
-	OrderExpired         = "订单已过期"
-	MerchantInfoNotFound = "商户信息不存在"
-	RecipientNotFound    = "收款人不存在"
-	OrderNoFormatError   = "订单号格式错误"
-	CannotTransferToSelf = "不能转账给自己"
-	PayConfigNotFound    = "支付配置不存在"
+	OrderNotFound          = "订单不存在或已完成"
+	OrderStatusInvalid     = "订单状态不允许支付"
+	OrderExpired           = "订单已过期"
+	MerchantInfoNotFound   = "商户信息不存在"
+	RecipientNotFound      = "收款人不存在"
+	OrderNoFormatError     = "订单号格式错误"
+	CannotTransferToSelf   = "不能转账给自己"
+	PayConfigNotFound      = "支付配置不存在"
+	InvalidPublicKeyFormat = "公钥格式错误"
+	InvalidPublicKeyLength = "公钥长度必须为32字节"
 )
