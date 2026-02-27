@@ -53,7 +53,7 @@ type GetOrderRequest struct {
 // MerchantInfo 商户信息
 type MerchantInfo struct {
 	AppName     string `json:"app_name"`
-	RedirectURI string `json:"redirect_uri"`
+	RedirectURL string `json:"redirect_url"`
 }
 
 // GetOrderResponse 查询订单响应
@@ -495,7 +495,7 @@ func GetPaymentPageDetails(c *gin.Context) {
 		FeeRate: orderCtx.MerchantPayConfig.FeeRate,
 		Merchant: MerchantInfo{
 			AppName:     merchant.AppName,
-			RedirectURI: merchant.RedirectURI,
+			RedirectURL: merchant.RedirectURL,
 		},
 	}))
 }
