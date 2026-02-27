@@ -118,7 +118,7 @@ export function PayingOnline() {
       const mockOrderInfo: GetMerchantOrderResponse = {
         merchant: {
           app_name: data.app_name || "商户",
-          redirect_uri: data.redirect_uri || "",
+          redirect_url: data.redirect_url || "",
         },
         order: {
           id: '0',
@@ -207,9 +207,9 @@ export function PayingOnline() {
       timeoutRef.current = setTimeout(() => {
         if (!isMountedRef.current) return
 
-        const redirectUri = orderInfo?.merchant?.redirect_uri
-        if (redirectUri && redirectUri.trim()) {
-          window.location.href = redirectUri
+        const redirectUrl = orderInfo?.merchant?.redirect_url
+        if (redirectUrl && redirectUrl.trim()) {
+          window.location.href = redirectUrl
           return
         }
 
