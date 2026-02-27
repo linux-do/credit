@@ -31,7 +31,7 @@ type CreateAPIKeyRequest struct {
 	AppName        string `json:"app_name" binding:"required,max=20"`
 	AppHomepageURL string `json:"app_homepage_url" binding:"required,max=100,url"`
 	AppDescription string `json:"app_description" binding:"max=100"`
-	RedirectURI    string `json:"redirect_uri" binding:"omitempty,max=100,url"`
+	RedirectURL    string `json:"redirect_url" binding:"omitempty,max=100,url"`
 	NotifyURL      string `json:"notify_url" binding:"required,max=100,url"`
 	TestMode       bool   `json:"test_mode"`
 }
@@ -40,7 +40,7 @@ type UpdateAPIKeyRequest struct {
 	AppName        string `json:"app_name" binding:"omitempty,max=20"`
 	AppHomepageURL string `json:"app_homepage_url" binding:"omitempty,max=100,url"`
 	AppDescription string `json:"app_description" binding:"omitempty,max=100"`
-	RedirectURI    string `json:"redirect_uri" binding:"omitempty,max=100,url"`
+	RedirectURL    string `json:"redirect_url" binding:"omitempty,max=100,url"`
 	NotifyURL      string `json:"notify_url" binding:"omitempty,max=100,url"`
 	TestMode       bool   `json:"test_mode"`
 }
@@ -73,7 +73,7 @@ func CreateAPIKey(c *gin.Context) {
 		AppName:        req.AppName,
 		AppHomepageURL: req.AppHomepageURL,
 		AppDescription: req.AppDescription,
-		RedirectURI:    req.RedirectURI,
+		RedirectURL:    req.RedirectURL,
 		NotifyURL:      req.NotifyURL,
 		TestMode:       req.TestMode,
 	}
@@ -138,7 +138,7 @@ func UpdateAPIKey(c *gin.Context) {
 		"app_name":         req.AppName,
 		"app_homepage_url": req.AppHomepageURL,
 		"app_description":  req.AppDescription,
-		"redirect_uri":     req.RedirectURI,
+		"redirect_url":     req.RedirectURL,
 		"notify_url":       req.NotifyURL,
 		"test_mode":        req.TestMode,
 	}
