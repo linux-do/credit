@@ -16,7 +16,7 @@
  * const apiKey = await MerchantService.createAPIKey({
  *   app_name: '我的应用',
  *   app_homepage_url: 'https://example.com',
- *   redirect_uri: 'https://example.com/callback',
+ *   redirect_url: 'https://example.com/callback',
  *   notify_url: 'https://example.com/notify'
  * });
  * 
