@@ -351,7 +351,7 @@ function MerchantOnlineContent({ apiKeys }: MerchantOnlineContentProps) {
   const previewOrderInfo: GetMerchantOrderResponse = {
     merchant: {
       app_name: selectedKey?.app_name || "服务名称",
-      redirect_uri: "",
+      redirect_url: "",
     },
     order: {
       id: '0',
