@@ -31,7 +31,7 @@ type MerchantAPIKey struct {
 	AppName        string         `json:"app_name" gorm:"size:20;not null"`
 	AppHomepageURL string         `json:"app_homepage_url" gorm:"size:100;not null"`
 	AppDescription string         `json:"app_description" gorm:"size:100"`
-	RedirectURI    string         `json:"redirect_uri" gorm:"size:100"`
+	RedirectURL    string         `json:"redirect_url" gorm:"size:100"`
 	NotifyURL      string         `json:"notify_url" gorm:"size:100;not null"`
 	TestMode       bool           `json:"test_mode" gorm:"default:false"`
 	CreatedAt      time.Time      `json:"created_at" gorm:"autoCreateTime;index:idx_merchant_api_keys_user_created,priority:2"`
