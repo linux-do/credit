@@ -22,7 +22,7 @@ app:
 oauth2:
   client_id: "<OAUTH2_CLIENT_ID>"
   client_secret: "<OAUTH2_CLIENT_SECRET>"
-  redirect_uri: "<OAUTH2_REDIRECT_URI>"
+  redirect_url: "<OAUTH2_REDIRECT_URL>"
   issuer: "https://connect.linux.do/"  # OIDC Issuer URL，用于自动发现端点
   authorization_endpoint: "https://connect.linux.do/oauth2/authorize"
   token_endpoint: "https://connect.linux.do/oauth2/token"
