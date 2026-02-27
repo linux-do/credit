@@ -103,7 +103,7 @@ type PaymentLinkDetail struct {
 	UserLimit   *uint           `json:"user_limit"`
 	CreatedAt   time.Time       `json:"created_at"`
 	AppName     string          `json:"app_name"`
-	RedirectURI string          `json:"redirect_uri"`
+	RedirectURL string          `json:"redirect_url"`
 }
 
 // ListPaymentLinks 获取支付链接列表
@@ -118,7 +118,7 @@ func ListPaymentLinks(c *gin.Context) {
 	var paymentLinks []PaymentLinkDetail
 	if err := db.DB(c.Request.Context()).
 		Table("merchant_payment_links").
-		Select("merchant_payment_links.id, merchant_payment_links.token, merchant_payment_links.amount, merchant_payment_links.product_name, merchant_payment_links.remark, merchant_payment_links.total_limit, merchant_payment_links.user_limit, merchant_payment_links.created_at, merchant_api_keys.app_name, merchant_api_keys.redirect_uri").
+		Select("merchant_payment_links.id, merchant_payment_links.token, merchant_payment_links.amount, merchant_payment_links.product_name, merchant_payment_links.remark, merchant_payment_links.total_limit, merchant_payment_links.user_limit, merchant_payment_links.created_at, merchant_api_keys.app_name, merchant_api_keys.redirect_url").
 		Joins("JOIN merchant_api_keys ON merchant_api_keys.id = merchant_payment_links.merchant_api_key_id").
 		Where("merchant_payment_links.merchant_api_key_id = ? AND merchant_payment_links.deleted_at IS NULL", apiKey.ID).
 		Order("merchant_payment_links.created_at DESC").
@@ -140,7 +140,7 @@ func GetPaymentLinkByToken(c *gin.Context) {
 	var paymentLink PaymentLinkDetail
 	if err := db.DB(c.Request.Context()).
 		Table("merchant_payment_links").
-		Select("merchant_payment_links.id, merchant_payment_links.token, merchant_payment_links.amount, merchant_payment_links.product_name, merchant_payment_links.remark, merchant_payment_links.created_at, merchant_api_keys.app_name, merchant_api_keys.redirect_uri").
+		Select("merchant_payment_links.id, merchant_payment_links.token, merchant_payment_links.amount, merchant_payment_links.product_name, merchant_payment_links.remark, merchant_payment_links.created_at, merchant_api_keys.app_name, merchant_api_keys.redirect_url").
 		Joins("JOIN merchant_api_keys ON merchant_api_keys.id = merchant_payment_links.merchant_api_key_id").
 		Where("merchant_payment_links.token = ? AND merchant_payment_links.deleted_at IS NULL", c.Param("token")).
 		First(&paymentLink).Error; err != nil {
