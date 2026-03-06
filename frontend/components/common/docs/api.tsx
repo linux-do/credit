@@ -69,7 +69,7 @@ export const apiSections: PolicySection[] = [
         <ul className="list-disc pl-4 md:pl-5 space-y-2 mb-4">
           <li><code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">pid</code>：Client ID</li>
           <li><code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">key</code>：Client Secret（妥善保管）</li>
-          <li><code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">notify_url</code>：回调地址, 使用创建应用时设置的 <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">notify_url</code>；请求体中的 notify_url 仅参与签名，不会覆盖创建应用时设置的 notify_url。</li>
+          <li><code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">notify_url</code> / <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">return_url</code>：应用级默认回调地址（兜底）；创建订单时可在请求中传同名字段作为订单级覆盖，未传时回退应用配置。</li>
         </ul>
 
         <h4 className="font-medium text-foreground mt-3 md:mt-4 mb-2">2.4.2 签名算法</h4>
@@ -132,12 +132,12 @@ sign=$(echo -n "\${payload}\${SECRET}" | md5)  # 输出小写`}
             <DocsTableRow>
               <DocsTableCell className="font-mono text-xs">notify_url</DocsTableCell>
               <DocsTableCell>否</DocsTableCell>
-              <DocsTableCell>仅参与签名，不会覆盖创建应用时设置的 notify_url</DocsTableCell>
+              <DocsTableCell>会参与签名；可选订单级异步通知地址。传入后支付成功优先回调该地址，未传则使用应用 notify_url</DocsTableCell>
             </DocsTableRow>
             <DocsTableRow>
               <DocsTableCell className="font-mono text-xs">return_url</DocsTableCell>
               <DocsTableCell>否</DocsTableCell>
-              <DocsTableCell>仅参与签名，不会覆盖创建应用时设置的 return_url</DocsTableCell>
+              <DocsTableCell>会参与签名；可选订单级回跳地址。传入后支付成功页面优先跳转该地址，未传则使用应用 redirect_uri</DocsTableCell>
             </DocsTableRow>
             <DocsTableRow>
               <DocsTableCell className="font-mono text-xs">device</DocsTableCell>
