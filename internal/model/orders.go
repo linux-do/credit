@@ -71,6 +71,8 @@ type Order struct {
 	Type            OrderType       `json:"type" gorm:"type:varchar(20);not null;index:idx_orders_payee_status_type_created,priority:3;index:idx_orders_payer_status_type_created,priority:3;index:idx_orders_payer_status_type_trade,priority:3"`
 	Remark          string          `json:"remark" gorm:"size:255"`
 	PaymentType     string          `json:"payment_type" gorm:"size:20"`
+	NotifyURL       *string         `json:"-" gorm:"size:512"`
+	ReturnURL       *string         `json:"-" gorm:"size:512"`
 	PaymentLinkID   *uint64         `json:"payment_link_id,string" gorm:"index:idx_orders_payment_link_status,priority:1"`
 	TradeTime       time.Time       `json:"trade_time" gorm:"index:idx_orders_payer_status_type_trade,priority:4"`
 	ExpiresAt       time.Time       `json:"expires_at" gorm:"not null"`

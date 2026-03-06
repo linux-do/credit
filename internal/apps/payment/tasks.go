@@ -79,7 +79,8 @@ func HandleMerchantPaymentNotify(ctx context.Context, t *asynq.Task) error {
 
 	callbackParams["sign"] = GenerateSignature(callbackParams, apiKey.ClientSecret)
 
-	if err := sendCallbackRequest(ctx, apiKey.NotifyURL, callbackParams); err != nil {
+	callbackURL := ResolveOrderNotifyURL(&order, &apiKey)
+	if err := sendCallbackRequest(ctx, callbackURL, callbackParams); err != nil {
 		retried, _ := asynq.GetRetryCount(ctx)
 		logger.ErrorF(ctx, "商户回调失败: 订单[ID:%d] 重试次数[%d] 错误: %v",
 			payload.OrderID, retried+1, err)

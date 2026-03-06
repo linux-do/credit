@@ -69,6 +69,32 @@ type OrderContext struct {
 	MerchantAPIKey    *model.MerchantAPIKey
 }
 
+func normalizeOptionalURL(raw string) *string {
+	trimmed := strings.TrimSpace(raw)
+	if trimmed == "" {
+		return nil
+	}
+	return &trimmed
+}
+
+func ResolveOrderNotifyURL(order *model.Order, apiKey *model.MerchantAPIKey) string {
+	if order != nil {
+		if notifyURL := strings.TrimSpace(util.DerefString(order.NotifyURL)); notifyURL != "" {
+			return notifyURL
+		}
+	}
+	return apiKey.NotifyURL
+}
+
+func ResolveOrderReturnURL(order *model.Order, apiKey *model.MerchantAPIKey) string {
+	if order != nil {
+		if returnURL := strings.TrimSpace(util.DerefString(order.ReturnURL)); returnURL != "" {
+			return returnURL
+		}
+	}
+	return apiKey.RedirectURI
+}
+
 // ParseOrderNo 解析订单号，获取订单上下文信息
 func ParseOrderNo(c *gin.Context, orderNo string) (*OrderContext, error) {
 	merchantIDStr, errGet := db.Redis.Get(c.Request.Context(), db.PrefixedKey(fmt.Sprintf(OrderMerchantIDCacheKeyFormat, orderNo))).Result()

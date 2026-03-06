@@ -130,6 +130,8 @@ func CreateMerchantOrder(c *gin.Context) {
 				Type:            model.OrderTypePayment,
 				Remark:          req.Remark,
 				PaymentType:     req.PaymentType,
+				NotifyURL:       req.NotifyURL,
+				ReturnURL:       req.ReturnURL,
 				ExpiresAt:       time.Now().Add(time.Duration(expireMinutes) * time.Minute),
 			}
 			if err := tx.Create(&order).Error; err != nil {
@@ -490,12 +492,14 @@ func GetPaymentPageDetails(c *gin.Context) {
 		return
 	}
 
+	redirectURI := ResolveOrderReturnURL(&order, &merchant)
+
 	c.JSON(http.StatusOK, util.OK(GetOrderResponse{
 		Order:   &order,
 		FeeRate: orderCtx.MerchantPayConfig.FeeRate,
 		Merchant: MerchantInfo{
 			AppName:     merchant.AppName,
-			RedirectURI: merchant.RedirectURI,
+			RedirectURI: redirectURI,
 		},
 	}))
 }
