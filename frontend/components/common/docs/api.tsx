@@ -103,6 +103,16 @@ signBase64 = base64.StdEncoding.EncodeToString(signature)`}
               <DocsTableCell>商品名称</DocsTableCell>
             </DocsTableRow>
             <DocsTableRow>
+              <DocsTableCell className="font-mono text-xs">notify_url</DocsTableCell>
+              <DocsTableCell>否</DocsTableCell>
+              <DocsTableCell>会参与签名；可选订单级异步通知地址。传入后支付成功优先回调该地址，未传则使用应用 notify_url</DocsTableCell>
+            </DocsTableRow>
+            <DocsTableRow>
+              <DocsTableCell className="font-mono text-xs">return_url</DocsTableCell>
+              <DocsTableCell>否</DocsTableCell>
+              <DocsTableCell>会参与签名；可选订单级回跳地址。传入后支付成功页面优先跳转该地址，未传则使用应用 redirect_uri</DocsTableCell>
+            </DocsTableRow>
+            <DocsTableRow>
               <DocsTableCell className="font-mono text-xs">sign</DocsTableCell>
               <DocsTableCell>是</DocsTableCell>
               <DocsTableCell>按“签名算法”生成的 Base64 签名串</DocsTableCell>
@@ -409,7 +419,7 @@ sign=$(echo -n "\${payload}\${SECRET}" | md5)  # 输出小写`}
         <h3 id="3-3-notify" className="text-base md:text-lg font-semibold text-foreground mt-6 md:mt-8 mb-3 md:mb-4">3.3 异步通知</h3>
         <ul className="list-disc pl-4 md:pl-5 space-y-2 mb-6">
           <li><strong>触发：</strong>认证成功后；失败自动重试，最多 5 次（单次 30s 超时）</li>
-          <li><strong>目标：</strong>创建应用时设置的 notify_url</li>
+          <li><strong>目标：</strong>订单级 notify_url（如有）优先，否则回退到创建应用时设置的 notify_url</li>
           <li><strong>方式：</strong>HTTP GET</li>
         </ul>
 

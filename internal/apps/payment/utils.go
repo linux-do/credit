@@ -254,7 +254,7 @@ func VerifySignatureMD5(c *gin.Context, apiKey *model.MerchantAPIKey) (*CreateOr
 		return nil, errors.New("签名验证失败")
 	}
 
-	return NewCreateOrderRequest(req.OrderName, req.MerchantOrderNo, req.Amount, req.PayType), nil
+	return NewCreateOrderRequest(req.OrderName, req.MerchantOrderNo, req.Amount, req.PayType, req.NotifyURL, req.ReturnURL), nil
 }
 
 // VerifySignatureEd25519 验证 Ed25519 签名
@@ -288,6 +288,8 @@ func VerifySignatureEd25519(c *gin.Context, apiKey *model.MerchantAPIKey) (*Crea
 		"type":         req.PayType,
 		"out_trade_no": util.DerefString(req.MerchantOrderNo),
 		"order_name":   req.OrderName,
+		"notify_url":   req.NotifyURL,
+		"return_url":   req.ReturnURL,
 		"money":        req.Amount.Truncate(2).StringFixed(2),
 	}
 
@@ -298,5 +300,5 @@ func VerifySignatureEd25519(c *gin.Context, apiKey *model.MerchantAPIKey) (*Crea
 		return nil, errors.New("签名验证失败")
 	}
 
-	return NewCreateOrderRequest(req.OrderName, req.MerchantOrderNo, req.Amount, req.PayType), nil
+	return NewCreateOrderRequest(req.OrderName, req.MerchantOrderNo, req.Amount, req.PayType, req.NotifyURL, req.ReturnURL), nil
 }

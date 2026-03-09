@@ -60,19 +60,21 @@ type LDCPayRequest struct {
 	OrderName       string          `form:"order_name" binding:"required,max=64"`
 	MerchantOrderNo *string         `form:"out_trade_no" binding:"required,min=1,max=64"`
 	Amount          decimal.Decimal `form:"money" binding:"required"`
+	NotifyURL       string          `form:"notify_url"`
+	ReturnURL       string          `form:"return_url"`
 	PayType         string          `form:"type" binding:"required"`
 	Sign            string          `form:"sign" binding:"required"`
 }
 
 // NewCreateOrderRequest 从支付请求创建通用订单请求
-func NewCreateOrderRequest(orderName string, merchantOrderNo *string, amount decimal.Decimal, payType string) *CreateOrderRequest {
+func NewCreateOrderRequest(orderName string, merchantOrderNo *string, amount decimal.Decimal, payType string, notifyURL string, returnURL string) *CreateOrderRequest {
 	return &CreateOrderRequest{
 		OrderName:       orderName,
 		MerchantOrderNo: merchantOrderNo,
 		Amount:          amount,
 		PaymentType:     payType,
-		NotifyURL:       normalizeOptionalURL(NotifyURL),
-		ReturnURL:       normalizeOptionalURL(ReturnURL),
+		NotifyURL:       normalizeOptionalURL(notifyURL),
+		ReturnURL:       normalizeOptionalURL(returnURL),
 	}
 }
 
