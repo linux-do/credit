@@ -36,8 +36,8 @@ type CreateOrderRequest struct {
 	Amount          decimal.Decimal `json:"amount" binding:"required"`
 	Remark          string          `json:"remark" binding:"max=100"`
 	PaymentType     string          `json:"payment_type"`
-	NotifyURL       string          `json:"notify_url,omitempty"`
-	ReturnURL       string          `json:"return_url,omitempty"`
+	NotifyURL       string          `json:"notify_url" binding:"omitempty,max=100,url"`
+	ReturnURL       string          `json:"return_url" binding:"omitempty,max=100,url"`
 }
 
 // EPayRequest 易支付请求

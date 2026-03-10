@@ -71,8 +71,8 @@ signBase64 = base64.StdEncoding.EncodeToString(signature)`}
         <DocsTable>
           <DocsTableHeader>
             <DocsTableRow>
-              <DocsTableHead>参数</DocsTableHead>
-              <DocsTableHead>必填</DocsTableHead>
+              <DocsTableHead className="w-[100px] whitespace-nowrap">参数</DocsTableHead>
+              <DocsTableHead className="w-[80px] whitespace-nowrap">必填</DocsTableHead>
               <DocsTableHead>说明</DocsTableHead>
             </DocsTableRow>
           </DocsTableHeader>
@@ -105,12 +105,12 @@ signBase64 = base64.StdEncoding.EncodeToString(signature)`}
             <DocsTableRow>
               <DocsTableCell className="font-mono text-xs">notify_url</DocsTableCell>
               <DocsTableCell>否</DocsTableCell>
-              <DocsTableCell>会参与签名；可选订单级异步通知地址。传入后支付成功优先回调该地址，未传则使用应用 notify_url</DocsTableCell>
+              <DocsTableCell>会参与签名；可选订单级异步通知地址。长度不超过 100，需为合法 URL。传入后支付成功优先回调该地址，未传则使用应用 notify_url</DocsTableCell>
             </DocsTableRow>
             <DocsTableRow>
               <DocsTableCell className="font-mono text-xs">return_url</DocsTableCell>
               <DocsTableCell>否</DocsTableCell>
-              <DocsTableCell>会参与签名；可选订单级回跳地址。传入后支付成功页面优先跳转该地址，未传则使用应用 redirect_uri</DocsTableCell>
+              <DocsTableCell>会参与签名；可选订单级回跳地址。长度不超过 100，需为合法 URL。传入后支付成功页面优先跳转该地址，未传则使用应用 redirect_uri</DocsTableCell>
             </DocsTableRow>
             <DocsTableRow>
               <DocsTableCell className="font-mono text-xs">sign</DocsTableCell>
@@ -207,8 +207,8 @@ sign=$(echo -n "\${payload}\${SECRET}" | md5)  # 输出小写`}
         <DocsTable>
           <DocsTableHeader>
             <DocsTableRow>
-              <DocsTableHead>参数</DocsTableHead>
-              <DocsTableHead>必填</DocsTableHead>
+              <DocsTableHead className="w-[100px] whitespace-nowrap">参数</DocsTableHead>
+              <DocsTableHead className="w-[80px] whitespace-nowrap">必填</DocsTableHead>
               <DocsTableHead>说明</DocsTableHead>
             </DocsTableRow>
           </DocsTableHeader>
@@ -241,12 +241,12 @@ sign=$(echo -n "\${payload}\${SECRET}" | md5)  # 输出小写`}
             <DocsTableRow>
               <DocsTableCell className="font-mono text-xs">notify_url</DocsTableCell>
               <DocsTableCell>否</DocsTableCell>
-              <DocsTableCell>会参与签名；可选订单级异步通知地址。传入后支付成功优先回调该地址，未传则使用应用 notify_url</DocsTableCell>
+              <DocsTableCell>会参与签名；可选订单级异步通知地址。长度不超过 100，需为合法 URL。传入后支付成功优先回调该地址，未传则使用应用 notify_url</DocsTableCell>
             </DocsTableRow>
             <DocsTableRow>
               <DocsTableCell className="font-mono text-xs">return_url</DocsTableCell>
               <DocsTableCell>否</DocsTableCell>
-              <DocsTableCell>会参与签名；可选订单级回跳地址。传入后支付成功页面优先跳转该地址，未传则使用应用 redirect_uri</DocsTableCell>
+              <DocsTableCell>会参与签名；可选订单级回跳地址。长度不超过 100，需为合法 URL。传入后支付成功页面优先跳转该地址，未传则使用应用 redirect_uri</DocsTableCell>
             </DocsTableRow>
             <DocsTableRow>
               <DocsTableCell className="font-mono text-xs">device</DocsTableCell>
@@ -317,8 +317,8 @@ sign=$(echo -n "\${payload}\${SECRET}" | md5)  # 输出小写`}
         <DocsTable>
           <DocsTableHeader>
             <DocsTableRow>
-              <DocsTableHead>参数</DocsTableHead>
-              <DocsTableHead>必填</DocsTableHead>
+              <DocsTableHead className="w-[100px] whitespace-nowrap">参数</DocsTableHead>
+              <DocsTableHead className="w-[80px] whitespace-nowrap">必填</DocsTableHead>
               <DocsTableHead>说明</DocsTableHead>
             </DocsTableRow>
           </DocsTableHeader>
@@ -376,8 +376,8 @@ sign=$(echo -n "\${payload}\${SECRET}" | md5)  # 输出小写`}
           <DocsTable>
             <DocsTableHeader>
               <DocsTableRow>
-                <DocsTableHead>参数</DocsTableHead>
-                <DocsTableHead>必填</DocsTableHead>
+                <DocsTableHead className="w-[100px] whitespace-nowrap">参数</DocsTableHead>
+                <DocsTableHead className="w-[80px] whitespace-nowrap">必填</DocsTableHead>
                 <DocsTableHead>说明</DocsTableHead>
               </DocsTableRow>
             </DocsTableHeader>
@@ -427,7 +427,7 @@ sign=$(echo -n "\${payload}\${SECRET}" | md5)  # 输出小写`}
           <DocsTable>
             <DocsTableHeader>
               <DocsTableRow>
-                <DocsTableHead>参数</DocsTableHead>
+                <DocsTableHead className="w-[100px] whitespace-nowrap">参数</DocsTableHead>
                 <DocsTableHead>说明</DocsTableHead>
               </DocsTableRow>
             </DocsTableHeader>
@@ -479,8 +479,8 @@ sign=$(echo -n "\${payload}\${SECRET}" | md5)  # 输出小写`}
         <DocsTable>
           <DocsTableHeader>
             <DocsTableRow>
-              <DocsTableHead>参数</DocsTableHead>
-              <DocsTableHead>必填</DocsTableHead>
+              <DocsTableHead className="w-[100px] whitespace-nowrap">参数</DocsTableHead>
+              <DocsTableHead className="w-[80px] whitespace-nowrap">必填</DocsTableHead>
               <DocsTableHead>说明</DocsTableHead>
             </DocsTableRow>
           </DocsTableHeader>
