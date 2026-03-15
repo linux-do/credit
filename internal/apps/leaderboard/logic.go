@@ -68,7 +68,7 @@ func getUserRank(ctx context.Context, userID uint64) (*UserRankResponse, error) 
 
 	// 查询用户余额
 	var user model.User
-	if err := db.DB(ctx).Select("id, available_balance").Where("id = ?", userID).First(&user).Error; err != nil {
+	if err := db.DB(ctx).Select("id, available_balance").Where("id = ? AND is_active = ?", userID, true).First(&user).Error; err != nil {
 		return nil, err
 	}
 
@@ -77,8 +77,8 @@ func getUserRank(ctx context.Context, userID uint64) (*UserRankResponse, error) 
 	// 即：余额更高，或余额相同但 id 更小
 	var rank int64
 	if err := db.DB(ctx).Model(&model.User{}).
-		Where("(available_balance > ?) OR (available_balance = ? AND id < ?)",
-			user.AvailableBalance, user.AvailableBalance, userID).
+		Where("is_active = ? AND ((available_balance > ?) OR (available_balance = ? AND id < ?))",
+			true, user.AvailableBalance, user.AvailableBalance, userID).
 		Count(&rank).Error; err != nil {
 		return nil, err
 	}

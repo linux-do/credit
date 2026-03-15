@@ -35,7 +35,7 @@ func getCacheTTL(ctx context.Context) time.Duration {
 func queryLeaderboard(ctx context.Context, req *ListRequest) ([]LeaderboardEntry, int64, error) {
 	offset := (req.Page - 1) * req.PageSize
 
-	baseQuery := db.DB(ctx).Model(&model.User{})
+	baseQuery := db.DB(ctx).Model(&model.User{}).Where("is_active = ?", true)
 
 	var total int64
 	if err := baseQuery.Count(&total).Error; err != nil {

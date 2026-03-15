@@ -91,7 +91,7 @@ type LeaderboardUser struct {
 }
 
 type User struct {
-	ID               uint64          `json:"id" gorm:"primaryKey;index:idx_users_avail_bal_id,priority:2"`
+	ID               uint64          `json:"id" gorm:"primaryKey;index:idx_users_active_bal_id,priority:3"`
 	Username         string          `json:"username" gorm:"size:64;uniqueIndex"`
 	Nickname         string          `json:"nickname" gorm:"size:100"`
 	AvatarUrl        string          `json:"avatar_url" gorm:"size:100"`
@@ -104,8 +104,8 @@ type User struct {
 	TotalTransfer    decimal.Decimal `json:"total_transfer" gorm:"type:numeric(20,2);default:0"`
 	TotalCommunity   decimal.Decimal `json:"total_community" gorm:"type:numeric(20,2);default:0"`
 	CommunityBalance decimal.Decimal `json:"community_balance" gorm:"type:numeric(20,2);default:0"`
-	AvailableBalance decimal.Decimal `json:"available_balance" gorm:"type:numeric(20,2);default:0;index:idx_users_avail_bal_id,priority:1"`
-	IsActive         bool            `json:"is_active" gorm:"default:true"`
+	AvailableBalance decimal.Decimal `json:"available_balance" gorm:"type:numeric(20,2);default:0;index:idx_users_active_bal_id,priority:2"`
+	IsActive         bool            `json:"is_active" gorm:"default:true;index:idx_users_active_bal_id,priority:1"`
 	IsAdmin          bool            `json:"is_admin" gorm:"default:false"`
 	LastLoginAt      time.Time       `json:"last_login_at" gorm:"index"`
 	CreatedAt        time.Time       `json:"created_at" gorm:"autoCreateTime;index"`
