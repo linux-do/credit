@@ -17,9 +17,6 @@ limitations under the License.
 package upload
 
 const (
-	// 上传目录
-	UploadDir = "uploads"
-
 	// 封面类型
 	CoverTypeCover       = "cover"
 	CoverTypeHeterotypic = "heterotypic"

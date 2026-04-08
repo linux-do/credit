@@ -19,20 +19,20 @@ package upload
 import (
 	"errors"
 	"net/http"
-	"os"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/linux-do/credit/internal/db"
 	"github.com/linux-do/credit/internal/model"
+	"github.com/linux-do/credit/internal/storage"
 	"gorm.io/gorm"
 )
 
-// ServeFileByID serves an uploaded file by its ID
+// ServeFileByID serves an uploaded file by redirecting to the public URL
 // @Tags upload
 // @Produce octet-stream
 // @Param id path string true "Upload ID"
-// @Success 200
+// @Success 302
 // @Router /f/{id} [get]
 func ServeFileByID(c *gin.Context) {
 	idStr := c.Param("id")
@@ -54,24 +54,12 @@ func ServeFileByID(c *gin.Context) {
 		return
 	}
 
-	// Open the file
-	file, err := os.Open(upload.FilePath)
-	if err != nil {
-		c.AbortWithStatus(http.StatusNotFound)
-		return
-	}
-	defer file.Close()
-
-	// Get file info
-	info, err := file.Stat()
-	if err != nil || info.IsDir() {
-		c.AbortWithStatus(http.StatusForbidden)
+	store := storage.Default()
+	if store == nil {
+		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
 
-	// Set caching headers (7 days)
-	c.Header("Cache-Control", "public, max-age=604800, immutable")
-
-	// Serve the file with proper content type detection
-	http.ServeContent(c.Writer, c.Request, info.Name(), info.ModTime(), file)
+	// Redirect to the public storage URL
+	c.Redirect(http.StatusFound, store.PublicURL(upload.FilePath))
 }

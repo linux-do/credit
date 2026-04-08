@@ -19,7 +19,6 @@ package upload
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"image"
 	_ "image/gif"
@@ -27,19 +26,18 @@ import (
 	_ "image/png"
 	"io"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/linux-do/credit/internal/apps/oauth"
+	"github.com/linux-do/credit/internal/config"
 	"github.com/linux-do/credit/internal/db"
 	"github.com/linux-do/credit/internal/db/idgen"
 	"github.com/linux-do/credit/internal/model"
+	"github.com/linux-do/credit/internal/storage"
 	"github.com/linux-do/credit/internal/util"
 	_ "golang.org/x/image/webp"
-	"gorm.io/gorm"
 )
 
 // UploadResponse 上传响应
@@ -136,89 +134,53 @@ func UploadRedEnvelopeCover(c *gin.Context) {
 	}
 	filename := fmt.Sprintf("%d_%s_%s%s", currentUser.ID, coverType, md5Sum, safeExt)
 
-	// 创建上传目录，格式: uploads/2026/01/01/userid
+	// 构建对象存储 key，格式: {path_prefix}/{yyyy/MM/dd}/{userID}/{filename}
 	now := time.Now()
-	uploadPath := filepath.Join(UploadDir, now.Format("2006/01/02"), fmt.Sprintf("%d", currentUser.ID))
-	if err := os.MkdirAll(uploadPath, 0750); err != nil {
-		c.JSON(http.StatusInternalServerError, util.Err(ErrCreateDirFailed))
+	pathPrefix := config.Config.Storage.PathPrefix
+	objectKey := fmt.Sprintf("%s/%s/%d/%s", pathPrefix, now.Format("2006/01/02"), currentUser.ID, filename)
+
+	// 推断 content type
+	contentType := "image/" + format
+	if format == "jpg" {
+		contentType = "image/jpeg"
+	}
+
+	store := storage.Default()
+	if store == nil {
+		c.JSON(http.StatusServiceUnavailable, util.Err(ErrStorageNotConfigured))
 		return
 	}
 
-	relPath := filepath.ToSlash(filepath.Join(uploadPath, filename))
-	diskPath := filepath.Join(uploadPath, filename)
-
-	// 验证路径安全性
-	safeDiskPath, err := ValidatePath(UploadDir, diskPath)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, util.Err(ErrInvalidImage))
+	// Check for duplicate file first
+	var existing model.Upload
+	if err := db.DB(c.Request.Context()).Where("file_path = ?", objectKey).First(&existing).Error; err == nil {
+		c.JSON(http.StatusOK, util.OK(UploadResponse{ID: existing.ID}))
 		return
 	}
 
-	var recordID uint64
+	// Upload to object storage first (outside transaction to avoid orphaned DB records)
+	if err := store.Put(c.Request.Context(), objectKey, src, file.Size, contentType); err != nil {
+		c.JSON(http.StatusInternalServerError, util.Err(ErrSaveFileFailed))
+		return
+	}
 
-	if err := db.DB(c.Request.Context()).Transaction(func(tx *gorm.DB) error {
-		var existing model.Upload
-		if err := tx.Where("file_path = ?", relPath).First(&existing).Error; err == nil {
-			recordID = existing.ID
-			return nil
-		} else if !errors.Is(err, gorm.ErrRecordNotFound) {
-			return err
-		}
+	upload := model.Upload{
+		ID:       idgen.NextUint64ID(),
+		UserID:   currentUser.ID,
+		FilePath: objectKey,
+		FileSize: file.Size,
+		Type:     coverType,
+		Status:   model.UploadStatusPending,
+	}
 
-		fileCreated := false
-		if _, err := os.Stat(safeDiskPath); err != nil {
-			if !os.IsNotExist(err) {
-				return errors.New(ErrSaveFileFailed)
-			}
-			dst, err := os.OpenFile(safeDiskPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0640)
-			if err != nil {
-				if !os.IsExist(err) {
-					return errors.New(ErrSaveFileFailed)
-				}
-			} else {
-				fileCreated = true
-				if _, err := io.Copy(dst, src); err != nil {
-					dst.Close()
-					os.Remove(safeDiskPath)
-					return errors.New(ErrSaveFileFailed)
-				}
-				if err := dst.Close(); err != nil {
-					os.Remove(safeDiskPath)
-					return errors.New(ErrSaveFileFailed)
-				}
-			}
-		}
-
-		upload := model.Upload{
-			ID:       idgen.NextUint64ID(),
-			UserID:   currentUser.ID,
-			FilePath: relPath,
-			FileSize: file.Size,
-			Type:     coverType,
-			Status:   model.UploadStatusPending,
-		}
-
-		if err := tx.Create(&upload).Error; err != nil {
-			if fileCreated {
-				os.Remove(safeDiskPath)
-			}
-			return errors.New(ErrSaveUploadRecordFailed)
-		}
-
-		recordID = upload.ID
-		return nil
-	}); err != nil {
-		if err.Error() == ErrSaveFileFailed {
-			c.JSON(http.StatusInternalServerError, util.Err(ErrSaveFileFailed))
-			return
-		}
+	if err := db.DB(c.Request.Context()).Create(&upload).Error; err != nil {
+		// Clean up uploaded file on DB failure
+		_ = store.Delete(c.Request.Context(), objectKey)
 		c.JSON(http.StatusInternalServerError, util.Err(ErrSaveUploadRecordFailed))
 		return
 	}
 
-	c.JSON(http.StatusOK, util.OK(UploadResponse{
-		ID: recordID,
-	}))
+	c.JSON(http.StatusOK, util.OK(UploadResponse{ID: upload.ID}))
 }
 
 // ListRedEnvelopeCovers 获取用户历史红包封面

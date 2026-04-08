@@ -30,4 +30,5 @@ const (
 	ErrInvalidFilePath               = "非法文件路径"
 	ErrSaveUploadRecordFailed        = "保存上传记录失败"
 	ErrQueryHistoryCoverFailed       = "查询历史封面失败"
+	ErrStorageNotConfigured          = "对象存储未配置"
 )

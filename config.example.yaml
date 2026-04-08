@@ -134,3 +134,14 @@ linuxDo:
 # OpenTelemetry
 otel:
   sampling_rate: 0.1  # 采样率 0.0-1.0
+
+# Storage (S3-compatible, e.g. Cloudflare R2)
+storage:
+  enabled: false
+  endpoint: "https://<account_id>.r2.cloudflarestorage.com"
+  region: "auto"
+  bucket: "credit-uploads"
+  access_key_id: "<R2_ACCESS_KEY_ID>"
+  secret_access_key: "<R2_SECRET_ACCESS_KEY>"
+  public_url: "https://cdn.example.com"  # R2 公开访问域名
+  path_prefix: "uploads"                  # 对象 key 前缀

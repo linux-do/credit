@@ -18,13 +18,13 @@ package upload
 
 import (
 	"context"
-	"os"
 	"time"
 
 	"github.com/hibiken/asynq"
 	"github.com/linux-do/credit/internal/db"
 	"github.com/linux-do/credit/internal/logger"
 	"github.com/linux-do/credit/internal/model"
+	"github.com/linux-do/credit/internal/storage"
 	"gorm.io/gorm"
 )
 
@@ -45,6 +45,8 @@ func cleanupUnusedUploads(ctx context.Context) {
 
 	// 计算1小时前的时间
 	oneHourAgo := time.Now().Add(-1 * time.Hour)
+
+	store := storage.Default()
 
 	for {
 		// 使用游标分页查询未使用且超过1小时的上传记录
@@ -77,11 +79,9 @@ func cleanupUnusedUploads(ctx context.Context) {
 					return err
 				}
 
-				// 删除文件
-				if err := os.Remove(upload.FilePath); err != nil {
-					if !os.IsNotExist(err) {
-						return err
-					}
+				// 从对象存储删除文件
+				if err := store.Delete(ctx, upload.FilePath); err != nil {
+					return err
 				}
 
 				return nil
