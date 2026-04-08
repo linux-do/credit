@@ -194,7 +194,8 @@ func Serve() {
 			uploadRouter := apiV1Router.Group("/upload")
 			uploadRouter.Use(oauth.LoginRequired())
 			{
-				uploadRouter.POST("/redenvelope/cover", upload.UploadRedEnvelopeCover)
+				// Closed
+				// uploadRouter.POST("/redenvelope/cover", upload.UploadRedEnvelopeCover)
 			}
 
 			// Config (public)
