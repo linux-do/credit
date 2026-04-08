@@ -64,8 +64,7 @@ func ServeFileByID(c *gin.Context) {
 	}
 	defer obj.Body.Close()
 
-	// Set caching headers (7 days)
-	c.Header("Cache-Control", "public, max-age=604800, immutable")
+	// no cache control, use cdn cache settings if available
 	c.Header("Content-Type", obj.ContentType)
 	if obj.ContentLength > 0 {
 		c.Header("Content-Length", strconv.FormatInt(obj.ContentLength, 10))
