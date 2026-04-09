@@ -24,7 +24,6 @@ const (
 	ErrInvalidImage                  = "无效的图片文件"
 	ErrUploadExtensionsNotConfigured = "上传扩展名未配置"
 	ErrProcessFileFailed             = "处理文件失败"
-	ErrCreateDirFailed               = "创建上传目录失败"
 	ErrSaveFileFailed                = "保存文件失败"
 	ErrOpenFileFailed                = "打开文件失败"
 	ErrInvalidFilePath               = "非法文件路径"

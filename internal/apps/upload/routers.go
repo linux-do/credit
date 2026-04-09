@@ -27,8 +27,6 @@ import (
 	_ "image/png"
 	"io"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -37,6 +35,7 @@ import (
 	"github.com/linux-do/credit/internal/db"
 	"github.com/linux-do/credit/internal/db/idgen"
 	"github.com/linux-do/credit/internal/model"
+	"github.com/linux-do/credit/internal/storage"
 	"github.com/linux-do/credit/internal/util"
 	_ "golang.org/x/image/webp"
 	"gorm.io/gorm"
@@ -134,74 +133,50 @@ func UploadRedEnvelopeCover(c *gin.Context) {
 	if format == "jpeg" {
 		safeExt = ".jpg"
 	}
-	filename := fmt.Sprintf("%d_%s_%s%s", currentUser.ID, coverType, md5Sum, safeExt)
+	filename := fmt.Sprintf("%s%s", md5Sum, safeExt)
 
-	// 创建上传目录，格式: uploads/2026/01/01/userid
+	// 构建 S3 object key: {prefix}{type}/{date}/{userID}/{filename}
 	now := time.Now()
-	uploadPath := filepath.Join(UploadDir, now.Format("2006/01/02"), fmt.Sprintf("%d", currentUser.ID))
-	if err := os.MkdirAll(uploadPath, 0750); err != nil {
-		c.JSON(http.StatusInternalServerError, util.Err(ErrCreateDirFailed))
+	objectPath := fmt.Sprintf("%s/%s/%d/%s", coverType, now.Format("2006/01/02"), currentUser.ID, filename)
+	s3Key := storage.BuildKey(objectPath)
+
+	// validate S3 key
+	if err := ValidateS3Key(s3Key); err != nil {
+		c.JSON(http.StatusBadRequest, util.Err(ErrInvalidFilePath))
 		return
 	}
 
-	relPath := filepath.ToSlash(filepath.Join(uploadPath, filename))
-	diskPath := filepath.Join(uploadPath, filename)
-
-	// 验证路径安全性
-	safeDiskPath, err := ValidatePath(UploadDir, diskPath)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, util.Err(ErrInvalidImage))
-		return
-	}
+	// Content type for S3
+	contentType := "image/" + format
 
 	var recordID uint64
 
 	if err := db.DB(c.Request.Context()).Transaction(func(tx *gorm.DB) error {
 		var existing model.Upload
-		if err := tx.Where("file_path = ?", relPath).First(&existing).Error; err == nil {
+		if err := tx.Where("file_path = ?", s3Key).First(&existing).Error; err == nil {
 			recordID = existing.ID
 			return nil
 		} else if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return err
 		}
 
-		fileCreated := false
-		if _, err := os.Stat(safeDiskPath); err != nil {
-			if !os.IsNotExist(err) {
-				return errors.New(ErrSaveFileFailed)
-			}
-			dst, err := os.OpenFile(safeDiskPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0640)
-			if err != nil {
-				if !os.IsExist(err) {
-					return errors.New(ErrSaveFileFailed)
-				}
-			} else {
-				fileCreated = true
-				if _, err := io.Copy(dst, src); err != nil {
-					dst.Close()
-					os.Remove(safeDiskPath)
-					return errors.New(ErrSaveFileFailed)
-				}
-				if err := dst.Close(); err != nil {
-					os.Remove(safeDiskPath)
-					return errors.New(ErrSaveFileFailed)
-				}
-			}
+		// Upload to S3
+		if err := storage.PutObject(c.Request.Context(), s3Key, src, file.Size, contentType); err != nil {
+			return errors.New(ErrSaveFileFailed)
 		}
 
 		upload := model.Upload{
 			ID:       idgen.NextUint64ID(),
 			UserID:   currentUser.ID,
-			FilePath: relPath,
+			FilePath: s3Key,
 			FileSize: file.Size,
 			Type:     coverType,
 			Status:   model.UploadStatusPending,
 		}
 
 		if err := tx.Create(&upload).Error; err != nil {
-			if fileCreated {
-				os.Remove(safeDiskPath)
-			}
+			// 如果数据库保存失败，尝试删除已上传的文件以避免垃圾数据
+			_ = storage.DeleteObject(c.Request.Context(), s3Key)
 			return errors.New(ErrSaveUploadRecordFailed)
 		}
 

@@ -134,3 +134,16 @@ linuxDo:
 # OpenTelemetry
 otel:
   sampling_rate: 0.1  # 采样率 0.0-1.0
+
+# S3 Compatible Storage
+# 支持 AWS S3、MinIO、Cloudflare R2、腾讯 COS 等 S3 兼容存储
+s3:
+  enabled: true
+  endpoint: "https://<Account ID>.r2.cloudflarestorage.com"
+  region: "auto"
+  bucket: "<Bucket Name>"
+  access_key_id: "<S3_ACCESS_KEY_ID>"
+  secret_access_key: "<S3_SECRET_ACCESS_KEY>"
+  path_style: false                              # MinIO 等自托管服务设为 true
+  key_prefix: ""                                 # 对象 key 前缀，如 "uploads/"，可用于分目录存储
+  cdn_url: ""                                    # CDN 域名（如 https://cdn.example.com），为空则直接读 S3

@@ -14,32 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package upload
+package storage
 
-import (
-	"fmt"
-	"strings"
-)
+type ErrS3InitializationFailed struct{}
 
-const maxS3KeyLength = 1024
-
-// ValidateS3Key validates an S3 object key for safety.
-func ValidateS3Key(key string) error {
-	if key == "" {
-		return fmt.Errorf("s3 key must not be empty")
-	}
-
-	if len(key) > maxS3KeyLength {
-		return fmt.Errorf("s3 key exceeds maximum length of %d", maxS3KeyLength)
-	}
-
-	if strings.HasPrefix(key, "/") {
-		return fmt.Errorf("s3 key must not start with /")
-	}
-
-	if strings.Contains(key, "\x00") {
-		return fmt.Errorf("s3 key must not contain null bytes")
-	}
-
-	return nil
+func (e ErrS3InitializationFailed) Error() string {
+	return "S3存储初始化失败"
 }

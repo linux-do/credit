@@ -16,14 +16,13 @@ limitations under the License.
 
 package upload
 
+// 封面类型
 const (
-	// 上传目录
-	UploadDir = "uploads"
-
-	// 封面类型
 	CoverTypeCover       = "cover"
 	CoverTypeHeterotypic = "heterotypic"
+)
 
-	// 最大文件大小 (2MB)
-	MaxFileSize = 2 * 1024 * 1024
+// 最大文件大小
+const (
+	MaxFileSize = 2 * 1024 * 1024 // 2MB
 )

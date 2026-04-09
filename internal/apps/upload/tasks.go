@@ -18,13 +18,13 @@ package upload
 
 import (
 	"context"
-	"os"
 	"time"
 
 	"github.com/hibiken/asynq"
 	"github.com/linux-do/credit/internal/db"
 	"github.com/linux-do/credit/internal/logger"
 	"github.com/linux-do/credit/internal/model"
+	"github.com/linux-do/credit/internal/storage"
 	"gorm.io/gorm"
 )
 
@@ -77,11 +77,9 @@ func cleanupUnusedUploads(ctx context.Context) {
 					return err
 				}
 
-				// 删除文件
-				if err := os.Remove(upload.FilePath); err != nil {
-					if !os.IsNotExist(err) {
-						return err
-					}
+				// Delete from S3
+				if err := storage.DeleteObject(ctx, upload.FilePath); err != nil {
+					return err
 				}
 
 				return nil

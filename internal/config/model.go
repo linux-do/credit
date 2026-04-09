@@ -27,6 +27,7 @@ type configModel struct {
 	ClickHouse clickHouseConfig `mapstructure:"clickhouse"`
 	LinuxDo    linuxDoConfig    `mapstructure:"linuxdo"`
 	Otel       otelConfig       `mapstructure:"otel"`
+	S3         s3Config         `mapstructure:"s3"`
 }
 
 // appConfig 应用基本配置
@@ -178,4 +179,17 @@ type linuxDoConfig struct {
 // otelConfig OpenTelemetry 配置
 type otelConfig struct {
 	SamplingRate float64 `mapstructure:"sampling_rate"`
+}
+
+// s3Config S3 compatible storage configuration
+type s3Config struct {
+	Enabled         bool   `mapstructure:"enabled"`
+	Endpoint        string `mapstructure:"endpoint"`
+	Region          string `mapstructure:"region"`
+	Bucket          string `mapstructure:"bucket"`
+	AccessKeyID     string `mapstructure:"access_key_id" json:"-"`
+	SecretAccessKey string `mapstructure:"secret_access_key" json:"-"`
+	PathStyle       bool   `mapstructure:"path_style"`
+	KeyPrefix       string `mapstructure:"key_prefix"`
+	CdnURL          string `mapstructure:"cdn_url"`
 }
