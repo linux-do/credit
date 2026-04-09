@@ -23,7 +23,6 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
@@ -31,18 +30,17 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/linux-do/credit/internal/config"
 	"github.com/linux-do/credit/internal/otel_trace"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"github.com/linux-do/credit/internal/util"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
 
 var (
-	client     *s3.Client
-	bucket     string
-	keyPrefix  string
-	cdnURL     string
-	httpClient *http.Client
+	client    *s3.Client
+	bucket    string
+	keyPrefix string
+	cdnURL    string
 )
 
 func init() {
@@ -72,16 +70,6 @@ func init() {
 		}
 		o.UsePathStyle = cfg.PathStyle
 	})
-
-	// HTTP client for CDN requests
-	httpClient = &http.Client{
-		Timeout: 10 * time.Second,
-		Transport: otelhttp.NewTransport(&http.Transport{
-			MaxIdleConns:        100,
-			MaxIdleConnsPerHost: 20,
-			IdleConnTimeout:     60 * time.Second,
-		}),
-	}
 
 	log.Printf("[Storage] S3 storage initialized (bucket: %s, prefix: %s, cdn: %s)\n", bucket, keyPrefix, cdnURL)
 }
@@ -190,13 +178,8 @@ func GetObjectViaProxy(ctx context.Context, key string) (*ObjectInfo, error) {
 
 	url := cdnURL + "/" + key
 	span.SetAttributes(attribute.Bool("s3.use_cdn", true))
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-	if err != nil {
-		span.SetStatus(codes.Error, fmt.Sprintf("create cdn request failed: %v", err))
-		return nil, fmt.Errorf("create cdn request failed: %w", err)
-	}
 
-	resp, err := httpClient.Do(req)
+	resp, err := util.Request(ctx, http.MethodGet, url, nil, nil, nil)
 	if err != nil {
 		span.SetStatus(codes.Error, fmt.Sprintf("cdn request failed: %v", err))
 		return nil, fmt.Errorf("cdn request failed: %w", err)
