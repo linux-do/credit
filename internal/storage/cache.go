@@ -47,6 +47,11 @@ type metaInfo struct {
 	ContentLength int64  `json:"content_length"`
 }
 
+type cacheObject struct {
+	ObjectInfo
+	Body []byte
+}
+
 func init() {
 	cfg := config.Config.S3.LocalCache
 	localCacheEnabled = cfg.Enabled && cfg.CacheDir != ""
@@ -110,13 +115,21 @@ func GetObjectViaCache(ctx context.Context, key string) (*ObjectInfo, error) {
 			}
 		}
 
-		return objInfo, nil
+		// 将对象内容读入内存，以便在 singleflight 内部返回给其他等待的请求
+		bodyBytes, err := io.ReadAll(objInfo.Body)
+		if err != nil {
+			span.SetStatus(codes.Error, err.Error())
+			logger.ErrorF(ctx, "Failed to read object body: %v", err)
+			return nil, err
+		}
+		return &cacheObject{ObjectInfo: ObjectInfo{ContentLength: objInfo.ContentLength, ContentType: objInfo.ContentType}, Body: bodyBytes}, nil
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	return v.(*ObjectInfo), nil
+	cacheObj := v.(*cacheObject)
+	return &ObjectInfo{ContentLength: cacheObj.ContentLength, ContentType: cacheObj.ContentType, Body: io.NopCloser(bytes.NewReader(cacheObj.Body))}, nil
 }
 
 func GetLocalCacheFile(ctx context.Context, localPath, metaPath string) (*ObjectInfo, error) {
