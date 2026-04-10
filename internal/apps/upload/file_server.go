@@ -18,13 +18,11 @@ package upload
 
 import (
 	"errors"
-	"io"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/linux-do/credit/internal/db"
-	"github.com/linux-do/credit/internal/logger"
 	"github.com/linux-do/credit/internal/model"
 	"github.com/linux-do/credit/internal/storage"
 	"gorm.io/gorm"
@@ -72,14 +70,6 @@ func ServeFileByID(c *gin.Context) {
 	// Stream from CDN/S3
 	defer obj.Body.Close()
 
-	// no cache control, use cdn cache settings if available
-	c.Header("Content-Type", obj.ContentType)
-	if obj.ContentLength > 0 {
-		c.Header("Content-Length", strconv.FormatInt(obj.ContentLength, 10))
-	}
-
-	c.Status(http.StatusOK)
-	if _, err := io.Copy(c.Writer, obj.Body); err != nil {
-		logger.ErrorF(c.Request.Context(), "Failed to serve file for upload ID %d: %v", uploadID, err)
-	}
+	// Respond with the file content
+	c.DataFromReader(http.StatusOK, obj.ContentLength, obj.ContentType, obj.Body, nil)
 }
