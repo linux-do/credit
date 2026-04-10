@@ -44,11 +44,6 @@ type metaInfo struct {
 	ContentLength int64  `json:"content_length"`
 }
 
-type cacheObject struct {
-	ObjectInfo
-	Body []byte
-}
-
 func init() {
 	cfg := config.Config.S3.LocalCache
 	localCacheEnabled = cfg.Enabled && cfg.CacheDir != ""
@@ -113,6 +108,7 @@ func GetLocalCacheFile(ctx context.Context, localPath, metaPath string) (*Object
 
 	// 尝试打开本地缓存文件
 	file, err := os.Open(localPath)
+	defer file.Close()
 
 	// 文件不存在
 	if err != nil && os.IsNotExist(err) {
@@ -131,13 +127,11 @@ func GetLocalCacheFile(ctx context.Context, localPath, metaPath string) (*Object
 
 	// 文件不存在
 	if err != nil && os.IsNotExist(err) {
-		file.Close()
 		return nil, nil
 	}
 
 	// 判断是否为其他异常
 	if err != nil {
-		file.Close()
 		span.SetStatus(codes.Error, err.Error())
 		logger.ErrorF(ctx, "Failed to read local cache meta file %s: %v", metaPath, err)
 		return nil, LocalCacheError{}
@@ -146,13 +140,12 @@ func GetLocalCacheFile(ctx context.Context, localPath, metaPath string) (*Object
 	// 解析元信息
 	meta := &metaInfo{}
 	if err := json.Unmarshal(metaData, meta); err != nil {
-		file.Close()
 		span.SetStatus(codes.Error, err.Error())
 		logger.ErrorF(ctx, "Failed to parse local cache meta file %s: %v", metaPath, err)
 		return nil, LocalCacheError{}
 	}
 
-	return &ObjectInfo{Body: file, ContentLength: meta.ContentLength, ContentType: meta.ContentType}, nil
+	return &ObjectInfo{CachePath: localPath, ContentLength: meta.ContentLength, ContentType: meta.ContentType}, nil
 }
 
 func SaveToLocalCache(ctx context.Context, localPath, metaPath string, objInfo *ObjectInfo) error {

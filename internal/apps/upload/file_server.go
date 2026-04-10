@@ -62,6 +62,14 @@ func ServeFileByID(c *gin.Context) {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
+
+	// Cachefile
+	if obj.CachePath != "" {
+		c.File(obj.CachePath)
+		return
+	}
+
+	// Stream from CDN/S3
 	defer obj.Body.Close()
 
 	// no cache control, use cdn cache settings if available
