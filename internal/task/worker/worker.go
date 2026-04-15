@@ -81,6 +81,8 @@ func StartWorker() error {
 	mux.HandleFunc(task.SyncOrdersToClickHouseTask, order.HandleSyncOrdersToClickHouse)
 	mux.HandleFunc(task.RefundExpiredRedEnvelopesTask, redenvelope.HandleRefundExpiredRedEnvelopes)
 	mux.HandleFunc(task.CleanupUnusedUploadsTask, upload.HandleCleanupUnusedUploads)
+	mux.HandleFunc(task.SettlePendingPaymentsTask, order.HandleSettlePendingPayments)
+
 	// 启动服务器
 	return asynqServer.Run(mux)
 }

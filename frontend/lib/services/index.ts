@@ -108,6 +108,7 @@ export type {
   Order,
   OrderType,
   OrderStatus,
+  TransferStatus,
   TransactionQueryParams,
   TransactionListResponse,
   TransferRequest,

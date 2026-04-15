@@ -38,6 +38,7 @@ func Migrate() {
 		&model.MerchantAPIKey{},
 		&model.MerchantPaymentLink{},
 		&model.Order{},
+		&model.OrderTransfer{},
 		&model.SystemConfig{},
 		&model.Dispute{},
 		&model.RedEnvelope{},
@@ -134,6 +135,16 @@ func initSystemConfigs() {
 			Key:         model.ConfigKeyUploadAllowedExtensions,
 			Value:       "jpg,png,webp",
 			Description: "允许上传的图片扩展名（逗号分隔）",
+		},
+		{
+			Key:         model.ConfigKeySettlementDelayDaysMin,
+			Value:       "7",
+			Description: "商户收款延迟到账最小天数（大于等于1）",
+		},
+		{
+			Key:         model.ConfigKeySettlementDelayDaysMax,
+			Value:       "14",
+			Description: "商户收款延迟到账最大天数（实际天数在min~max随机）",
 		},
 	}
 

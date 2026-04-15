@@ -33,15 +33,15 @@ function safeNumber(value: number): number {
 
 /**
  * 积分余额摘要组件
- * 
+ *
  * 显示积分余额的可视化摘要,包括可视化进度条和详细的积分余额分类列表
  */
 export function BalanceSummary() {
   const { user, loading } = useUser()
 
   const available = parseFloat(user?.available_balance || '0')
-  const total = available
-  const pending = 0
+  const pending = parseFloat(user?.pending_balance || '0')
+  const total = available + pending
 
   const percentages = React.useMemo(
     () => calculatePercentages(available, total),

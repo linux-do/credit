@@ -102,6 +102,16 @@ func StartScheduler() error {
 			return
 		}
 
+		// 延迟到账结算任务
+		if _, err = scheduler.Register(
+			config.Config.Scheduler.SettlePendingPaymentsTaskCron,
+			asynq.NewTask(task.SettlePendingPaymentsTask, nil),
+			asynq.Unique(55*time.Minute),
+			asynq.MaxRetry(3),
+		); err != nil {
+			return
+		}
+
 		// 启动调度器
 		err = scheduler.Run()
 	})

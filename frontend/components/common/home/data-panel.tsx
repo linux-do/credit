@@ -36,6 +36,7 @@ export function DataPanel() {
   const [loading, setLoading] = React.useState(true)
 
   const availableBalance = parseFloat(user?.available_balance || '0')
+  const pendingBalance = parseFloat(user?.pending_balance || '0')
   const remainQuota = parseFloat(user?.remain_quota || '0')
   const communityBalance = parseFloat(user?.community_balance || '0').toLocaleString()
 
@@ -198,6 +199,26 @@ export function DataPanel() {
           </div>
           <div className="text-xl font-semibold pt-2">
             {userLoading ? '-' : <CountingNumber number={availableBalance} decimalPlaces={2} />}
+          </div>
+        </div>
+
+        <div className="flex-1 min-w-[120px] md:border-b md:pb-4 border-r md:border-r-0 border-border pr-8 md:pr-0">
+          <div className="text-sm text-muted-foreground font-medium flex items-center gap-1 whitespace-nowrap">
+            <span className="min-[400px]:hidden">未来LDC</span>
+            <span className="hidden min-[400px]:inline">未来 LINUX DO Credits</span>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button type="button" aria-label="查看详情">
+                  <Info className="size-3.5 cursor-pointer" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent side="top" className="w-auto max-w-[280px] p-3">
+                <p className="text-xs">商户收款后延迟到账的资金，到期后自动转入可用余额</p>
+              </PopoverContent>
+            </Popover>
+          </div>
+          <div className="text-xl font-semibold pt-2">
+            {userLoading ? '-' : <CountingNumber number={pendingBalance} decimalPlaces={2} />}
           </div>
         </div>
 

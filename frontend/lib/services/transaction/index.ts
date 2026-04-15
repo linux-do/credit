@@ -1,15 +1,15 @@
 /**
  * 交易服务模块
- * 
+ *
  * @description
  * 提供交易相关的功能，包括：
  * - 查询交易记录列表（分页）
  * - 用户转账
- * 
+ *
  * @example
  * ```typescript
  * import { TransactionService } from '@/lib/services';
- * 
+ *
  * // 查询交易记录
  * const result = await TransactionService.getTransactions({
  *   page: 1,
@@ -17,7 +17,7 @@
  *   type: 'receive',
  *   status: 'success'
  * });
- * 
+ *
  * // 用户转账
  * await TransactionService.transfer({
  *   recipient_id: 123,
@@ -34,6 +34,7 @@ export type {
   Order,
   OrderType,
   OrderStatus,
+  TransferStatus,
   TransactionQueryParams,
   TransactionListResponse,
   TransferRequest,

@@ -25,6 +25,7 @@ const (
 	SyncOrdersToClickHouseTask            = "order:sync_to_clickhouse"
 	RefundExpiredRedEnvelopesTask         = "redenvelope:refund_expired"
 	CleanupUnusedUploadsTask              = "upload:cleanup_unused"
+	SettlePendingPaymentsTask             = "order:settle_pending_payments"
 )
 
 const (
@@ -40,6 +41,7 @@ const (
 	TaskTypeDisputeRefund     = "dispute_auto_refund"
 	TaskTypeRedEnvelopeRefund = "redenvelope_auto_refund"
 	TaskTypeCleanupUploads    = "cleanup_unused_uploads"
+	TaskTypeSettlePending     = "settle_pending_payments"
 )
 
 // TaskMeta 任务元数据
@@ -98,6 +100,15 @@ var DispatchableTasks = []TaskMeta{
 		Description:  "清理超过1小时未使用的上传文件",
 		SupportsTime: false,
 		MaxRetry:     3,
+		Queue:        QueueDefault,
+	},
+	{
+		Type:         TaskTypeSettlePending,
+		AsynqTask:    SettlePendingPaymentsTask,
+		Name:         "延迟到账结算",
+		Description:  "结算到期的延迟到账订单，将在途资金转入可用余额",
+		SupportsTime: false,
+		MaxRetry:     5,
 		Queue:        QueueDefault,
 	},
 }

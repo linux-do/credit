@@ -19,6 +19,7 @@ package order
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/hibiken/asynq"
@@ -26,7 +27,10 @@ import (
 	"github.com/linux-do/credit/internal/db"
 	"github.com/linux-do/credit/internal/logger"
 	"github.com/linux-do/credit/internal/model"
+	"github.com/linux-do/credit/internal/service"
 	"github.com/linux-do/credit/internal/util"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // HandleSyncOrdersToClickHouse 同步订单数据
@@ -126,4 +130,61 @@ func batchInsertToClickHouse(ctx context.Context, orders []model.Order) error {
 	}
 
 	return batch.Send()
+}
+
+// HandleSettlePendingPayments 处理到期的延迟到账订单
+func HandleSettlePendingPayments(ctx context.Context, _ *asynq.Task) error {
+	batchSize := 500
+	totalSettled := 0
+
+	for {
+		orders, err := model.GetDueTransferOrders(ctx, batchSize)
+		if err != nil {
+			logger.ErrorF(ctx, "查询到期待结算订单失败: %v", err)
+			return err
+		}
+
+		if len(orders) == 0 {
+			break
+		}
+
+		for _, order := range orders {
+			if err := db.DB(ctx).Transaction(func(tx *gorm.DB) error {
+				// 锁定行
+				var lockedOrderTransfer model.OrderTransfer
+				if err := tx.Clauses(clause.Locking{Strength: "UPDATE", Options: "NOWAIT"}).
+					Where("id = ? AND status = ?", order.ID, model.OrderTransferStatusPending).
+					First(&lockedOrderTransfer).Error; err != nil {
+					return fmt.Errorf("lock order failed: %w", err)
+				}
+
+				// 移动到可用余额
+				if err := service.SettlePendingToAvailable(tx, lockedOrderTransfer.PayeeUserID, lockedOrderTransfer.Amount); err != nil {
+					return fmt.Errorf("settle balance failed: %w", err)
+				}
+
+				// 更新订单状态
+				if err := tx.Model(&lockedOrderTransfer).Updates(
+					map[string]interface{}{
+						"transfer_at": time.Now(),
+						"status":      model.OrderTransferStatusCompleted,
+					},
+				).Error; err != nil {
+					return fmt.Errorf("update order status failed: %w", err)
+				}
+
+				logger.InfoF(ctx, "订单[ID:%d]延迟到账结算成功: 商户[ID:%d] 金额[%s]", lockedOrderTransfer.ID, lockedOrderTransfer.PayeeUserID, lockedOrderTransfer.Amount.String())
+				return nil
+			}); err != nil {
+				logger.ErrorF(ctx, "结算订单[ID:%d]失败: %v", order.ID, err)
+				continue
+			}
+			totalSettled++
+		}
+	}
+
+	if totalSettled > 0 {
+		logger.InfoF(ctx, "延迟到账结算完成，共结算 %d 笔", totalSettled)
+	}
+	return nil
 }

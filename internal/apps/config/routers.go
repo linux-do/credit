@@ -33,6 +33,8 @@ type PublicConfigResponse struct {
 	RedEnvelopeDailyLimit    int             `json:"red_envelope_daily_limit"`    // 每日发红包的个数限制
 	RedEnvelopeFeeRate       decimal.Decimal `json:"red_envelope_fee_rate"`       // 红包手续费率
 	RedEnvelopeMaxRecipients int             `json:"red_envelope_max_recipients"` // 每个红包的最大可领取人数上限
+	SettlementDelayDaysMin   int             `json:"settlement_delay_days_min"`   // 商户收款延迟到账最小天数
+	SettlementDelayDaysMax   int             `json:"settlement_delay_days_max"`   // 商户收款延迟到账最大天数
 }
 
 // GetPublicConfig 获取公共配置
@@ -81,6 +83,18 @@ func GetPublicConfig(c *gin.Context) {
 		return
 	}
 
+	settlementDelayDaysMin, err := model.GetIntByKey(c.Request.Context(), model.ConfigKeySettlementDelayDaysMin)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, util.Err(err.Error()))
+		return
+	}
+
+	settlementDelayDaysMax, err := model.GetIntByKey(c.Request.Context(), model.ConfigKeySettlementDelayDaysMax)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, util.Err(err.Error()))
+		return
+	}
+
 	response := PublicConfigResponse{
 		DisputeTimeWindowHours:   disputeTimeHours,
 		RedEnvelopeEnabled:       redEnvelopeEnabled,
@@ -88,6 +102,8 @@ func GetPublicConfig(c *gin.Context) {
 		RedEnvelopeDailyLimit:    redEnvelopeDailyLimit,
 		RedEnvelopeFeeRate:       redEnvelopeFeeRate,
 		RedEnvelopeMaxRecipients: redEnvelopeMaxRecipients,
+		SettlementDelayDaysMin:   settlementDelayDaysMin,
+		SettlementDelayDaysMax:   settlementDelayDaysMax,
 	}
 
 	c.JSON(http.StatusOK, util.OK(response))

@@ -385,6 +385,7 @@ func PayByLink(c *gin.Context) {
 
 			// 非测试模式：扣减用户余额和增加商户余额
 			if !isTestMode {
+				// 扣用户
 				if err := service.UpdateBalance(tx, service.BalanceUpdateOptions{
 					UserID:       currentUser.ID,
 					Amount:       paymentLink.Amount,
@@ -396,15 +397,29 @@ func PayByLink(c *gin.Context) {
 					return err
 				}
 
+				// 加商家
 				merchantScoreIncrease := paymentLink.Amount.Mul(merchantPayConfig.ScoreRate).Round(0).IntPart()
 				if err := service.UpdateBalance(tx, service.BalanceUpdateOptions{
-					UserID:       merchantUser.ID,
-					Amount:       merchantAmount,
-					Operation:    service.BalanceAdd,
-					ScoreChange:  merchantScoreIncrease,
-					TotalField:   "total_receive",
-					CheckBalance: false,
+					UserID:        merchantUser.ID,
+					Amount:        merchantAmount,
+					Operation:     service.BalanceAdd,
+					ScoreChange:   merchantScoreIncrease,
+					TotalField:    "total_receive",
+					CheckBalance:  false,
+					AsyncTransfer: true,
 				}); err != nil {
+					return err
+				}
+
+				// 创建异步流转记录
+				orderTransfer := model.OrderTransfer{
+					OrderID:     order.ID,
+					PayeeUserID: merchantUser.ID,
+					Amount:      merchantAmount,
+					Status:      model.OrderTransferStatusPending,
+					TransferAt:  model.GetRandomSettleAt(c.Request.Context()),
+				}
+				if err := tx.Create(&orderTransfer).Error; err != nil {
 					return err
 				}
 			}

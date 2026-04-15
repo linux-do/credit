@@ -47,15 +47,16 @@ type TransactionListResponse struct {
 	PageSize int   `json:"page_size"`
 	Orders   []struct {
 		model.Order
-		AppName        string  `json:"app_name"`
-		AppHomepageURL string  `json:"app_homepage_url"`
-		AppDescription string  `json:"app_description"`
-		RedirectURI    string  `json:"redirect_uri"`
-		DisputeID      *uint64 `json:"dispute_id,string"`
-		PayerUsername  string  `json:"payer_username"`
-		PayeeUsername  string  `json:"payee_username"`
-		PayerAvatarURL string  `json:"payer_avatar_url"`
-		PayeeAvatarURL string  `json:"payee_avatar_url"`
+		AppName             string  `json:"app_name"`
+		AppHomepageURL      string  `json:"app_homepage_url"`
+		AppDescription      string  `json:"app_description"`
+		RedirectURI         string  `json:"redirect_uri"`
+		DisputeID           *uint64 `json:"dispute_id,string"`
+		PayerUsername       string  `json:"payer_username"`
+		PayeeUsername       string  `json:"payee_username"`
+		PayerAvatarURL      string  `json:"payer_avatar_url"`
+		PayeeAvatarURL      string  `json:"payee_avatar_url"`
+		PayeeTransferStatus string  `json:"payee_transfer_status"`
 	} `json:"orders"`
 }
 
@@ -76,11 +77,12 @@ func ListTransactions(c *gin.Context) {
 	user, _ := util.GetFromContext[*model.User](c, oauth.UserObjKey)
 
 	baseQuery := db.DB(c.Request.Context()).Model(&model.Order{}).
-		Select("orders.*, merchant_api_keys.app_name, merchant_api_keys.app_homepage_url, merchant_api_keys.app_description, merchant_api_keys.redirect_uri, disputes.id as dispute_id, payer_user.username as payer_username, payee_user.username as payee_username, payer_user.avatar_url as payer_avatar_url, payee_user.avatar_url as payee_avatar_url").
+		Select("orders.*, merchant_api_keys.app_name, merchant_api_keys.app_homepage_url, merchant_api_keys.app_description, merchant_api_keys.redirect_uri, disputes.id as dispute_id, payer_user.username as payer_username, payee_user.username as payee_username, payer_user.avatar_url as payer_avatar_url, payee_user.avatar_url as payee_avatar_url, order_transfers.status as payee_transfer_status").
 		Joins("LEFT JOIN merchant_api_keys ON orders.client_id = merchant_api_keys.client_id").
 		Joins("LEFT JOIN disputes ON orders.id = disputes.order_id").
 		Joins("LEFT JOIN users as payer_user ON orders.payer_user_id = payer_user.id").
-		Joins("LEFT JOIN users as payee_user ON orders.payee_user_id = payee_user.id")
+		Joins("LEFT JOIN users as payee_user ON orders.payee_user_id = payee_user.id").
+		Joins("LEFT JOIN order_transfers ON orders.id = order_transfers.order_id")
 
 	clientIDHandled := false
 	if len(req.Types) > 0 {

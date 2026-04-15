@@ -434,12 +434,25 @@ func MerchantDistribute(c *gin.Context) {
 
 		// 增加收款人余额（按分发费率计算后的金额）
 		if err := service.UpdateBalance(tx, service.BalanceUpdateOptions{
-			UserID:       recipient.ID,
-			Amount:       recipientAmount,
-			Operation:    service.BalanceAdd,
-			TotalField:   "total_receive",
-			CheckBalance: false,
+			UserID:        recipient.ID,
+			Amount:        recipientAmount,
+			Operation:     service.BalanceAdd,
+			TotalField:    "total_receive",
+			CheckBalance:  false,
+			AsyncTransfer: true,
 		}); err != nil {
+			return err
+		}
+
+		// 创建异步到账任务
+		orderTransfer := model.OrderTransfer{
+			OrderID:     orderID,
+			PayeeUserID: recipient.ID,
+			Amount:      recipientAmount,
+			Status:      model.OrderTransferStatusPending,
+			TransferAt:  model.GetRandomSettleAt(c.Request.Context()),
+		}
+		if err := tx.Create(&orderTransfer).Error; err != nil {
 			return err
 		}
 
@@ -584,6 +597,7 @@ func PayMerchantOrder(c *gin.Context) {
 
 			// 非测试模式：扣减用户余额和增加商户余额
 			if !isTestMode {
+				// 扣用户
 				if err := service.UpdateBalance(tx, service.BalanceUpdateOptions{
 					UserID:       orderCtx.CurrentUser.ID,
 					Amount:       order.Amount,
@@ -595,15 +609,29 @@ func PayMerchantOrder(c *gin.Context) {
 					return err
 				}
 
+				// 加给商家
 				merchantScoreIncrease := order.Amount.Mul(orderCtx.MerchantPayConfig.ScoreRate).Round(0).IntPart()
 				if err := service.UpdateBalance(tx, service.BalanceUpdateOptions{
-					UserID:       orderCtx.MerchantUser.ID,
-					Amount:       merchantAmount,
-					Operation:    service.BalanceAdd,
-					ScoreChange:  merchantScoreIncrease,
-					TotalField:   "total_receive",
-					CheckBalance: false,
+					UserID:        orderCtx.MerchantUser.ID,
+					Amount:        merchantAmount,
+					Operation:     service.BalanceAdd,
+					ScoreChange:   merchantScoreIncrease,
+					TotalField:    "total_receive",
+					CheckBalance:  false,
+					AsyncTransfer: true,
 				}); err != nil {
+					return err
+				}
+
+				// 异步到账任务
+				orderTransfer := model.OrderTransfer{
+					OrderID:     order.ID,
+					PayeeUserID: order.PayeeUserID,
+					Amount:      merchantAmount,
+					Status:      model.OrderTransferStatusPending,
+					TransferAt:  model.GetRandomSettleAt(c.Request.Context()),
+				}
+				if err := tx.Create(&orderTransfer).Error; err != nil {
 					return err
 				}
 			}

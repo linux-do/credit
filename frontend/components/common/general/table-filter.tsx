@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
-import type { OrderType, OrderStatus } from "@/lib/services"
+import type { OrderType, OrderStatus, TransferStatus } from "@/lib/services"
 
 /* 类型标签配置 */
 export const typeConfig: Record<OrderType, { label: string; color: string }> = {
@@ -33,7 +33,12 @@ export const statusConfig: Record<OrderStatus, { label: string; color: string }>
   expired: { label: '已过期', color: 'bg-muted/50 text-gray-800 dark:bg-gray-900 dark:text-gray-300' },
   disputing: { label: '争议中', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300' },
   refund: { label: '已退回', color: 'bg-muted/50 text-gray-800 dark:bg-gray-900 dark:text-gray-300' },
-  refused: { label: '已拒绝', color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' }
+  refused: { label: '已拒绝', color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' },
+}
+
+export const transferStatusConfig: Record<TransferStatus, { label: string; color: string }> = {
+  completed: { label: '已结算', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' },
+  pending: { label: '未结算', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' },
 }
 
 /* 时间范围选项 */
@@ -199,10 +204,10 @@ export function TableFilter({
   }
 
   /* 是否有激活的筛选 */
-  const hasActiveFilters = 
-    (enabledFilters.type && selectedTypes.length > 0) || 
-    (enabledFilters.status && selectedStatuses.length > 0) || 
-    (enabledFilters.timeRange && selectedTimeRange !== null) || 
+  const hasActiveFilters =
+    (enabledFilters.type && selectedTypes.length > 0) ||
+    (enabledFilters.status && selectedStatuses.length > 0) ||
+    (enabledFilters.timeRange && selectedTimeRange !== null) ||
     (enabledFilters.search && Object.values(searchValues || {}).some(v => v))
 
   return (

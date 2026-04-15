@@ -111,6 +111,7 @@ scheduler:
   sync_orders_to_clickhouse_task_cron: "10 0 * * *"
   refund_expired_red_envelopes_task_cron: "0 1 * * *"
   cleanup_unused_uploads_task_cron: "0 */2 * * *"
+  settle_pending_payments_task_cron: "0 * * * *"
 
 # Worker
 worker:

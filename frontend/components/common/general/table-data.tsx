@@ -2,7 +2,7 @@ import * as React from "react"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { typeConfig, statusConfig } from "@/components/common/general/table-filter"
+import { typeConfig, statusConfig, transferStatusConfig } from "@/components/common/general/table-filter"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
 import { ErrorInline } from "@/components/layout/error"
@@ -19,6 +19,7 @@ import {
   ViewDisputeHistoryDialog,
   RefundReviewDialog,
 } from "./dispute-dialog"
+import {usePublicConfig} from "@/hooks/use-public-config";
 
 const ROW_HEIGHT = 36
 
@@ -62,6 +63,7 @@ export const TransactionDataTable = React.memo(function TransactionDataTable({
               <TableHead className="whitespace-nowrap text-center min-w-[60px]">积分</TableHead>
               <TableHead className="whitespace-nowrap text-center min-w-[50px]">类型</TableHead>
               <TableHead className="whitespace-nowrap text-center min-w-[50px]">状态</TableHead>
+              <TableHead className="whitespace-nowrap text-center min-w-[50px]">结算</TableHead>
               <TableHead className="whitespace-nowrap text-center min-w-[80px]">积分动向</TableHead>
               <TableHead className="whitespace-nowrap text-center min-w-[80px]">应用名</TableHead>
               <TableHead className="whitespace-nowrap text-left min-w-[120px]">编号</TableHead>
@@ -124,6 +126,8 @@ const TransactionTableRow = React.memo(React.forwardRef<HTMLTableRowElement, {
     </span>
   )
 
+  const { config: publicConfig } = usePublicConfig()
+
   const isDisputeSupported = order.type === 'payment' || order.type === 'online' || order.type === 'receive'
   const isCurrentUserPayer = user?.id === order.payer_user_id
   const isCurrentUserPayee = user?.id === order.payee_user_id
@@ -160,6 +164,33 @@ const TransactionTableRow = React.memo(React.forwardRef<HTMLTableRowElement, {
         >
           {statusConfig[order.status].label}
         </Badge>
+      </TableCell>
+      <TableCell className="text-[11px] font-medium whitespace-nowrap text-center py-1">
+        {
+          /* 未到账只是商家的状态，只需要向商户展示 */
+          order.payee_transfer_status === 'pending' && isCurrentUserPayee ?
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge
+                    variant="secondary"
+                    className={`text-[10px] px-1 ${transferStatusConfig[order.payee_transfer_status].color}`}
+                  >
+                    {transferStatusConfig[order.payee_transfer_status].label}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="p-3">
+                  {`预计需要${publicConfig?.settlement_delay_days_min ?? 7}-${publicConfig?.settlement_delay_days_max ?? 14}天`}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider> :
+            <Badge
+              variant="secondary"
+              className={`text-[10px] px-1 ${ transferStatusConfig['completed'].color }`}
+            >
+              {transferStatusConfig['completed'].label}
+            </Badge>
+        }
       </TableCell>
       <TableCell className="text-[11px] font-medium whitespace-nowrap text-center py-1">
         {order.status === 'pending' || order.status === 'expired' || order.type === 'community' || order.type === 'red_envelope_send' || order.type === 'red_envelope_refund' ? (

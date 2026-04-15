@@ -41,22 +41,28 @@ const (
 
 // BalanceUpdateOptions 余额更新选项
 type BalanceUpdateOptions struct {
-	UserID       uint64
-	Amount       decimal.Decimal
-	Operation    BalanceOperation
-	ScoreChange  int64
-	TotalField   string // 累计字段：total_payment / total_receive / total_transfer
-	CheckBalance bool
+	UserID        uint64
+	Amount        decimal.Decimal
+	Operation     BalanceOperation
+	ScoreChange   int64
+	TotalField    string // 累计字段：total_payment / total_receive / total_transfer
+	CheckBalance  bool
+	AsyncTransfer bool // 异步结算时使用 pending_balance 字段
 }
 
 // UpdateBalance 通用余额更新函数
 func UpdateBalance(tx *gorm.DB, opts BalanceUpdateOptions) error {
 	updates := make(map[string]interface{})
 
+	balanceField := "available_balance"
+	if opts.AsyncTransfer {
+		balanceField = "pending_balance"
+	}
+
 	if opts.Operation == BalanceAdd {
-		updates["available_balance"] = gorm.Expr("available_balance + ?", opts.Amount)
+		updates[balanceField] = gorm.Expr(balanceField+" + ?", opts.Amount)
 	} else {
-		updates["available_balance"] = gorm.Expr("available_balance - ?", opts.Amount)
+		updates[balanceField] = gorm.Expr(balanceField+" - ?", opts.Amount)
 	}
 
 	if opts.TotalField != "" {
@@ -69,7 +75,7 @@ func UpdateBalance(tx *gorm.DB, opts BalanceUpdateOptions) error {
 
 	query := tx.Model(&model.User{}).Where("id = ?", opts.UserID)
 	if opts.CheckBalance {
-		query = query.Where("available_balance >= ?", opts.Amount)
+		query = query.Where(balanceField+" >= ?", opts.Amount)
 	}
 
 	result := query.UpdateColumns(updates)
@@ -80,6 +86,23 @@ func UpdateBalance(tx *gorm.DB, opts BalanceUpdateOptions) error {
 		return errors.New(common.InsufficientBalance)
 	}
 
+	return nil
+}
+
+// SettlePendingToAvailable 将资金从 PendingBalance 转入 AvailableBalance
+func SettlePendingToAvailable(tx *gorm.DB, userID uint64, amount decimal.Decimal) error {
+	result := tx.Model(&model.User{}).
+		Where("id = ? AND pending_balance >= ?", userID, amount).
+		UpdateColumns(map[string]interface{}{
+			"pending_balance":   gorm.Expr("pending_balance - ?", amount),
+			"available_balance": gorm.Expr("available_balance + ?", amount),
+		})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return errors.New(common.InsufficientBalance)
+	}
 	return nil
 }
 

@@ -117,13 +117,14 @@ const createDisputeOrder = (dispute: DisputeWithOrder, type: 'receive' | 'paymen
   expires_at: '',
   created_at: '',
   updated_at: '',
-  payment_type: ''
+  payment_type: '',
+  payee_transfer_status: 'completed' as const,
 })
 
 /**
  * 争议列表骨架屏
  * 用于显示争议列表的加载状态
- * 
+ *
  * @returns 争议列表骨架屏
  */
 const DisputeListSkeleton = () => (
@@ -197,7 +198,7 @@ const getStatusVariant = (status: string): "default" | "secondary" | "destructiv
 /**
  * 活动卡片
  * 用于显示活动列表数据
- * 
+ *
  * @returns 活动列表卡片
  */
 function PaymentCard({ onViewAll }: { onViewAll: () => void }) {
@@ -278,7 +279,7 @@ function PaymentCard({ onViewAll }: { onViewAll: () => void }) {
 /**
  * 收入统计卡片
  * 用于显示每日收入统计
- * 
+ *
  * @returns 收入统计卡片
  */
 function IncomeStatsCard() {
@@ -391,7 +392,7 @@ function IncomeStatsCard() {
 /**
  * 支出统计卡片
  * 用于显示每日支出统计
- * 
+ *
  * @returns 支出统计卡片
  */
 function ExpenseStatsCard() {
@@ -411,7 +412,7 @@ function ExpenseStatsCard() {
         if (income < 0) {
           expense = expense - income;
           income = 0;
-        } 
+        }
         newStats[i] = {
           date: stat.date,
           income: String(income),
@@ -607,7 +608,7 @@ function TopCustomersCard() {
 /**
  * 待处理的争议卡片
  * 用于显示待处理的争议数据
- * 
+ *
  * @returns 待处理的争议卡片
  */
 function PendingDisputesCard({ onViewAll }: { onViewAll: () => void }) {
@@ -653,7 +654,7 @@ function PendingDisputesCard({ onViewAll }: { onViewAll: () => void }) {
 /**
  * 我发起的争议卡片
  * 用于显示我发起的争议数据
- * 
+ *
  * @returns 我发起的争议卡片
  */
 function MyDisputesCard({ onViewAll }: { onViewAll: () => void }) {
@@ -699,7 +700,7 @@ function MyDisputesCard({ onViewAll }: { onViewAll: () => void }) {
 /**
  * 概览面板组件
  * 用于显示概览面板
- * 
+ *
  * @returns 概览面板组件
  */
 export function OverviewPanel() {

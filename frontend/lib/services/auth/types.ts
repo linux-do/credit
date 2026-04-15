@@ -54,6 +54,8 @@ export interface User {
   community_balance: string;
   /** 可用余额 */
   available_balance: string;
+  /** 在途资金（延迟到账中） */
+  pending_balance: string;
   /** 支付分数 */
   pay_score: number;
   /** 是否有支付密钥 */

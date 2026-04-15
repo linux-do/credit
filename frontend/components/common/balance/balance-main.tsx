@@ -9,7 +9,7 @@ import { useUser } from "@/contexts/user-context"
 
 /**
  * 积分余额主页面组件
- * 
+ *
  * 负责组装积分余额页面的各个子组件,包括积分余额总览、积分余额摘要、近期活动和报告侧边栏
  */
 export function BalanceMain() {

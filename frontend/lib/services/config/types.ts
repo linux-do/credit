@@ -14,4 +14,8 @@ export interface PublicConfigResponse {
   red_envelope_fee_rate: string;
   /** 每个红包的最大可领取人数上限 */
   red_envelope_max_recipients: number;
+  /** 到账最短时间 **/
+  settlement_delay_days_min: number;
+  /** 到账最长时间 **/
+  settlement_delay_days_max: number;
 }

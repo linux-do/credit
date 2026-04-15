@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
 	"strconv"
 	"time"
 
@@ -44,6 +45,8 @@ const (
 	ConfigKeyRedEnvelopeMaxRecipients   = "red_envelope_max_recipients"   // 每个红包的最大可领取人数上限
 	ConfigKeyUserBalanceStatsCacheTTL   = "user_balance_stats_cache_ttl"  // 用户余额统计缓存过期时间（秒)
 	ConfigKeyUploadAllowedExtensions    = "upload_allowed_extensions"     // 允许上传的文件扩展名，逗号分隔
+	ConfigKeySettlementDelayDaysMin     = "settlement_delay_days_min"     // 商户收款延迟到账最小天数（0表示即时到账）
+	ConfigKeySettlementDelayDaysMax     = "settlement_delay_days_max"     // 商户收款延迟到账最大天数（实际天数在min~max随机）
 )
 
 const (
@@ -124,4 +127,31 @@ func GetBoolByKey(ctx context.Context, key string) (bool, error) {
 	}
 
 	return value, nil
+}
+
+const defaultHoldDays = 7
+
+func GetRandomHoldDays(ctx context.Context) int {
+	// get config
+	holdDays := defaultHoldDays
+	holdDaysMin, errMin := GetIntByKey(ctx, ConfigKeySettlementDelayDaysMin)
+	if errMin != nil || holdDaysMin <= 0 {
+		holdDaysMin = defaultHoldDays
+	}
+	holdDaysMax, errMax := GetIntByKey(ctx, ConfigKeySettlementDelayDaysMax)
+	if errMax != nil || holdDaysMax <= 0 {
+		holdDaysMax = defaultHoldDays
+	}
+	// check config
+	if holdDaysMin == holdDaysMax {
+		return holdDaysMin
+	}
+	if holdDaysMin > holdDaysMax {
+		return holdDays
+	}
+	return holdDaysMin + rand.Intn(holdDaysMax-holdDaysMin+1)
+}
+
+func GetRandomSettleAt(ctx context.Context) time.Time {
+	return time.Now().AddDate(0, 0, GetRandomHoldDays(ctx))
 }

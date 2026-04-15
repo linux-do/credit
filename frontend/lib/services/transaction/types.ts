@@ -9,6 +9,11 @@ export type OrderType = 'receive' | 'payment' | 'transfer' | 'community' | 'onli
 export type OrderStatus = 'success' | 'pending' | 'failed' | 'expired' | 'disputing' | 'refund' | 'refused';
 
 /**
+ * 到账状态
+ */
+export type TransferStatus = 'pending' | 'completed';
+
+/**
  * 订单信息
  */
 export interface Order {
@@ -62,6 +67,8 @@ export interface Order {
   dispute_id?: string;
   /** 支付类型 */
   payment_type: string;
+  /** 是否到账 */
+  payee_transfer_status: TransferStatus;
 }
 
 /**
