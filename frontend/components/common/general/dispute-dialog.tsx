@@ -620,7 +620,7 @@ export function RefundReviewDialog({ order, onSuccess }: { order: Order; onSucce
       })
 
       updateOrderStatus(order.id, {
-        status: action === 'refund' ? 'refund' : 'success'
+        status: action === 'refund' ? 'refund' : 'refused'
       })
 
       setOpen(false)

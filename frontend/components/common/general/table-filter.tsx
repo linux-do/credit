@@ -35,12 +35,12 @@ export const statusConfig: Record<OrderStatus, { label: string; color: string }>
   refused: { label: '已拒绝', color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' }
 }
 
-export type DisplayOrderStatus = OrderStatus | 'success_unsettled'
+export type DisplayOrderStatus = OrderStatus | 'transfer_pending'
 
 export const displayStatusConfig: Record<DisplayOrderStatus, { label: string; color: string }> = {
   pending: statusConfig.pending,
   success: statusConfig.success,
-  success_unsettled: { label: '成功（待结算）', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' },
+  transfer_pending: { label: '结算中', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' },
   failed: statusConfig.failed,
   expired: statusConfig.expired,
   disputing: statusConfig.disputing,
@@ -55,9 +55,8 @@ export function mapDisplayStatusToQuery(
     return {}
   }
 
-  if (selectedStatus === 'success_unsettled') {
+  if (selectedStatus === 'transfer_pending') {
     return {
-      statuses: ['success'],
       payee_transfer_status: 'pending',
     }
   }

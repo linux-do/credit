@@ -136,8 +136,24 @@ const TransactionTableRow = React.memo(React.forwardRef<HTMLTableRowElement, {
   const isCurrentUserPayer = user?.id === order.payer_user_id
   const isCurrentUserPayee = user?.id === order.payee_user_id
   const isDisputing = order.status === 'disputing' && isCurrentUserPayee
-  const isSettlementPending = order.status === 'success' && order.payee_transfer_status === 'pending' && isCurrentUserPayee
+  const hasPendingTransfer = order.payee_transfer_status === 'pending' && isCurrentUserPayee
   const currentTypeConfig = typeConfig[order.type as keyof typeof typeConfig] ?? FALLBACK_TYPE_CONFIG
+  const pendingTransferHint = React.useMemo(() => {
+    const settlementRange = `${publicConfig?.settlement_delay_days_min ?? 7}-${publicConfig?.settlement_delay_days_max ?? 14} 天`
+
+    switch (order.status) {
+      case 'success':
+        return `延迟结算机制：积分会在 ${settlementRange} 后转入可用积分`
+      case 'refused':
+        return `延迟结算机制：已拒绝退款，积分会在 ${settlementRange} 后转入可用积分`
+      case 'disputing':
+        return `延迟结算机制：争议处理中，积分会在 ${settlementRange} 后转入可用积分`
+      case 'refund':
+        return `延迟结算机制：已退款成功，积分会在 ${settlementRange} 后转入可用积分`
+      default:
+        return `延迟结算机制：积分会在 ${settlementRange} 后转入可用积分`
+    }
+  }, [order.status, publicConfig?.settlement_delay_days_max, publicConfig?.settlement_delay_days_min])
 
   return (
     <TableRow
@@ -172,20 +188,20 @@ const TransactionTableRow = React.memo(React.forwardRef<HTMLTableRowElement, {
           >
             {statusConfig[order.status].label}
           </Badge>
-          {isSettlementPending && (
+          {hasPendingTransfer && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
                     type="button"
                     className="absolute left-full ml-1 inline-flex items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
-                    aria-label="查看待结算说明"
+                    aria-label="查看到账说明"
                   >
                     <Lightbulb className="size-3" />
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="px-2.5 py-1.5">
-                  {`待结算，预计需要 ${publicConfig?.settlement_delay_days_min ?? 7}-${publicConfig?.settlement_delay_days_max ?? 14} 天转入可用积分`}
+                  {pendingTransferHint}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
