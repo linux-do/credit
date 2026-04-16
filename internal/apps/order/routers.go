@@ -28,17 +28,18 @@ import (
 )
 
 type TransactionListRequest struct {
-	Page          int        `json:"page" form:"page" binding:"min=1"`
-	PageSize      int        `json:"page_size" form:"page_size" binding:"min=1,max=100"`
-	Types         []string   `json:"types" form:"types" binding:"omitempty,dive,oneof=receive payment transfer community online test distribute red_envelope_send red_envelope_receive red_envelope_refund"`
-	Statuses      []string   `json:"statuses" form:"statuses" binding:"omitempty,dive,oneof=success pending failed expired disputing refund refused"`
-	ClientID      string     `json:"client_id" form:"client_id" binding:"omitempty"`
-	StartTime     *time.Time `json:"startTime" form:"startTime" binding:"omitempty"`
-	EndTime       *time.Time `json:"endTime" form:"endTime" binding:"omitempty,gtfield=StartTime"`
-	ID            *uint64    `json:"id,string" form:"id" binding:"omitempty"`
-	OrderName     string     `json:"order_name" form:"order_name" binding:"omitempty"`
-	PayerUsername string     `json:"payer_username" form:"payer_username" binding:"omitempty"`
-	PayeeUsername string     `json:"payee_username" form:"payee_username" binding:"omitempty"`
+	Page                int                       `json:"page" form:"page" binding:"min=1"`
+	PageSize            int                       `json:"page_size" form:"page_size" binding:"min=1,max=100"`
+	Types               []string                  `json:"types" form:"types" binding:"omitempty,dive,oneof=receive payment transfer community online test distribute red_envelope_send red_envelope_receive red_envelope_refund"`
+	Statuses            []string                  `json:"statuses" form:"statuses" binding:"omitempty,dive,oneof=success pending failed expired disputing refund refused"`
+	ClientID            string                    `json:"client_id" form:"client_id" binding:"omitempty"`
+	StartTime           *time.Time                `json:"startTime" form:"startTime" binding:"omitempty"`
+	EndTime             *time.Time                `json:"endTime" form:"endTime" binding:"omitempty,gtfield=StartTime"`
+	ID                  *uint64                   `json:"id,string" form:"id" binding:"omitempty"`
+	OrderName           string                    `json:"order_name" form:"order_name" binding:"omitempty"`
+	PayerUsername       string                    `json:"payer_username" form:"payer_username" binding:"omitempty"`
+	PayeeUsername       string                    `json:"payee_username" form:"payee_username" binding:"omitempty"`
+	PayeeTransferStatus model.OrderTransferStatus `json:"payee_transfer_status" form:"payee_transfer_status" binding:"omitempty,oneof=pending completed"`
 }
 
 type TransactionListResponse struct {
@@ -165,6 +166,14 @@ func ListTransactions(c *gin.Context) {
 	if req.PayeeUsername != "" {
 		baseQuery = baseQuery.Where("payee_user.username LIKE ?", req.PayeeUsername+"%")
 	}
+	if req.PayeeTransferStatus != "" {
+		switch req.PayeeTransferStatus {
+		case model.OrderTransferStatusPending:
+			baseQuery = baseQuery.Where("order_transfers.status = ?", model.OrderTransferStatusPending)
+		case model.OrderTransferStatusCompleted:
+			baseQuery = baseQuery.Where("order_transfers.status = ? OR order_transfers.status IS NULL", model.OrderTransferStatusCompleted)
+		}
+	}
 	if req.StartTime != nil {
 		baseQuery = baseQuery.Where("orders.created_at >= ?", req.StartTime)
 	}
@@ -191,7 +200,11 @@ func ListTransactions(c *gin.Context) {
 	}
 
 	// 转换订单类型：从收款方视角看，payment 订单应该显示为 receive
+	// 并更新 Payee_transfer_status，兼容为空的场景
 	for i := range response.Orders {
+		if response.Orders[i].PayeeTransferStatus == "" {
+			response.Orders[i].PayeeTransferStatus = string(model.OrderTransferStatusCompleted)
+		}
 		if response.Orders[i].Type == model.OrderTypePayment && response.Orders[i].PayeeUserID == user.ID {
 			response.Orders[i].Type = model.OrderTypeReceive
 		}
