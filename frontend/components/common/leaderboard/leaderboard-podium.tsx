@@ -66,7 +66,7 @@ function PodiumSkeleton() {
           return (
             <div key={rank} className={cn("flex flex-col items-center gap-0", cfg.order)}>
               <Skeleton className={cn("rounded-lg", rank === 1 ? "h-[100px] w-[76px]" : "h-[72px] w-[52px]")} />
-              <Skeleton className={cn("-mt-5 shrink-0", cfg.avatarSize, cfg.avatarRadius)} />
+              <Skeleton className={cn("shrink-0 rounded-full", cfg.avatarSize, cfg.avatarNegMt)} />
               <Skeleton className="mt-3 h-4 w-[70%]" />
               <Skeleton className="mt-1.5 h-4 w-[45%]" />
             </div>
@@ -83,10 +83,9 @@ function PodiumColumn({ entry, rank }: { entry: LeaderboardEntry; rank: PodiumRa
   return (
     <article className={cn("flex min-w-0 flex-col items-center", cfg.order, cfg.shift)}>
 
-      {/* 排名大字 */}
       <div
         className={cn(
-          "select-none bg-clip-text text-transparent font-black leading-none tracking-[-0.05em]",
+          "select-none bg-clip-text text-transparent font-black leading-none tracking-[-0.05em] -mt-8",
           cfg.numSize,
           `bg-linear-to-b ${cfg.numColor}`,
         )}
@@ -94,7 +93,6 @@ function PodiumColumn({ entry, rank }: { entry: LeaderboardEntry; rank: PodiumRa
         {String(rank).padStart(2, "0")}
       </div>
 
-      {/* 头像 — 圆形 */}
       <Avatar className={cn("shrink-0 rounded-full", cfg.avatarSize, cfg.avatarNegMt)}>
         <AvatarImage src={entry.avatar_url} alt={entry.username} className="object-cover" />
         <AvatarFallback className={cn("rounded-full font-bold", rank === 1 ? "text-sm" : "text-xs")}>
@@ -102,13 +100,11 @@ function PodiumColumn({ entry, rank }: { entry: LeaderboardEntry; rank: PodiumRa
         </AvatarFallback>
       </Avatar>
 
-      {/* 用户名 */}
       <div className={cn("mt-2.5 w-full truncate text-center tracking-tight text-foreground", cfg.nameSize)}>
         {entry.username}
       </div>
 
-      {/* 积分 */}
-      <div className={cn("mt-0.5 tabular-nums tracking-tight", cfg.scoreSize, cfg.scoreColor)}>
+      <div className={cn("mt-0.5 mb-3 tabular-nums tracking-tight", cfg.scoreSize, cfg.scoreColor)}>
         {formatBalance(entry.available_balance)}
       </div>
 

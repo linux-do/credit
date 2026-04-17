@@ -14,7 +14,6 @@ import { useUser } from "@/contexts/user-context"
 import { useLeaderboard } from "@/hooks/use-leaderboard"
 import { LeaderboardPodium } from "@/components/common/leaderboard/leaderboard-podium"
 import { LeaderboardTable } from "@/components/common/leaderboard/leaderboard-table"
-import { LoadingState } from "@/components/layout/loading"
 import { cn } from "@/lib/utils"
 
 /**
@@ -32,6 +31,7 @@ export function LeaderboardMain() {
     loadNextPage,
     refresh,
   } = useLeaderboard()
+  const isInitialLoading = loading && items.length === 0
 
   const currentUserEntry = React.useMemo(() => {
     if (!myRank?.user) return undefined
@@ -48,10 +48,6 @@ export function LeaderboardMain() {
       available_balance: myRank.user.available_balance,
     }
   }, [items, myRank, user])
-
-  if (loading && items.length === 0) {
-    return <LoadingState title="加载中" description="正在获取排行榜数据..." />
-  }
 
   return (
     <div className="py-6 space-y-10">
@@ -85,14 +81,14 @@ export function LeaderboardMain() {
 
       <LeaderboardPodium
         items={items.slice(0, 3)}
-        loading={loading}
+        loading={isInitialLoading}
       />
 
       <section>
         <h2 className="font-semibold mb-4">完整榜单</h2>
         <LeaderboardTable
           items={items}
-          loading={loading || loadingMore || myRankLoading}
+          loading={isInitialLoading}
           currentUserId={myRank?.user.user_id}
           currentUserEntry={currentUserEntry}
           currentUserRank={myRank?.user.rank}
