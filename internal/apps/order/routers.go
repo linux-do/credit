@@ -58,6 +58,7 @@ type TransactionListResponse struct {
 		PayerAvatarURL      string  `json:"payer_avatar_url"`
 		PayeeAvatarURL      string  `json:"payee_avatar_url"`
 		PayeeTransferStatus string  `json:"payee_transfer_status"`
+		PayeeTransferAt     string  `json:"payee_transfer_at"`
 	} `json:"orders"`
 }
 
@@ -78,7 +79,7 @@ func ListTransactions(c *gin.Context) {
 	user, _ := util.GetFromContext[*model.User](c, oauth.UserObjKey)
 
 	baseQuery := db.DB(c.Request.Context()).Model(&model.Order{}).
-		Select("orders.*, merchant_api_keys.app_name, merchant_api_keys.app_homepage_url, merchant_api_keys.app_description, merchant_api_keys.redirect_uri, disputes.id as dispute_id, payer_user.username as payer_username, payee_user.username as payee_username, payer_user.avatar_url as payer_avatar_url, payee_user.avatar_url as payee_avatar_url, order_transfers.status as payee_transfer_status").
+		Select("orders.*, merchant_api_keys.app_name, merchant_api_keys.app_homepage_url, merchant_api_keys.app_description, merchant_api_keys.redirect_uri, disputes.id as dispute_id, payer_user.username as payer_username, payee_user.username as payee_username, payer_user.avatar_url as payer_avatar_url, payee_user.avatar_url as payee_avatar_url, order_transfers.status as payee_transfer_status, order_transfers.transfer_at as payee_transfer_at").
 		Joins("LEFT JOIN merchant_api_keys ON orders.client_id = merchant_api_keys.client_id").
 		Joins("LEFT JOIN disputes ON orders.id = disputes.order_id").
 		Joins("LEFT JOIN users as payer_user ON orders.payer_user_id = payer_user.id").

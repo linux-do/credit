@@ -139,21 +139,21 @@ const TransactionTableRow = React.memo(React.forwardRef<HTMLTableRowElement, {
   const hasPendingTransfer = order.payee_transfer_status === 'pending' && isCurrentUserPayee
   const currentTypeConfig = typeConfig[order.type as keyof typeof typeConfig] ?? FALLBACK_TYPE_CONFIG
   const pendingTransferHint = React.useMemo(() => {
-    const settlementRange = `${publicConfig?.settlement_delay_days_min ?? 7}-${publicConfig?.settlement_delay_days_max ?? 14} 天`
+    const settleAt = order.payee_transfer_at ? formatDateTime(order.payee_transfer_at) : `${publicConfig?.settlement_delay_days_min ?? 7}-${publicConfig?.settlement_delay_days_max ?? 14} 天`
 
     switch (order.status) {
       case 'success':
-        return `延迟结算机制：积分会在 ${settlementRange} 后转入可用积分`
+        return `延迟结算机制：积分会在 ${settleAt} 后转入可用积分`
       case 'refused':
-        return `延迟结算机制：已拒绝退款，积分会在 ${settlementRange} 后转入可用积分`
+        return `延迟结算机制：已拒绝退款，积分会在 ${settleAt} 后转入可用积分`
       case 'disputing':
-        return `延迟结算机制：争议处理中，积分会在 ${settlementRange} 后转入可用积分`
+        return `延迟结算机制：争议处理中，积分会在 ${settleAt} 后转入可用积分`
       case 'refund':
-        return `延迟结算机制：已退款成功，积分会在 ${settlementRange} 后转入可用积分`
+        return `延迟结算机制：已退款成功，积分会在 ${settleAt} 后转入可用积分`
       default:
-        return `延迟结算机制：积分会在 ${settlementRange} 后转入可用积分`
+        return `延迟结算机制：积分会在 ${settleAt} 后转入可用积分`
     }
-  }, [order.status, publicConfig?.settlement_delay_days_max, publicConfig?.settlement_delay_days_min])
+  }, [order.status, order.payee_transfer_at, publicConfig?.settlement_delay_days_max, publicConfig?.settlement_delay_days_min])
 
   return (
     <TableRow

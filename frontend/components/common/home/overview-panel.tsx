@@ -119,6 +119,7 @@ const createDisputeOrder = (dispute: DisputeWithOrder, type: 'receive' | 'paymen
   updated_at: '',
   payment_type: '',
   payee_transfer_status: 'completed' as const,
+  payee_transfer_at: '',
 })
 
 /**

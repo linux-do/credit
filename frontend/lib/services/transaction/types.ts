@@ -85,6 +85,8 @@ export interface Order {
   payment_type: string;
   /** 是否到账 */
   payee_transfer_status: TransferStatus;
+  /** 到账时间 */
+  payee_transfer_at: string;
 }
 
 /**
