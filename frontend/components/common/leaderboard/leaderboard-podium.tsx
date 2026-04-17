@@ -5,80 +5,110 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import type { LeaderboardEntry } from "@/lib/services/leaderboard"
-import { Crown, Medal, Trophy } from "lucide-react"
+
 
 interface LeaderboardPodiumProps {
   items: LeaderboardEntry[]
   loading?: boolean
 }
 
-const rankStyles = {
+type PodiumRank = 1 | 2 | 3
+
+function formatBalance(value: string) {
+  return Number.parseFloat(value).toLocaleString("zh-CN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+}
+
+const rankConfig = {
   1: {
-    icon: Crown,
-    iconClassName: "text-amber-500 dark:text-amber-300",
-    rowClassName: "h-[68px] grid-cols-[44px_40px_minmax(0,1fr)_112px] bg-amber-500/[0.10] border-amber-400/45 px-4 dark:bg-amber-300/[0.08] dark:border-amber-200/20",
-    badgeClassName: "text-amber-700 dark:text-amber-200",
-    avatarClassName: "size-10",
-    nameClassName: "text-sm",
-    metaClassName: "text-amber-700/70 dark:text-amber-100/65",
-    valueClassName: "text-lg leading-none text-amber-700 dark:text-amber-100",
+    numColor: "from-amber-500/60 to-amber-500/8",
+    scoreColor: "text-amber-500",
+    avatarSize: "size-16 sm:size-[72px]",
+    numSize: "text-[72px] sm:text-[88px]",
+    nameSize: "text-base font-bold",
+    scoreSize: "text-lg font-black",
+    avatarNegMt: "-mt-6 sm:-mt-7",
+    order: "md:order-2",
+    shift: "",
   },
   2: {
-    icon: Trophy,
-    iconClassName: "text-slate-500 dark:text-slate-200",
-    rowClassName: "h-[68px] grid-cols-[44px_40px_minmax(0,1fr)_112px] bg-slate-100/70 border-slate-200/80 px-4 dark:bg-slate-200/[0.04] dark:border-slate-200/12",
-    badgeClassName: "text-slate-600 dark:text-slate-200",
-    avatarClassName: "size-10",
-    nameClassName: "text-sm",
-    metaClassName: "text-slate-600/75 dark:text-slate-300/70",
-    valueClassName: "text-lg leading-none text-foreground dark:text-slate-100",
+    numColor: "from-zinc-400/45 to-zinc-400/5",
+    scoreColor: "text-zinc-400",
+    avatarSize: "size-12 sm:size-[52px]",
+    numSize: "text-[52px] sm:text-[64px]",
+    nameSize: "text-sm font-semibold",
+    scoreSize: "text-sm font-bold",
+    avatarNegMt: "-mt-5",
+    order: "md:order-1",
+    shift: "md:translate-y-9",
   },
   3: {
-    icon: Medal,
-    iconClassName: "text-orange-600 dark:text-orange-300",
-    rowClassName: "h-[68px] grid-cols-[44px_40px_minmax(0,1fr)_112px] bg-orange-100/60 border-orange-200/70 px-4 dark:bg-orange-300/[0.05] dark:border-orange-200/12",
-    badgeClassName: "text-orange-700 dark:text-orange-200",
-    avatarClassName: "size-10",
-    nameClassName: "text-sm",
-    metaClassName: "text-orange-700/75 dark:text-orange-200/70",
-    valueClassName: "text-lg leading-none text-foreground dark:text-orange-100",
+    numColor: "from-orange-500/55 to-orange-500/8",
+    scoreColor: "text-orange-500",
+    avatarSize: "size-12 sm:size-[52px]",
+    numSize: "text-[52px] sm:text-[64px]",
+    nameSize: "text-sm font-semibold",
+    scoreSize: "text-sm font-bold",
+    avatarNegMt: "-mt-5",
+    order: "md:order-3",
+    shift: "md:translate-y-14",
   },
 } as const
 
-function TopRankRow({
-  entry,
-  rank,
-}: {
-  entry: LeaderboardEntry
-  rank: 1 | 2 | 3
-}) {
-  const style = rankStyles[rank]
-  const Icon = style.icon
+function PodiumSkeleton() {
+  return (
+    <div className="rounded-2xl bg-muted/25 px-6 pb-10 pt-6 sm:px-14">
+      <div className="grid grid-cols-3 items-end gap-4 sm:gap-12">
+        {([2, 1, 3] as PodiumRank[]).map((rank) => {
+          const cfg = rankConfig[rank]
+          return (
+            <div key={rank} className={cn("flex flex-col items-center gap-0", cfg.order)}>
+              <Skeleton className={cn("rounded-lg", rank === 1 ? "h-[100px] w-[76px]" : "h-[72px] w-[52px]")} />
+              <Skeleton className={cn("shrink-0 rounded-full", cfg.avatarSize, cfg.avatarNegMt)} />
+              <Skeleton className="mt-3 h-4 w-[70%]" />
+              <Skeleton className="mt-1.5 h-4 w-[45%]" />
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function PodiumColumn({ entry, rank }: { entry: LeaderboardEntry; rank: PodiumRank }) {
+  const cfg = rankConfig[rank]
 
   return (
-    <div className={cn("grid items-center gap-4 border border-dashed", style.rowClassName)}>
-      <div className={cn("flex items-center justify-center", style.badgeClassName)}>
-        <Icon className={cn("size-5 shrink-0", style.iconClassName)} />
+    <article className={cn("flex min-w-0 flex-col items-center", cfg.order, cfg.shift)}>
+
+      <div
+        className={cn(
+          "select-none bg-clip-text text-transparent font-black leading-none tracking-[-0.05em] -mt-8",
+          cfg.numSize,
+          `bg-linear-to-b ${cfg.numColor}`,
+        )}
+      >
+        {String(rank).padStart(2, "0")}
       </div>
 
-      <Avatar className={cn("rounded-full", style.avatarClassName)}>
-        <AvatarImage src={entry.avatar_url} alt={entry.username} />
-        <AvatarFallback className="text-sm font-semibold">
+      <Avatar className={cn("shrink-0 rounded-full", cfg.avatarSize, cfg.avatarNegMt)}>
+        <AvatarImage src={entry.avatar_url} alt={entry.username} className="object-cover" />
+        <AvatarFallback className={cn("rounded-full font-bold", rank === 1 ? "text-sm" : "text-xs")}>
           {entry.username.slice(0, 2).toUpperCase()}
         </AvatarFallback>
       </Avatar>
 
-      <div className="min-w-0">
-        <div className={cn("truncate font-semibold", style.nameClassName)}>{entry.username}</div>
+      <div className={cn("mt-2.5 w-full truncate text-center tracking-tight text-foreground", cfg.nameSize)}>
+        {entry.username}
       </div>
 
-      <div className="text-right">
-        <div className={cn("text-[11px] font-medium", style.metaClassName)}>可用积分</div>
-        <div className={cn("mt-0.5 font-semibold tabular-nums", style.valueClassName)}>
-          {parseFloat(entry.available_balance).toFixed(2)}
-        </div>
+      <div className={cn("mt-0.5 mb-3 tabular-nums tracking-tight", cfg.scoreSize, cfg.scoreColor)}>
+        {formatBalance(entry.available_balance)}
       </div>
-    </div>
+
+    </article>
   )
 }
 
@@ -86,58 +116,25 @@ export const LeaderboardPodium = React.memo(function LeaderboardPodium({
   items,
   loading,
 }: LeaderboardPodiumProps) {
-  if (loading) {
-    return (
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold">Top 3</h2>
-        <div className="space-y-3">
-          {Array.from({ length: 3 }).map((_, index) => (
-            <div
-              key={index}
-              className={cn(
-                "grid items-center gap-4 border border-dashed",
-                index === 0
-                  ? "h-[68px] grid-cols-[44px_40px_minmax(0,1fr)_112px] border-amber-400/35 px-4 dark:border-amber-200/20"
-                  : "h-[68px] grid-cols-[44px_40px_minmax(0,1fr)_112px] border-border/70 px-4 dark:border-border/40"
-              )}
-            >
-              <Skeleton className="h-5 w-5" />
-              <Skeleton className="size-10 rounded-full" />
-              <Skeleton className="h-4 w-28" />
-              <div className="space-y-2 justify-self-end">
-                <Skeleton className="h-3 w-12" />
-                <Skeleton className="h-4 w-16" />
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-    )
-  }
+  if (loading) return <PodiumSkeleton />
 
   if (items.length === 0) {
-    return (
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold">Top 3</h2>
-        <div className="py-12 text-center text-muted-foreground">
-          暂无排行数据
-        </div>
-      </section>
-    )
+    return <div className="py-16 text-center text-muted-foreground">暂无排行数据</div>
   }
 
+  const ordered = [
+    items[1] ? { entry: items[1], rank: 2 as PodiumRank } : null,
+    items[0] ? { entry: items[0], rank: 1 as PodiumRank } : null,
+    items[2] ? { entry: items[2], rank: 3 as PodiumRank } : null,
+  ].filter(Boolean) as Array<{ entry: LeaderboardEntry; rank: PodiumRank }>
+
   return (
-    <section className="space-y-4">
-      <h2 className="text-lg font-semibold">Top 3</h2>
-      <div className="space-y-3">
-        {items.map((entry, index) => (
-          <TopRankRow
-            key={entry.user_id}
-            entry={entry}
-            rank={(index + 1) as 1 | 2 | 3}
-          />
+    <div className="rounded-2xl bg-muted/25 px-6 pb-10 pt-6 sm:px-14">
+      <div className="grid grid-cols-3 items-end gap-4 sm:gap-12">
+        {ordered.map(({ entry, rank }) => (
+          <PodiumColumn key={entry.user_id} entry={entry} rank={rank} />
         ))}
       </div>
-    </section>
+    </div>
   )
 })
