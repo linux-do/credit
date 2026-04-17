@@ -1,50 +1,51 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import { motion } from "motion/react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { cn } from "@/lib/utils";
-import type { LeaderboardEntry } from "@/lib/services/leaderboard";
+import * as React from "react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { cn } from "@/lib/utils"
+import type { LeaderboardEntry } from "@/lib/services/leaderboard"
 
 interface RankRowItemProps {
-  entry: LeaderboardEntry;
-  rank: number;
-  isCurrentUser?: boolean;
+  entry: LeaderboardEntry
+  rank: number
+  isCurrentUser?: boolean
+  metaLabel?: string
+  pinned?: boolean
 }
 
 export const RankRowItem = React.memo(function RankRowItem({
   entry,
   rank,
   isCurrentUser,
+  metaLabel = "排名用户",
+  pinned = false,
 }: RankRowItemProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: (rank % 10) * 0.03 }}
+    <div
       className={cn(
-        "flex items-center gap-4 py-3 px-4 rounded-xl transition-colors",
-        isCurrentUser ? "bg-blue-100" : "hover:bg-muted/50",
+        "grid h-[68px] grid-cols-[48px_minmax(0,1fr)_112px] items-center border-b border-dashed border-border/70 px-4 transition-colors",
+        isCurrentUser && "bg-primary/5",
+        pinned && "bg-primary/[0.07]"
       )}
     >
-      <span className="w-10 text-muted-foreground font-medium tabular-nums">
-        # {rank}
-      </span>
+      <div className="text-sm font-medium tabular-nums text-muted-foreground">{rank}</div>
 
-      <Avatar className="h-9 w-9">
-        <AvatarImage src={entry.avatar_url} alt={entry.username} />
-        <AvatarFallback className="text-xs">
-          {entry.username.slice(0, 2).toUpperCase()}
-        </AvatarFallback>
-      </Avatar>
+      <div className="flex min-w-0 items-center gap-3">
+        <Avatar className="size-9">
+          <AvatarImage src={entry.avatar_url} alt={entry.username} />
+          <AvatarFallback className="text-xs font-semibold">
+            {entry.username.slice(0, 2).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+        <div className="min-w-0">
+          <div className="truncate text-sm font-medium">{entry.username}</div>
+          <div className="text-[11px] text-muted-foreground">{metaLabel}</div>
+        </div>
+      </div>
 
-      <span className="flex-1 min-w-0 font-medium truncate">
-        {entry.username}
-      </span>
-
-      <span className="font-semibold tabular-nums">
-        {parseFloat(entry.available_balance as string).toFixed(2)}
-      </span>
-    </motion.div>
-  );
-});
+      <div className="text-right text-[15px] font-semibold tabular-nums">
+        {parseFloat(entry.available_balance).toFixed(2)}
+      </div>
+    </div>
+  )
+})

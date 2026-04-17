@@ -5,9 +5,9 @@ import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Undo2, FileText, Link2 } from "lucide-react"
 import { toast } from "sonner"
-import { TableFilter, type SearchValues } from "@/components/common/general/table-filter"
+import { TableFilter, mapDisplayStatusToQuery, type DisplayOrderStatus, type SearchValues } from "@/components/common/general/table-filter"
 import { TransactionTableList } from "@/components/common/general/table-data"
-import { DEFAULT_ORDER_TYPES, type MerchantAPIKey, type OrderType, type OrderStatus } from "@/lib/services"
+import { DEFAULT_ORDER_TYPES, type MerchantAPIKey, type OrderType } from "@/lib/services"
 import { TransactionProvider, useTransaction } from "@/contexts/transaction-context"
 import { formatLocalDate } from "@/lib/utils"
 
@@ -61,33 +61,37 @@ function MerchantDataContent({ apiKey }: MerchantDataProps) {
   const { transactions, total, currentPage, totalPages, pageSize, loading, error, fetchTransactions, goToPage, setPageSize: setPageSizeHandler } = useTransaction()
 
   const [selectedTypes, setSelectedTypes] = React.useState<OrderType[]>([])
-  const [selectedStatuses, setSelectedStatuses] = React.useState<OrderStatus[]>([])
+  const [selectedStatus, setSelectedStatus] = React.useState<DisplayOrderStatus | null>(null)
   const [selectedQuickSelection, setSelectedQuickSelection] = React.useState<string | null>("最近 1 个月")
   const [dateRange, setDateRange] = React.useState<{ from: Date; to: Date } | null>(getDefaultDateRange)
   const [selectedSearch, setSelectedSearch] = React.useState<SearchValues>({})
 
-  const buildQueryParams = React.useCallback((page: number) => ({
-    page,
-    page_size: pageSize,
-    types: selectedTypes.length > 0 ? selectedTypes : DEFAULT_ORDER_TYPES,
-    statuses: selectedStatuses.length > 0 ? selectedStatuses : undefined,
-    startTime: dateRange ? formatLocalDate(dateRange.from) : undefined,
-    endTime: dateRange ? (() => {
-      const endDate = new Date(dateRange.to)
-      endDate.setHours(0, 0, 0, 0)
-      endDate.setDate(endDate.getDate() + 1)
-      return formatLocalDate(endDate)
-    })() : undefined,
-    client_id: apiKey.client_id,
-    id: selectedSearch.id || undefined,
-    order_name: selectedSearch.order_name || undefined,
-    payer_username: selectedSearch.payer_username || undefined,
-    payee_username: selectedSearch.payee_username || undefined,
-  }), [apiKey.client_id, dateRange, pageSize, selectedSearch, selectedStatuses, selectedTypes])
+  const buildQueryParams = React.useCallback((page: number) => {
+    const stateQuery = mapDisplayStatusToQuery(selectedStatus)
+
+    return {
+      page,
+      page_size: pageSize,
+      types: selectedTypes.length > 0 ? selectedTypes : DEFAULT_ORDER_TYPES,
+      ...stateQuery,
+      startTime: dateRange ? formatLocalDate(dateRange.from) : undefined,
+      endTime: dateRange ? (() => {
+        const endDate = new Date(dateRange.to)
+        endDate.setHours(0, 0, 0, 0)
+        endDate.setDate(endDate.getDate() + 1)
+        return formatLocalDate(endDate)
+      })() : undefined,
+      client_id: apiKey.client_id,
+      id: selectedSearch.id || undefined,
+      order_name: selectedSearch.order_name || undefined,
+      payer_username: selectedSearch.payer_username || undefined,
+      payee_username: selectedSearch.payee_username || undefined,
+    }
+  }, [apiKey.client_id, dateRange, pageSize, selectedSearch, selectedStatus, selectedTypes])
 
   const clearAllFilters = () => {
     setSelectedTypes([])
-    setSelectedStatuses([])
+    setSelectedStatus(null)
     setDateRange(null)
     setSelectedQuickSelection(null)
     setSelectedSearch({})
@@ -99,7 +103,7 @@ function MerchantDataContent({ apiKey }: MerchantDataProps) {
 
   const actionHandlers = {
     refund: () => {
-      setSelectedStatuses(['disputing'])
+      setSelectedStatus('disputing')
       toast.success('待处理的争议', { description: '显示此应用的所有待处理的争议' })
     },
     'view-all': () => {
@@ -145,11 +149,11 @@ function MerchantDataContent({ apiKey }: MerchantDataProps) {
               search: true
             }}
             selectedTypes={selectedTypes}
-            selectedStatuses={selectedStatuses}
+            selectedStatus={selectedStatus}
             selectedTimeRange={dateRange}
             selectedQuickSelection={selectedQuickSelection}
             onTypeChange={setSelectedTypes}
-            onStatusChange={setSelectedStatuses}
+            onStatusChange={setSelectedStatus}
             onTimeRangeChange={setDateRange}
             onQuickSelectionChange={setSelectedQuickSelection}
             onSearch={setSelectedSearch}

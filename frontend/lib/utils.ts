@@ -67,6 +67,7 @@ export function encodeBase64(value: string): string {
 export function generateTransactionCacheKey(params: {
   types?: string[]
   statuses?: string[]
+  payee_transfer_status?: string
   client_id?: string
   page?: number
   page_size?: number
@@ -79,6 +80,7 @@ export function generateTransactionCacheKey(params: {
 }): string {
   const typesKey = params.types?.length ? params.types.sort().join(',') : 'all'
   const statusesKey = params.statuses?.length ? params.statuses.sort().join(',') : 'all'
+  const transferStatusKey = params.payee_transfer_status || 'all'
   const clientIdKey = params.client_id || 'all'
   const startTimeKey = params.startTime || 'no-start'
   const endTimeKey = params.endTime || 'no-end'
@@ -87,5 +89,5 @@ export function generateTransactionCacheKey(params: {
   const payerKey = params.payer_username || 'no-payer'
   const payeeKey = params.payee_username || 'no-payee'
 
-  return `${ typesKey }_${ statusesKey }_${ clientIdKey }_${ params.page }_${ params.page_size }_${ startTimeKey }_${ endTimeKey }_${ idKey }_${ orderNameKey }_${ payerKey }_${ payeeKey }`
+  return `${ typesKey }_${ statusesKey }_${ transferStatusKey }_${ clientIdKey }_${ params.page }_${ params.page_size }_${ startTimeKey }_${ endTimeKey }_${ idKey }_${ orderNameKey }_${ payerKey }_${ payeeKey }`
 }

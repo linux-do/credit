@@ -1,15 +1,15 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import { motion } from "motion/react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
-import type { UserRankResponse } from "@/lib/services/leaderboard";
+import * as React from "react"
+import { Skeleton } from "@/components/ui/skeleton"
+import { cn } from "@/lib/utils"
+import type { UserRankResponse } from "@/lib/services/leaderboard"
+import { UserRound } from "lucide-react"
 
 interface UserRankCardProps {
-  data: UserRankResponse | null;
-  loading?: boolean;
-  className?: string;
+  data: UserRankResponse | null
+  loading?: boolean
+  className?: string
 }
 
 export const UserRankCard = React.memo(function UserRankCard({
@@ -19,42 +19,50 @@ export const UserRankCard = React.memo(function UserRankCard({
 }: UserRankCardProps) {
   if (loading) {
     return (
-      <div className={cn("bg-blue-100 rounded-xl p-4", className)}>
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-6 w-24 bg-blue-200" />
-          <Skeleton className="h-5 w-8 bg-blue-200" />
-          <Skeleton className="h-6 w-16 bg-blue-200" />
+      <section className={cn("space-y-4", className)}>
+        <div className="flex items-center gap-2">
+          <UserRound className="size-4 text-muted-foreground" />
+          <h2 className="text-lg font-semibold">我的排名</h2>
         </div>
-      </div>
-    );
+        <div className="space-y-4 px-1 py-1">
+          {Array.from({ length: 2 }).map((_, index) => (
+            <div key={index} className="space-y-2">
+              <Skeleton className="h-3 w-16" />
+              <Skeleton className="h-8 w-24" />
+            </div>
+          ))}
+        </div>
+      </section>
+    )
   }
-
-  if (!data) {
-    return null;
-  }
-
-  const balance: number = parseFloat(data.user.available_balance);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className={cn("bg-blue-100 dark:bg-blue-900/20 rounded-xl px-5 py-4 ", className)}
-    >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-blue-600 font-bold text-lg tabular-nums">
-            # {data.user.rank.toLocaleString()}
-          </span>
-        </div>
-
-        <span className="text-blue-600 font-bold text-lg">您</span>
-
-        <span className="text-blue-600 font-bold text-lg tabular-nums">
-          {balance.toFixed(2)}
-        </span>
+    <section className={cn("space-y-4", className)}>
+      <div className="flex items-center gap-2">
+        <UserRound className="size-4 text-muted-foreground" />
+        <h2 className="text-lg font-semibold">我的排名</h2>
       </div>
-    </motion.div>
-  );
-});
+
+      <div className="space-y-5 px-1 py-1">
+        {data ? (
+          <>
+            <div className="space-y-1">
+              <div className="text-[11px] font-medium text-muted-foreground">当前名次</div>
+              <div className="text-3xl font-semibold tabular-nums">#{data.user.rank.toLocaleString()}</div>
+            </div>
+            <div className="space-y-1">
+              <div className="text-[11px] font-medium text-muted-foreground">可用积分</div>
+              <div className="text-2xl font-semibold tabular-nums">{parseFloat(data.user.available_balance).toFixed(2)}</div>
+            </div>
+          </>
+        ) : (
+          <div className="space-y-1">
+            <div className="text-[11px] font-medium text-muted-foreground">当前状态</div>
+            <div className="text-base font-medium">暂未进入榜单</div>
+            <div className="text-sm text-muted-foreground">继续积累可用积分后会出现在排行榜中。</div>
+          </div>
+        )}
+      </div>
+    </section>
+  )
+})

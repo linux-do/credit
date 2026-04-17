@@ -14,7 +14,8 @@
  *   page: 1,
  *   page_size: 20,
  *   types: ['receive'],
- *   statuses: ['success']
+ *   statuses: ['success'],
+ *   payee_transfer_status: 'pending',
  * });
  * ```
  */

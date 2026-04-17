@@ -494,7 +494,6 @@ definitions:
       max_score:
         type: integer
       min_score:
-        minimum: 0
         type: integer
       score_rate:
         type: number
@@ -514,7 +513,6 @@ definitions:
       max_score:
         type: integer
       min_score:
-        minimum: 0
         type: integer
       score_rate:
         type: number

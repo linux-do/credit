@@ -1,8 +1,8 @@
 import * as React from "react"
 import { TransactionTableList } from "@/components/common/general/table-data"
-import { TableFilter, type SearchValues } from "@/components/common/general/table-filter"
+import { TableFilter, mapDisplayStatusToQuery, type DisplayOrderStatus, type SearchValues } from "@/components/common/general/table-filter"
 import { TransactionProvider, useTransaction } from "@/contexts/transaction-context"
-import { DEFAULT_ORDER_TYPES, type OrderStatus, type OrderType, type TransactionQueryParams } from "@/lib/services"
+import { DEFAULT_ORDER_TYPES, type OrderType, type TransactionQueryParams } from "@/lib/services"
 import { formatLocalDate } from "@/lib/utils"
 
 /**
@@ -57,32 +57,36 @@ function TransactionList({ initialType }: { initialType?: OrderType }) {
   } = useTransaction()
 
   const [selectedTypes, setSelectedTypes] = React.useState<OrderType[]>(initialType ? [initialType] : [])
-  const [selectedStatuses, setSelectedStatuses] = React.useState<OrderStatus[]>([])
+  const [selectedStatus, setSelectedStatus] = React.useState<DisplayOrderStatus | null>(null)
   const [selectedQuickSelection, setSelectedQuickSelection] = React.useState<string | null>("最近 1 个月")
   const [dateRange, setDateRange] = React.useState<{ from: Date; to: Date } | null>(getDefaultDateRange)
   const [selectedSearch, setSelectedSearch] = React.useState<SearchValues>({})
 
-  const buildQueryParams = React.useCallback((page: number): TransactionQueryParams => ({
-    page,
-    page_size: pageSize,
-    types: selectedTypes.length > 0 ? selectedTypes : DEFAULT_ORDER_TYPES,
-    statuses: selectedStatuses.length > 0 ? selectedStatuses : undefined,
-    startTime: dateRange ? formatLocalDate(dateRange.from) : undefined,
-    endTime: dateRange ? (() => {
-      const endDate = new Date(dateRange.to)
-      endDate.setDate(endDate.getDate() + 1)
-      return formatLocalDate(endDate)
-    })() : undefined,
-    id: selectedSearch.id || undefined,
-    order_name: selectedSearch.order_name || undefined,
-    payer_username: selectedSearch.payer_username || undefined,
-    payee_username: selectedSearch.payee_username || undefined,
-  }), [dateRange, pageSize, selectedSearch, selectedStatuses, selectedTypes])
+  const buildQueryParams = React.useCallback((page: number): TransactionQueryParams => {
+    const stateQuery = mapDisplayStatusToQuery(selectedStatus)
+
+    return {
+      page,
+      page_size: pageSize,
+      types: selectedTypes.length > 0 ? selectedTypes : DEFAULT_ORDER_TYPES,
+      ...stateQuery,
+      startTime: dateRange ? formatLocalDate(dateRange.from) : undefined,
+      endTime: dateRange ? (() => {
+        const endDate = new Date(dateRange.to)
+        endDate.setDate(endDate.getDate() + 1)
+        return formatLocalDate(endDate)
+      })() : undefined,
+      id: selectedSearch.id || undefined,
+      order_name: selectedSearch.order_name || undefined,
+      payer_username: selectedSearch.payer_username || undefined,
+      payee_username: selectedSearch.payee_username || undefined,
+    }
+  }, [dateRange, pageSize, selectedSearch, selectedStatus, selectedTypes])
 
   /* 清空所有筛选 */
   const clearAllFilters = () => {
     setSelectedTypes(initialType ? [initialType] : [])
-    setSelectedStatuses([])
+    setSelectedStatus(null)
     setDateRange(null)
     setSelectedQuickSelection(null)
     setSelectedSearch({})
@@ -112,11 +116,11 @@ function TransactionList({ initialType }: { initialType?: OrderType }) {
           search: true
         }}
         selectedTypes={selectedTypes}
-        selectedStatuses={selectedStatuses}
+        selectedStatus={selectedStatus}
         selectedTimeRange={dateRange}
         selectedQuickSelection={selectedQuickSelection}
         onTypeChange={setSelectedTypes}
-        onStatusChange={setSelectedStatuses}
+        onStatusChange={setSelectedStatus}
         onTimeRangeChange={setDateRange}
         onQuickSelectionChange={setSelectedQuickSelection}
         onSearch={setSelectedSearch}

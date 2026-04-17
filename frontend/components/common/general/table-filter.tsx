@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
-import type { OrderType, OrderStatus, TransferStatus } from "@/lib/services"
+import type { OrderType, OrderStatus, TransactionQueryParams } from "@/lib/services"
 
 /* 类型标签配置 */
 export const typeConfig: Record<OrderType, { label: string; color: string }> = {
@@ -35,9 +35,35 @@ export const statusConfig: Record<OrderStatus, { label: string; color: string }>
   refused: { label: '已拒绝', color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' }
 }
 
-export const transferStatusConfig: Record<TransferStatus, { label: string; color: string }> = {
-  completed: { label: '已结算', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' },
-  pending: { label: '未结算', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' },
+export type DisplayOrderStatus = OrderStatus | 'transfer_pending'
+
+export const displayStatusConfig: Record<DisplayOrderStatus, { label: string; color: string }> = {
+  pending: statusConfig.pending,
+  success: statusConfig.success,
+  transfer_pending: { label: '结算中', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' },
+  failed: statusConfig.failed,
+  expired: statusConfig.expired,
+  disputing: statusConfig.disputing,
+  refund: statusConfig.refund,
+  refused: statusConfig.refused,
+}
+
+export function mapDisplayStatusToQuery(
+  selectedStatus: DisplayOrderStatus | null
+): Pick<TransactionQueryParams, 'statuses' | 'payee_transfer_status'> {
+  if (!selectedStatus) {
+    return {}
+  }
+
+  if (selectedStatus === 'transfer_pending') {
+    return {
+      payee_transfer_status: 'pending',
+    }
+  }
+
+  return {
+    statuses: [selectedStatus],
+  }
 }
 
 /* 时间范围选项 */
@@ -121,7 +147,7 @@ export interface TableFilterProps {
 
   /* 当前选中的值 */
   selectedTypes?: OrderType[]
-  selectedStatuses?: OrderStatus[]
+  selectedStatus?: DisplayOrderStatus | null
   selectedTimeRange?: { from: Date; to: Date } | null
   selectedQuickSelection?: string | null
   /* 搜索值 */
@@ -129,7 +155,7 @@ export interface TableFilterProps {
 
   /* 回调函数 */
   onTypeChange?: (types: OrderType[]) => void
-  onStatusChange?: (statuses: OrderStatus[]) => void
+  onStatusChange?: (status: DisplayOrderStatus | null) => void
   onTimeRangeChange?: (range: { from: Date; to: Date } | null) => void
   onQuickSelectionChange?: (selection: string | null) => void
   onSearch?: (values: SearchValues) => void
@@ -157,7 +183,7 @@ export interface TableFilterProps {
 export function TableFilter({
   enabledFilters = { type: true, status: true, timeRange: true, search: true },
   selectedTypes = [],
-  selectedStatuses = [],
+  selectedStatus = null,
   selectedTimeRange = null,
   selectedQuickSelection = null,
   searchValues = {},
@@ -195,7 +221,10 @@ export function TableFilter({
   const toggleType = (type: OrderType) => handleToggle(type, selectedTypes, onTypeChange)
 
   /* 切换状态筛选 */
-  const toggleStatus = (status: OrderStatus) => handleToggle(status, selectedStatuses, onStatusChange)
+  const toggleStatus = (status: DisplayOrderStatus) => {
+    if (!onStatusChange) return
+    onStatusChange(selectedStatus === status ? null : status)
+  }
 
   /* 处理时间范围变化 */
   const handleTimeRangeChange = (range: { from: Date; to: Date } | null) => {
@@ -205,7 +234,7 @@ export function TableFilter({
   /* 是否有激活的筛选 */
   const hasActiveFilters =
     (enabledFilters.type && selectedTypes.length > 0) ||
-    (enabledFilters.status && selectedStatuses.length > 0) ||
+    (enabledFilters.status && selectedStatus !== null) ||
     (enabledFilters.timeRange && selectedTimeRange !== null) ||
     (enabledFilters.search && Object.values(searchValues || {}).some(v => v))
 
@@ -229,11 +258,11 @@ export function TableFilter({
         )}
 
         {enabledFilters.status && (
-          <FilterSelect<OrderStatus>
+          <SingleFilterSelect<DisplayOrderStatus>
             label="状态"
-            selectedValues={selectedStatuses}
-            options={statusConfig}
-            onToggleValue={toggleStatus}
+            selectedValue={selectedStatus}
+            options={displayStatusConfig}
+            onSelectValue={toggleStatus}
           />
         )}
 
@@ -422,6 +451,53 @@ export function FilterSelect<T extends string>({ label, selectedValues, options,
                   : "opacity-50 [&_svg]:invisible"
               )}>
               </div>
+              <span className="text-xs">{options[value].label}</span>
+            </DropdownMenuItem>
+          )
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+export function SingleFilterSelect<T extends string>({ label, selectedValue, options, onSelectValue }: {
+  label: string
+  selectedValue: T | null
+  options: Record<T, { label: string; color: string }>
+  onSelectValue: (value: T) => void
+}) {
+  const activeLabel = selectedValue ? options[selectedValue].label : null
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className={cn(
+            "h-5 border-dashed text-[10px] font-medium shadow-none focus-visible:ring-0",
+            selectedValue && "bg-primary/5 border-primary/20"
+          )}
+        >
+          <Filter className="size-3" />
+          {activeLabel ? `${label}: ${activeLabel}` : label}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-[160px]" align="start">
+        {(Object.keys(options) as T[]).map((value) => {
+          const isSelected = selectedValue === value
+          return (
+            <DropdownMenuItem
+              key={value}
+              onSelect={(e) => {
+                e.preventDefault()
+                onSelectValue(value)
+              }}
+            >
+              <div className={cn(
+                "mr-2 flex size-3 items-center justify-center rounded-full border border-primary",
+                isSelected ? "bg-primary" : "opacity-50"
+              )} />
               <span className="text-xs">{options[value].label}</span>
             </DropdownMenuItem>
           )

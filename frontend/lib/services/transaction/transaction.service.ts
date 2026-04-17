@@ -20,8 +20,9 @@ export class TransactionService extends BaseService {
    * const result = await TransactionService.getTransactions({
    *   page: 1,
    *   page_size: 20,
-   *   type: 'receive',
-   *   status: 'success'
+   *   types: ['receive'],
+   *   statuses: ['success'],
+   *   payee_transfer_status: 'pending'
    * });
    * ```
    */

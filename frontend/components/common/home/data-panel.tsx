@@ -49,7 +49,7 @@ function ResponsiveInfoTip({ children }: { children: React.ReactNode }) {
             <Info className="size-3.5" />
           </button>
         </TooltipTrigger>
-        <TooltipContent side="top" sideOffset={6} className="w-fit max-w-[calc(100vw-2rem)] px-3 py-2">
+        <TooltipContent side="top" sideOffset={6} className="w-fit max-w-[calc(100vw-2rem)] px-2.5 py-1.5">
           <p className="text-xs leading-5 break-words">{children}</p>
         </TooltipContent>
       </Tooltip>
@@ -119,7 +119,6 @@ export function DataPanel() {
 
   return (
     <div className="flex flex-col md:grid md:grid-cols-3 gap-8 md:gap-12">
-      {/* 积分趋势图表区域 - 移动端在上方，桌面端占左侧 2/3 */}
       <div className="md:col-span-2 order-1 md:order-none">
         <h3 className="text-sm text-muted-foreground font-medium mb-2">积分趋势</h3>
 
@@ -211,7 +210,6 @@ export function DataPanel() {
         )}
       </div>
 
-      {/* 统计数据区域 - 移动端改为单列信息行，桌面端保持右侧垂直展示 */}
       <div className="md:col-span-1 order-2 md:order-none flex flex-col divide-y divide-border/70 md:divide-y-0 md:pt-px">
         <div className="py-3 first:pt-0 md:border-b md:pb-4 md:pt-0">
           <div className="flex items-start justify-between gap-4 md:block">

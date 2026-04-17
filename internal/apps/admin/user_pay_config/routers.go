@@ -31,7 +31,7 @@ import (
 // CreateUserPayConfigRequest 创建支付配置请求
 type CreateUserPayConfigRequest struct {
 	Level          model.PayLevel  `json:"level"`
-	MinScore       int64           `json:"min_score" binding:"min=0"`
+	MinScore       int64           `json:"min_score"`
 	MaxScore       *int64          `json:"max_score" binding:"omitempty,gtfield=MinScore"`
 	DailyLimit     *int64          `json:"daily_limit"`
 	FeeRate        decimal.Decimal `json:"fee_rate" binding:"required"`
@@ -41,7 +41,7 @@ type CreateUserPayConfigRequest struct {
 
 // UpdateUserPayConfigRequest 更新支付配置请求
 type UpdateUserPayConfigRequest struct {
-	MinScore       int64           `json:"min_score" binding:"min=0"`
+	MinScore       int64           `json:"min_score"`
 	MaxScore       *int64          `json:"max_score" binding:"omitempty,gtfield=MinScore"`
 	DailyLimit     *int64          `json:"daily_limit"`
 	FeeRate        decimal.Decimal `json:"fee_rate" binding:"required"`

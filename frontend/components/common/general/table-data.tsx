@@ -2,14 +2,14 @@ import * as React from "react"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { typeConfig, statusConfig, transferStatusConfig } from "@/components/common/general/table-filter"
+import { typeConfig, statusConfig } from "@/components/common/general/table-filter"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
 import { ErrorInline } from "@/components/layout/error"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { EmptyStateWithBorder } from "@/components/layout/empty"
 import { LoadingStateWithBorder } from "@/components/layout/loading"
-import { ListRestart, Layers, LucideIcon } from "lucide-react"
+import { Lightbulb, ListRestart, Layers, LucideIcon } from "lucide-react"
 import { formatDateTime } from "@/lib/utils"
 import type { Order } from "@/lib/services"
 import { useUser } from "@/contexts/user-context"
@@ -65,10 +65,9 @@ export const TransactionDataTable = React.memo(function TransactionDataTable({
           <TableHeader className="sticky top-0 z-30 bg-background">
             <TableRow className="border-b border-dashed hover:bg-transparent">
               <TableHead className="whitespace-nowrap w-[120px]">名称</TableHead>
-              <TableHead className="whitespace-nowrap text-center min-w-[60px]">积分</TableHead>
+              <TableHead className="whitespace-nowrap text-center min-w-[76px]">积分</TableHead>
               <TableHead className="whitespace-nowrap text-center min-w-[50px]">类型</TableHead>
-              <TableHead className="whitespace-nowrap text-center min-w-[50px]">状态</TableHead>
-              <TableHead className="whitespace-nowrap text-center min-w-[50px]">结算</TableHead>
+              <TableHead className="whitespace-nowrap text-center min-w-[84px]">状态</TableHead>
               <TableHead className="whitespace-nowrap text-center min-w-[80px]">积分动向</TableHead>
               <TableHead className="whitespace-nowrap text-center min-w-[80px]">应用名</TableHead>
               <TableHead className="whitespace-nowrap text-left min-w-[120px]">编号</TableHead>
@@ -137,7 +136,24 @@ const TransactionTableRow = React.memo(React.forwardRef<HTMLTableRowElement, {
   const isCurrentUserPayer = user?.id === order.payer_user_id
   const isCurrentUserPayee = user?.id === order.payee_user_id
   const isDisputing = order.status === 'disputing' && isCurrentUserPayee
+  const hasPendingTransfer = order.payee_transfer_status === 'pending' && isCurrentUserPayee
   const currentTypeConfig = typeConfig[order.type as keyof typeof typeConfig] ?? FALLBACK_TYPE_CONFIG
+  const pendingTransferHint = React.useMemo(() => {
+    const settlementRange = `${publicConfig?.settlement_delay_days_min ?? 7}-${publicConfig?.settlement_delay_days_max ?? 14} 天`
+
+    switch (order.status) {
+      case 'success':
+        return `延迟结算机制：积分会在 ${settlementRange} 后转入可用积分`
+      case 'refused':
+        return `延迟结算机制：已拒绝退款，积分会在 ${settlementRange} 后转入可用积分`
+      case 'disputing':
+        return `延迟结算机制：争议处理中，积分会在 ${settlementRange} 后转入可用积分`
+      case 'refund':
+        return `延迟结算机制：已退款成功，积分会在 ${settlementRange} 后转入可用积分`
+      default:
+        return `延迟结算机制：积分会在 ${settlementRange} 后转入可用积分`
+    }
+  }, [order.status, publicConfig?.settlement_delay_days_max, publicConfig?.settlement_delay_days_min])
 
   return (
     <TableRow
@@ -164,39 +180,34 @@ const TransactionTableRow = React.memo(React.forwardRef<HTMLTableRowElement, {
         </Badge>
       </TableCell>
       <TableCell className="text-[11px] font-medium whitespace-nowrap text-center py-1">
-        <Badge
-          variant="secondary"
-          className={`text-[10px] px-1 ${ statusConfig[order.status].color }`}
-        >
-          {statusConfig[order.status].label}
-        </Badge>
-      </TableCell>
-      <TableCell className="text-[11px] font-medium whitespace-nowrap text-center py-1">
-        {
-          /* 未到账只是商家的状态，只需要向商户展示 */
-          order.payee_transfer_status === 'pending' && isCurrentUserPayee ?
+        <div className="flex justify-center">
+          <div className="relative inline-flex items-center">
+          <Badge
+            variant="secondary"
+            className={`text-[10px] px-1 ${ statusConfig[order.status].color }`}
+          >
+            {statusConfig[order.status].label}
+          </Badge>
+          {hasPendingTransfer && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Badge
-                    variant="secondary"
-                    className={`text-[10px] px-1 ${transferStatusConfig[order.payee_transfer_status].color}`}
+                  <button
+                    type="button"
+                    className="absolute left-full ml-1 inline-flex items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
+                    aria-label="查看到账说明"
                   >
-                    {transferStatusConfig[order.payee_transfer_status].label}
-                  </Badge>
+                    <Lightbulb className="size-3" />
+                  </button>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="p-3">
-                  {`预计需要${publicConfig?.settlement_delay_days_min ?? 7}-${publicConfig?.settlement_delay_days_max ?? 14}天`}
+                <TooltipContent side="top" className="px-2.5 py-1.5">
+                  {pendingTransferHint}
                 </TooltipContent>
               </Tooltip>
-            </TooltipProvider> :
-            <Badge
-              variant="secondary"
-              className={`text-[10px] px-1 ${ transferStatusConfig['completed'].color }`}
-            >
-              {transferStatusConfig['completed'].label}
-            </Badge>
-        }
+            </TooltipProvider>
+          )}
+          </div>
+        </div>
       </TableCell>
       <TableCell className="text-[11px] font-medium whitespace-nowrap text-center py-1">
         {order.status === 'pending' || order.status === 'expired' || order.type === 'community' || order.type === 'red_envelope_send' || order.type === 'red_envelope_refund' ? (
@@ -221,7 +232,7 @@ const TransactionTableRow = React.memo(React.forwardRef<HTMLTableRowElement, {
                   </Avatar>
                 </div>
               </TooltipTrigger>
-              <TooltipContent side="top" className="p-3">
+              <TooltipContent side="top" className="px-2.5 py-1.5">
                 <div className="space-y-2">
                   <div>
                     <p className="text-xs font-semibold">消费方</p>

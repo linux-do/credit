@@ -2494,8 +2494,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "min_score": {
-                    "type": "integer",
-                    "minimum": 0
+                    "type": "integer"
                 },
                 "score_rate": {
                     "type": "number"
@@ -2523,8 +2522,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "min_score": {
-                    "type": "integer",
-                    "minimum": 0
+                    "type": "integer"
                 },
                 "score_rate": {
                     "type": "number"
