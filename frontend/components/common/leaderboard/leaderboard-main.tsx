@@ -19,8 +19,6 @@ import { cn } from "@/lib/utils"
 
 /**
  * 排行榜主组件
- * 
- * 负责组装排行榜的各个子组件，包括领奖台、用户排名卡片和排名列表
  */
 export function LeaderboardMain() {
   const { user } = useUser()
@@ -56,16 +54,16 @@ export function LeaderboardMain() {
   }
 
   return (
-    <div className="py-6 space-y-6">
-      <div className="flex flex-col gap-4 border-b border-dashed border-border/80 pb-5 md:flex-row md:items-end md:justify-between">
+    <div className="py-6 space-y-10">
+      <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight">全局排行榜</h1>
 
-        <div className="flex items-center gap-2 self-start md:self-auto">
+        <div className="flex items-center gap-2">
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 border-dashed gap-1.5 shadow-none">
+              <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-muted-foreground">
                 <CircleHelp className="size-4" />
-                规则说明
+                规则
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -79,24 +77,30 @@ export function LeaderboardMain() {
             </DialogContent>
           </Dialog>
 
-          <Button variant="outline" size="icon" className="size-8 border-dashed shadow-none" onClick={refresh} aria-label="刷新排行榜">
+          <Button variant="ghost" size="icon" className="size-8 text-muted-foreground" onClick={refresh} aria-label="刷新排行榜">
             <RefreshCw className={cn("size-4", (loading || loadingMore || myRankLoading) && "animate-spin")} />
           </Button>
         </div>
       </div>
 
-      <LeaderboardPodium items={items.slice(0, 3)} loading={loading} />
-
-      <LeaderboardTable
-        items={items}
-        loading={loading || loadingMore || myRankLoading}
-        currentUserId={myRank?.user.user_id}
-        currentUserEntry={currentUserEntry}
-        currentUserRank={myRank?.user.rank}
-        onLoadMore={loadNextPage}
-        hasMore={hasMore}
-        startRank={1}
+      <LeaderboardPodium
+        items={items.slice(0, 3)}
+        loading={loading}
       />
+
+      <section>
+        <h2 className="font-semibold mb-4">完整榜单</h2>
+        <LeaderboardTable
+          items={items}
+          loading={loading || loadingMore || myRankLoading}
+          currentUserId={myRank?.user.user_id}
+          currentUserEntry={currentUserEntry}
+          currentUserRank={myRank?.user.rank}
+          onLoadMore={loadNextPage}
+          hasMore={hasMore}
+          startRank={1}
+        />
+      </section>
     </div>
   )
 }
