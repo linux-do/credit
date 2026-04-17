@@ -26,7 +26,6 @@ import (
 	"github.com/linux-do/credit/internal/apps/merchant"
 	"github.com/linux-do/credit/internal/apps/oauth"
 	"github.com/linux-do/credit/internal/common"
-	"github.com/linux-do/credit/internal/config"
 	"github.com/linux-do/credit/internal/db"
 	"github.com/linux-do/credit/internal/model"
 	"github.com/linux-do/credit/internal/service"
@@ -422,10 +421,6 @@ func PayByLink(c *gin.Context) {
 				if err := tx.Create(&orderTransfer).Error; err != nil {
 					return err
 				}
-			}
-
-			if config.Config.App.IsProduction() && util.IsLocalhost(merchantAPIKey.NotifyURL) {
-				return nil
 			}
 
 			return service.EnqueueMerchantNotify(order.ID, merchantAPIKey.ClientID)

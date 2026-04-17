@@ -30,6 +30,7 @@ import (
 
 	"github.com/hibiken/asynq"
 	"github.com/linux-do/credit/internal/common"
+	"github.com/linux-do/credit/internal/config"
 	"github.com/linux-do/credit/internal/db"
 	"github.com/linux-do/credit/internal/logger"
 	"github.com/linux-do/credit/internal/model"
@@ -66,6 +67,14 @@ func HandleMerchantPaymentNotify(ctx context.Context, t *asynq.Task) error {
 		return fmt.Errorf("查询商户信息失败: %w", err)
 	}
 
+	// 回调 URL
+	callbackURL := cmp.Or(order.NotifyURL, apiKey.NotifyURL)
+
+	// 判断是否需要回调
+	if config.Config.App.IsProduction() && util.IsLocalhost(callbackURL) {
+		return nil
+	}
+
 	// 构建回调参数
 	callbackParams := map[string]string{
 		"pid":          payload.ClientID,
@@ -76,10 +85,9 @@ func HandleMerchantPaymentNotify(ctx context.Context, t *asynq.Task) error {
 		"money":        order.Amount.Truncate(2).StringFixed(2),
 		"trade_status": "TRADE_SUCCESS",
 	}
-
 	callbackParams["sign"] = GenerateSignature(callbackParams, apiKey.ClientSecret, true)
 
-	callbackURL := cmp.Or(order.NotifyURL, apiKey.NotifyURL)
+	// 回调
 	if err := sendCallbackRequest(ctx, callbackURL, callbackParams); err != nil {
 		retried, _ := asynq.GetRetryCount(ctx)
 		logger.ErrorF(ctx, "商户回调失败: 订单[ID:%d] 重试次数[%d] 错误: %v",

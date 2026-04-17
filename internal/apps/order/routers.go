@@ -126,10 +126,14 @@ func ListTransactions(c *gin.Context) {
 					conditions = append(conditions, "(orders.type = ? AND (orders.payer_user_id = ? OR orders.payee_user_id = ?))")
 					args = append(args, orderType, user.ID, user.ID)
 				}
-			case model.OrderTypePayment, model.OrderTypeTransfer, model.OrderTypeTest, model.OrderTypeDistribute, model.OrderTypeRedEnvelopeSend:
-				// payment、transfer、test、distribute、red_envelope_send 类型：查询当前用户作为付款方的订单
+			case model.OrderTypePayment, model.OrderTypeTransfer, model.OrderTypeTest, model.OrderTypeRedEnvelopeSend:
+				// payment、transfer、test、red_envelope_send 类型：查询当前用户作为付款方的订单
 				conditions = append(conditions, "(orders.type = ? AND orders.payer_user_id = ?)")
 				args = append(args, orderType, user.ID)
+			case model.OrderTypeDistribute:
+				// distribute 类型：查询当前用户作为付款方或者收款方的订单
+				conditions = append(conditions, "((orders.type = ? AND orders.payer_user_id = ?) OR (orders.type = ? AND orders.payee_user_id = ?))")
+				args = append(args, orderType, user.ID, orderType, user.ID)
 			}
 		}
 
