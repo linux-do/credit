@@ -57,6 +57,7 @@ func StartScheduler() error {
 		if _, err = scheduler.Register(
 			config.Config.Scheduler.UpdateUserGamificationScoresTaskCron,
 			asynq.NewTask(task.UpdateUserGamificationScoresTask, nil),
+			asynq.Queue(task.QueueWhitelistOnly),
 			asynq.MaxRetry(5),
 			asynq.Unique(23*time.Hour),
 		); err != nil {
