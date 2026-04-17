@@ -38,16 +38,26 @@ export const LeaderboardTable = React.memo(function LeaderboardTable({
     return Math.max(...items.map(item => parseFloat(item.available_balance))) || 1
   }, [items])
 
+  const computePercentage = React.useCallback(
+    (balance: number) => {
+      const denominator = Math.log(maxBalance + 1)
+      if (denominator <= 0) return 0
+      const safeBalance = Math.max(balance, 0)
+      return (Math.log(safeBalance + 1) / denominator) * 100
+    },
+    [maxBalance]
+  )
+
   const rankedItems = React.useMemo(
     () =>
       items
         .map((entry, index) => ({
           entry,
           rank: startRank + index,
-          percentage: (parseFloat(entry.available_balance) / maxBalance) * 100,
+          percentage: computePercentage(parseFloat(entry.available_balance)),
         }))
         .filter(({ entry }) => entry.user_id !== currentUserEntry?.user_id),
-    [items, startRank, currentUserEntry?.user_id, maxBalance]
+    [items, startRank, currentUserEntry?.user_id, computePercentage]
   )
 
   const virtualizer = useVirtualizer({
@@ -69,7 +79,7 @@ export const LeaderboardTable = React.memo(function LeaderboardTable({
   }, [virtualItems, rankedItems.length, hasMore, loading, onLoadMore])
 
   const currentUserPercentage = currentUserEntry
-    ? (parseFloat(currentUserEntry.available_balance) / maxBalance) * 100
+    ? computePercentage(parseFloat(currentUserEntry.available_balance))
     : 0
 
   if (loading && items.length === 0) {
