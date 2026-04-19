@@ -86,7 +86,9 @@ export function proxy(request: NextRequest) {
 
   /* API 请求：速率限制后放行 */
   if (pathname.startsWith('/api/')) {
-    if (shouldRateLimit(pathname)) {
+    const rateLimitEnabled = !!process.env.LINUX_DO_CREDIT_RATE_LIMIT_ENABLED
+
+    if (rateLimitEnabled && shouldRateLimit(pathname)) {
       const identifier = sessionCookie?.value ||
         request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
         request.headers.get('x-real-ip') ||
