@@ -64,8 +64,6 @@ import {
 
 import { useUser } from "@/contexts/user-context"
 
-const BUILD_AT = "2026.04.22"
-
 /* 导航数据 */
 const data = {
   navMain: [
@@ -367,7 +365,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarFooter className="mt-auto px-3 py-3 group-data-[collapsible=icon]:hidden">
           <div className="border-t border-border/60 pt-3 text-[11px] leading-5 text-muted-foreground">
             <div>Version {packageJson.version}</div>
-            <div>Build At {BUILD_AT}</div>
+            <div>Build At {packageJson.buildDate}</div>
           </div>
         </SidebarFooter>
       </Sidebar>
