@@ -3,6 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
+import packageJson from "../../package.json"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
@@ -22,6 +23,7 @@ import { getCurrentTheme } from "@/components/layout/avater-style/registry"
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -62,6 +64,7 @@ import {
 
 import { useUser } from "@/contexts/user-context"
 
+const BUILD_AT = "2026.04.22"
 
 /* 导航数据 */
 const data = {
@@ -361,6 +364,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
+        <SidebarFooter className="mt-auto px-3 py-3 group-data-[collapsible=icon]:hidden">
+          <div className="border-t border-border/60 pt-3 text-[11px] leading-5 text-muted-foreground">
+            <div>Version {packageJson.version}</div>
+            <div>Build At {BUILD_AT}</div>
+          </div>
+        </SidebarFooter>
       </Sidebar>
 
       <AlertDialog open={showLogoutDialog} onOpenChange={(open) => !isLoggingOut && setShowLogoutDialog(open)}>
