@@ -75,6 +75,7 @@ func HandleUpdateUserGamificationScores(ctx context.Context, t *asynq.Task) erro
 		Period: time.Duration(rateLimit.Period) * time.Second,
 	}
 
+	retriesLifeCycle := 0
 	page := 0
 	totalProcessed := 0
 
@@ -84,10 +85,29 @@ func HandleUpdateUserGamificationScores(ctx context.Context, t *asynq.Task) erro
 			return err
 		}
 
-		leaderboard, err := model.GetLeaderboard(ctx, page)
-		if err != nil {
-			logger.ErrorF(ctx, "获取排行榜第 %d 页失败: %v", page, err)
-			return err
+		var err error
+		var leaderboard *model.LeaderboardResponse
+		var retryCount int
+		for {
+			// 获取排行榜数据
+			leaderboard, err = model.GetLeaderboard(ctx, page)
+			if err == nil {
+				break
+			}
+			// 处理获取排行榜数据失败的情况，记录错误并进行重试
+			retryCount++
+			logger.ErrorF(ctx, "获取排行榜第 %d 页失败: %v (%d/%d)", page, err, retryCount, LeaderboardAPIMaxRetriesPerRequest)
+			if retryCount >= LeaderboardAPIMaxRetriesPerRequest {
+				logger.ErrorF(ctx, "排行榜 API 重试已达每次请求上限 (%d 次)，终止任务", retryCount)
+				return err
+			}
+			retriesLifeCycle++
+			if retriesLifeCycle >= LeaderboardAPIMaxRetriesLifeCycle {
+				logger.ErrorF(ctx, "排行榜 API 重试已达生命周期上限 (%d 次)，终止任务", retriesLifeCycle)
+				return err
+			}
+			// 等待一段时间后重试
+			time.Sleep(LeaderboardAPIRetryDelay)
 		}
 
 		if len(leaderboard.Users) == 0 {

@@ -16,7 +16,13 @@ limitations under the License.
 
 package user
 
+import "time"
+
 const (
 	// linuxDoAPIRateLimitKey Redis 限流 Key
 	linuxDoAPIRateLimitKey = "linux_do:api:rate_limit"
+
+	LeaderboardAPIMaxRetriesLifeCycle  = 20
+	LeaderboardAPIMaxRetriesPerRequest = 3
+	LeaderboardAPIRetryDelay           = 10 * time.Second
 )
