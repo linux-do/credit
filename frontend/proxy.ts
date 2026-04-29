@@ -86,7 +86,7 @@ export function proxy(request: NextRequest) {
 
   /* API 请求：速率限制后放行 */
   if (pathname.startsWith('/api/')) {
-    const rateLimitEnabled = !!process.env.LINUX_DO_CREDIT_RATE_LIMIT_ENABLED
+    const rateLimitEnabled = process.env.LINUX_DO_CREDIT_RATE_LIMIT_ENABLED === 'true'
 
     if (rateLimitEnabled && shouldRateLimit(pathname)) {
       const identifier = sessionCookie?.value ||
