@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   experimental: {
   },
   async rewrites() {
-    const backendUrl = process.env.NEXT_PUBLIC_LINUX_DO_CREDIT_BACKEND_URL || 'http://localhost:8000';
+    const backendUrl = process.env.LINUX_DO_CREDIT_BACKEND_URL || 'http://localhost:8000';
     return [
       // 易支付兼容接口 - 创建订单
       {
