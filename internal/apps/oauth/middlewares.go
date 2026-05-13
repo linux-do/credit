@@ -17,6 +17,7 @@ limitations under the License.
 package oauth
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -27,6 +28,17 @@ import (
 	"github.com/linux-do/credit/internal/otel_trace"
 	"github.com/linux-do/credit/internal/util"
 )
+
+type loginRequiredAuditLog struct {
+	UserID     uint64 `json:"user_id"`
+	Username   string `json:"username"`
+	ClientIP   string `json:"client_ip"`
+	Method     string `json:"method"`
+	Path       string `json:"path"`
+	RequestURI string `json:"request_uri"`
+	UserAgent  string `json:"user_agent"`
+	Referer    string `json:"referer"`
+}
 
 func LoginRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -49,8 +61,23 @@ func LoginRequired() gin.HandlerFunc {
 			return
 		}
 
-		// log
-		logger.InfoF(ctx, "[LoginRequired] %d %s", user.ID, user.Username)
+		auditLog := loginRequiredAuditLog{
+			UserID:     user.ID,
+			Username:   user.Username,
+			ClientIP:   c.ClientIP(),
+			Method:     c.Request.Method,
+			Path:       c.Request.URL.Path,
+			RequestURI: c.Request.RequestURI,
+			UserAgent:  c.Request.UserAgent(),
+			Referer:    c.Request.Referer(),
+		}
+		auditJSON, err := json.Marshal(auditLog)
+		if err != nil {
+			logger.ErrorF(ctx, "[LoginRequiredAudit] marshal failed: %v", err)
+			logger.InfoF(ctx, "[LoginRequiredAudit] %s %d %s", c.ClientIP(), user.ID, user.Username)
+		} else {
+			logger.InfoF(ctx, "[LoginRequiredAudit] %s", auditJSON)
+		}
 
 		// set user info
 		util.SetToContext(c, UserObjKey, &user)
