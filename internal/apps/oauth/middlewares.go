@@ -50,7 +50,7 @@ func LoginRequired() gin.HandlerFunc {
 		}
 
 		// log
-		logger.InfoF(ctx, "[LoginRequired] %d %s", user.ID, user.Username)
+		logger.InfoF(ctx, "[LoginRequired] %s %d %s", c.ClientIP(), user.ID, user.Username)
 
 		// set user info
 		util.SetToContext(c, UserObjKey, &user)
