@@ -133,6 +133,16 @@ worker:
 linuxDo:
   api_key: "<LINUX_DO_API_KEY>"
 
+# OpenAPI Risk
+openapi_risk:
+  enabled: false
+  base_url: "https://audit.example.com"
+  username: "<OPENAPI_USERNAME>"
+  password: "<OPENAPI_PASSWORD>"
+  cache_ttl_seconds: 3600
+  prompt_risk_levels: []
+  block_risk_levels: []
+
 # OpenTelemetry
 otel:
   sampling_rate: 0.1  # 采样率 0.0-1.0

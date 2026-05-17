@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/layout/theme-provider";
 import { CustomThemeProvider } from "@/lib/theme";
 import { BellRingProvider } from "@/contexts/bell-ring-context";
 import { NotificationSettingsProvider } from "@/contexts/notification-settings-context";
+import { RiskBlockDialog } from "@/components/common/risk/risk-block-dialog";
 import "./globals.css";
 
 const inter = Inter({
@@ -54,6 +55,7 @@ export default function RootLayout({
             <NotificationSettingsProvider>
               <BellRingProvider>
                 {children}
+                <RiskBlockDialog />
                 <Toaster position="top-center" />
               </BellRingProvider>
             </NotificationSettingsProvider>

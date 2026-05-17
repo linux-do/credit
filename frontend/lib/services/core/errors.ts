@@ -55,8 +55,8 @@ export class UnauthorizedError extends ApiErrorBase {
  * 权限不足错误 (403)
  */
 export class ForbiddenError extends ApiErrorBase {
-  constructor(message = '权限不足') {
-    super(message, 'FORBIDDEN', 403);
+  constructor(message = '权限不足', code = 'FORBIDDEN', details?: unknown) {
+    super(message, code, 403, details);
     this.name = 'ForbiddenError';
     Object.setPrototypeOf(this, ForbiddenError.prototype);
   }
@@ -103,4 +103,3 @@ export class ValidationError extends ApiErrorBase {
 export function isCancelError(error: unknown): boolean {
   return error !== null && typeof error === 'object' && ('__CANCEL__' in error && (error as { __CANCEL__?: boolean }).__CANCEL__ === true || ('message' in error && (error as { message?: string }).message === '请求已被取消'));
 }
-

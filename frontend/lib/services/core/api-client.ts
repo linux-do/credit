@@ -1,5 +1,6 @@
 import axios, { AxiosError, AxiosResponse, CancelTokenSource, InternalAxiosRequestConfig } from 'axios';
 import { toast } from 'sonner';
+import { showRiskWarningToast } from '@/components/common/risk/risk-warning-toast';
 import { apiConfig } from './config';
 import {
   ApiErrorBase,
@@ -35,6 +36,63 @@ const cancelTokens = new Map<string, CancelTokenSource>();
  * 存储正在进行的请求 Promise，避免重复请求
  */
 const pendingRequests = new Map<string, Promise<AxiosResponse<ApiResponse>>>();
+
+const RISK_LEVEL_HEADER = 'x-credit-risk-level';
+const RISK_LABELS_HEADER = 'x-credit-risk-labels';
+const RISK_BLOCKED_CODE = 'RISK_BLOCKED';
+const RISK_BLOCKED_EVENT = 'credit-risk-blocked';
+
+interface RiskInfo {
+  risk_level: string;
+  risk_labels: string[];
+}
+
+function decodeRiskLabels(value?: string): string[] {
+  if (!value || typeof window === 'undefined') return [];
+
+  try {
+    const binary = window.atob(value);
+    const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
+    const json = new TextDecoder().decode(bytes);
+    const labels = JSON.parse(json);
+    return Array.isArray(labels) ? labels.filter((label): label is string => typeof label === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+function riskInfoFromHeaders(headers: AxiosResponse['headers']): RiskInfo | null {
+  const riskLevel = headers[RISK_LEVEL_HEADER];
+  if (typeof riskLevel !== 'string' || !riskLevel) return null;
+
+  const riskLabelsHeader = headers[RISK_LABELS_HEADER];
+  return {
+    risk_level: riskLevel,
+    risk_labels: typeof riskLabelsHeader === 'string' ? decodeRiskLabels(riskLabelsHeader) : [],
+  };
+}
+
+function riskInfoFromDetails(details: unknown): RiskInfo | null {
+  if (!details || typeof details !== 'object') return null;
+
+  const riskLevel = 'risk_level' in details ? (details as { risk_level?: unknown }).risk_level : undefined;
+  const riskLabels = 'risk_labels' in details ? (details as { risk_labels?: unknown }).risk_labels : undefined;
+  if (typeof riskLevel !== 'string' || !riskLevel) return null;
+
+  return {
+    risk_level: riskLevel,
+    risk_labels: Array.isArray(riskLabels) ? riskLabels.filter((label): label is string => typeof label === 'string') : [],
+  };
+}
+
+function showRiskWarning(riskInfo: RiskInfo): void {
+  showRiskWarningToast(riskInfo);
+}
+
+function showRiskBlockedDialog(riskInfo: RiskInfo): void {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new CustomEvent<RiskInfo>(RISK_BLOCKED_EVENT, { detail: riskInfo }));
+}
 
 /**
  * 生成请求的唯一键
@@ -99,6 +157,12 @@ apiClient.interceptors.response.use(
     const requestKey = getRequestKey(response.config);
     cancelTokens.delete(requestKey);
     pendingRequests.delete(requestKey);
+
+    const riskInfo = riskInfoFromHeaders(response.headers);
+    if (riskInfo) {
+      showRiskWarning(riskInfo);
+    }
+
     return response;
   },
   (error: AxiosError<ApiError>) => {
@@ -122,8 +186,19 @@ apiClient.interceptors.response.use(
 
     /* 403 权限不足错误 */
     if (error.response?.status === 403) {
+      if (error.response.data?.error_code === RISK_BLOCKED_CODE) {
+        const riskInfo = riskInfoFromDetails(error.response.data.details) || riskInfoFromHeaders(error.response.headers);
+        if (riskInfo) {
+          showRiskBlockedDialog(riskInfo);
+        }
+
+        return Promise.reject(
+          new ForbiddenError(error.response.data?.error_msg || '账号存在风险', RISK_BLOCKED_CODE, error.response.data?.details),
+        );
+      }
+
       return Promise.reject(
-        new ForbiddenError(error.response.data?.error_msg || '权限不足，请过盾后重试'),
+        new ForbiddenError(error.response.data?.error_msg || '权限不足，请过盾后重试', error.response.data?.error_code, error.response.data?.details),
       );
     }
 
