@@ -13,8 +13,8 @@ export function showRiskWarningToast(riskInfo: RiskInfo) {
     {
       id: RISK_TOAST_ID,
       duration: Infinity,
-      closeButton: false,
-      dismissible: false,
+      closeButton: true,
+      dismissible: true,
     },
   )
 }
