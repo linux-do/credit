@@ -40,6 +40,7 @@ const (
 
 	riskLevelHeader  = "X-Credit-Risk-Level"
 	riskLabelsHeader = "X-Credit-Risk-Labels"
+	riskItemsHeader  = "X-Credit-Risks"
 	exposeHeader     = "Access-Control-Expose-Headers"
 
 	riskBlockedCode = "RISK_BLOCKED"
@@ -49,6 +50,7 @@ const (
 type openAPIUserRiskItem struct {
 	Label string `json:"label"`
 	Value string `json:"value"`
+	Desc  string `json:"desc"`
 }
 
 type openAPIUserRiskResponse struct {
@@ -58,8 +60,9 @@ type openAPIUserRiskResponse struct {
 }
 
 type riskBlockDetails struct {
-	RiskLevel  string   `json:"risk_level"`
-	RiskLabels []string `json:"risk_labels"`
+	RiskLevel  string                `json:"risk_level"`
+	RiskLabels []string              `json:"risk_labels"`
+	Risks      []openAPIUserRiskItem `json:"risks"`
 }
 
 func checkOpenAPIUserRisk(ctx context.Context, userID uint64) (*openAPIUserRiskResponse, bool) {
@@ -143,37 +146,46 @@ func applyOpenAPIUserRisk(c *gin.Context, risk *openAPIUserRiskResponse) bool {
 	}
 
 	labels := riskLabels(risk)
+	items := riskItems(risk)
 	cfg := config.Config.OpenAPIRisk
 	if containsString(cfg.BlockRiskLevels, risk.RiskLevel) {
-		setRiskHeaders(c, risk.RiskLevel, labels)
+		setRiskHeaders(c, risk.RiskLevel, labels, items)
 		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
 			"error_code": riskBlockedCode,
 			"error_msg":  riskBlockedMsg,
 			"details": riskBlockDetails{
 				RiskLevel:  risk.RiskLevel,
 				RiskLabels: labels,
+				Risks:      items,
 			},
 		})
 		return true
 	}
 
 	if containsString(cfg.PromptRiskLevels, risk.RiskLevel) {
-		setRiskHeaders(c, risk.RiskLevel, labels)
+		setRiskHeaders(c, risk.RiskLevel, labels, items)
 	}
 
 	return false
 }
 
-func setRiskHeaders(c *gin.Context, riskLevel string, labels []string) {
+func setRiskHeaders(c *gin.Context, riskLevel string, labels []string, items []openAPIUserRiskItem) {
 	labelsJSON, err := json.Marshal(labels)
 	if err != nil {
 		logger.ErrorF(c.Request.Context(), "[OpenAPIRisk] marshal risk labels failed: %v", err)
 		return
 	}
 
+	itemsJSON, err := json.Marshal(items)
+	if err != nil {
+		logger.ErrorF(c.Request.Context(), "[OpenAPIRisk] marshal risk items failed: %v", err)
+		return
+	}
+
 	c.Header(riskLevelHeader, riskLevel)
 	c.Header(riskLabelsHeader, base64.StdEncoding.EncodeToString(labelsJSON))
-	appendExposeHeaders(c, riskLevelHeader, riskLabelsHeader)
+	c.Header(riskItemsHeader, base64.StdEncoding.EncodeToString(itemsJSON))
+	appendExposeHeaders(c, riskLevelHeader, riskLabelsHeader, riskItemsHeader)
 }
 
 func appendExposeHeaders(c *gin.Context, names ...string) {
@@ -212,6 +224,20 @@ func riskLabels(risk *openAPIUserRiskResponse) []string {
 		labels = append(labels, label)
 	}
 	return labels
+}
+
+func riskItems(risk *openAPIUserRiskResponse) []openAPIUserRiskItem {
+	items := make([]openAPIUserRiskItem, 0, len(risk.Risks))
+	for _, item := range risk.Risks {
+		item.Label = strings.TrimSpace(item.Label)
+		item.Value = strings.TrimSpace(item.Value)
+		item.Desc = strings.TrimSpace(item.Desc)
+		if item.Label == "" {
+			continue
+		}
+		items = append(items, item)
+	}
+	return items
 }
 
 func containsString(values []string, target string) bool {
