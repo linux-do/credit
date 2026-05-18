@@ -16,7 +16,7 @@ const RISK_BLOCKED_EVENT = "credit-risk-blocked"
 function isRiskInfo(value: unknown): value is RiskInfo {
   if (!value || typeof value !== "object") return false
   const riskInfo = value as Partial<RiskInfo>
-  return typeof riskInfo.risk_level === "string" && Array.isArray(riskInfo.risk_labels)
+  return typeof riskInfo.risk_level === "string" && Array.isArray(riskInfo.risk_labels) && Array.isArray(riskInfo.risks)
 }
 
 export function RiskBlockDialog() {

@@ -39,26 +39,62 @@ const pendingRequests = new Map<string, Promise<AxiosResponse<ApiResponse>>>();
 
 const RISK_LEVEL_HEADER = 'x-credit-risk-level';
 const RISK_LABELS_HEADER = 'x-credit-risk-labels';
+const RISK_ITEMS_HEADER = 'x-credit-risks';
 const RISK_BLOCKED_CODE = 'RISK_BLOCKED';
 const RISK_BLOCKED_EVENT = 'credit-risk-blocked';
+
+interface RiskItem {
+  label: string;
+  value?: string;
+  desc?: string;
+}
 
 interface RiskInfo {
   risk_level: string;
   risk_labels: string[];
+  risks: RiskItem[];
 }
 
-function decodeRiskLabels(value?: string): string[] {
+function decodeBase64JSON(value?: string): unknown {
   if (!value || typeof window === 'undefined') return [];
 
   try {
     const binary = window.atob(value);
     const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
     const json = new TextDecoder().decode(bytes);
-    const labels = JSON.parse(json);
-    return Array.isArray(labels) ? labels.filter((label): label is string => typeof label === 'string') : [];
+    return JSON.parse(json);
   } catch {
     return [];
   }
+}
+
+function normalizeRiskItems(value: unknown): RiskItem[] {
+  if (!Array.isArray(value)) return [];
+
+  return value.reduce<RiskItem[]>((items, item) => {
+    if (!item || typeof item !== 'object') return items;
+
+    const label = 'label' in item ? (item as { label?: unknown }).label : undefined;
+    if (typeof label !== 'string' || !label.trim()) return items;
+
+    const value = 'value' in item ? (item as { value?: unknown }).value : undefined;
+    const desc = 'desc' in item ? (item as { desc?: unknown }).desc : undefined;
+    items.push({
+      label: label.trim(),
+      value: typeof value === 'string' ? value.trim() : undefined,
+      desc: typeof desc === 'string' ? desc.trim() : undefined,
+    });
+
+    return items;
+  }, []);
+}
+
+function normalizeRiskLabels(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((label): label is string => typeof label === 'string' && !!label.trim()).map(label => label.trim()) : [];
+}
+
+function riskLabelsFromItems(items: RiskItem[]): string[] {
+  return items.map(item => item.label).filter(Boolean);
 }
 
 function riskInfoFromHeaders(headers: AxiosResponse['headers']): RiskInfo | null {
@@ -66,9 +102,14 @@ function riskInfoFromHeaders(headers: AxiosResponse['headers']): RiskInfo | null
   if (typeof riskLevel !== 'string' || !riskLevel) return null;
 
   const riskLabelsHeader = headers[RISK_LABELS_HEADER];
+  const riskItemsHeader = headers[RISK_ITEMS_HEADER];
+  const risks = typeof riskItemsHeader === 'string' ? normalizeRiskItems(decodeBase64JSON(riskItemsHeader)) : [];
+  const labels = typeof riskLabelsHeader === 'string' ? normalizeRiskLabels(decodeBase64JSON(riskLabelsHeader)) : riskLabelsFromItems(risks);
+
   return {
     risk_level: riskLevel,
-    risk_labels: typeof riskLabelsHeader === 'string' ? decodeRiskLabels(riskLabelsHeader) : [],
+    risk_labels: labels,
+    risks,
   };
 }
 
@@ -77,11 +118,16 @@ function riskInfoFromDetails(details: unknown): RiskInfo | null {
 
   const riskLevel = 'risk_level' in details ? (details as { risk_level?: unknown }).risk_level : undefined;
   const riskLabels = 'risk_labels' in details ? (details as { risk_labels?: unknown }).risk_labels : undefined;
+  const riskItems = 'risks' in details ? (details as { risks?: unknown }).risks : undefined;
   if (typeof riskLevel !== 'string' || !riskLevel) return null;
+
+  const risks = normalizeRiskItems(riskItems);
+  const labels = normalizeRiskLabels(riskLabels);
 
   return {
     risk_level: riskLevel,
-    risk_labels: Array.isArray(riskLabels) ? riskLabels.filter((label): label is string => typeof label === 'string') : [],
+    risk_labels: labels.length ? labels : riskLabelsFromItems(risks),
+    risks,
   };
 }
 
