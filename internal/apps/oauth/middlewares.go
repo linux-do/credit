@@ -17,13 +17,11 @@ limitations under the License.
 package oauth
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/linux-do/credit/internal/common"
 	"github.com/linux-do/credit/internal/db"
-	"github.com/linux-do/credit/internal/logger"
 	"github.com/linux-do/credit/internal/model"
 	"github.com/linux-do/credit/internal/otel_trace"
 	"github.com/linux-do/credit/internal/util"
@@ -61,23 +59,8 @@ func LoginRequired() gin.HandlerFunc {
 			return
 		}
 
-		auditLog := loginRequiredAuditLog{
-			UserID:     user.ID,
-			Username:   user.Username,
-			ClientIP:   c.ClientIP(),
-			Method:     c.Request.Method,
-			Path:       c.Request.URL.Path,
-			RequestURI: c.Request.RequestURI,
-			UserAgent:  c.Request.UserAgent(),
-			Referer:    c.Request.Referer(),
-		}
-		auditJSON, err := json.Marshal(auditLog)
-		if err != nil {
-			logger.ErrorF(ctx, "[LoginRequiredAudit] marshal failed: %v", err)
-			logger.InfoF(ctx, "[LoginRequiredAudit] %s %d %s", c.ClientIP(), user.ID, user.Username)
-		} else {
-			logger.InfoF(ctx, "[LoginRequiredAudit] %s", auditJSON)
-		}
+		// log
+		LogForAudit(ctx, &user, c)
 
 		// set user info
 		util.SetToContext(c, UserObjKey, &user)
