@@ -103,6 +103,8 @@ func Callback(c *gin.Context) {
 		return
 	}
 
+	LogForAudit(ctx, user, c)
+
 	c.JSON(http.StatusOK, util.OKNil())
 }
 
