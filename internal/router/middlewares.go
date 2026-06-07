@@ -17,6 +17,7 @@ limitations under the License.
 package router
 
 import (
+	"net/http"
 	"strconv"
 	"time"
 
@@ -24,9 +25,29 @@ import (
 	"github.com/linux-do/credit/internal/config"
 	"github.com/linux-do/credit/internal/logger"
 	"github.com/linux-do/credit/internal/otel_trace"
+	"github.com/linux-do/credit/internal/util"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
+
+func csrfMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		method := c.Request.Method
+		if method == http.MethodPost || method == http.MethodPut || method == http.MethodDelete || method == http.MethodPatch {
+			path := c.Request.URL.Path
+			if path == "/pay/submit.php" || path == "/api.php" || path == "/pay/distribute" {
+				c.Next()
+				return
+			}
+			if c.GetHeader("X-Requested-With") != "XMLHttpRequest" {
+				c.AbortWithStatusJSON(http.StatusForbidden, util.Err("CSRF 验证失败"))
+				return
+			}
+		}
+
+		c.Next()
+	}
+}
 
 func loggerMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
