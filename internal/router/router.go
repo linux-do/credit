@@ -102,7 +102,7 @@ func Serve() {
 	r.Use(sessions.Sessions(config.Config.App.SessionCookieName, sessionStore))
 
 	// 补充中间件
-	r.Use(otelgin.Middleware(config.Config.App.AppName), loggerMiddleware(), csrfMiddleware())
+	r.Use(otelgin.Middleware(config.Config.App.AppName), loggerMiddleware())
 
 	// 支付接口
 	r.Match([]string{"GET", "POST"}, "/pay/submit.php", payment.RequireSignatureAuth(), payment.CreateMerchantOrder)
@@ -117,6 +117,7 @@ func Serve() {
 	r.GET("/f/:id", upload.ServeFileByID)
 
 	apiGroup := r.Group(config.Config.App.APIPrefix)
+	apiGroup.Use(csrfMiddleware())
 	{
 		if !config.Config.App.IsProduction() {
 			// Swagger
