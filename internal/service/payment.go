@@ -140,9 +140,9 @@ func GetTodayUsedAmount(db *gorm.DB, userID uint64) (decimal.Decimal, error) {
 
 	var total decimal.Decimal
 	err := db.Model(&model.Order{}).
-		Where("payer_user_id = ? AND status = ? AND type IN ? AND trade_time >= ? AND trade_time < ?",
+		Where("payer_user_id = ? AND status IN ? AND type IN ? AND trade_time >= ? AND trade_time < ?",
 			userID,
-			model.OrderStatusSuccess,
+			[]model.OrderStatus{model.OrderStatusSuccess, model.OrderStatusDisputing, model.OrderStatusRefused},
 			[]model.OrderType{model.OrderTypePayment, model.OrderTypeOnline, model.OrderTypeDistribute, model.OrderTypeTransfer},
 			todayStart,
 			todayEnd).

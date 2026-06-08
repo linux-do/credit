@@ -117,6 +117,7 @@ func Serve() {
 	r.GET("/f/:id", upload.ServeFileByID)
 
 	apiGroup := r.Group(config.Config.App.APIPrefix)
+	apiGroup.Use(csrfMiddleware())
 	{
 		if !config.Config.App.IsProduction() {
 			// Swagger
