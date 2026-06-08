@@ -1,4 +1,5 @@
 import * as React from "react"
+import Link from "next/link"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -251,7 +252,22 @@ const TransactionTableRow = React.memo(React.forwardRef<HTMLTableRowElement, {
         )}
       </TableCell>
       <TableCell className="text-[11px] font-medium text-center py-1">
-        {order.app_name || '-'}
+        {order.app_name ? (
+          order.app_homepage_url ? (
+            <Link
+              href={order.app_homepage_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary underline-offset-4 hover:underline"
+            >
+              {order.app_name}
+            </Link>
+          ) : (
+            order.app_name
+          )
+        ) : (
+          '-'
+        )}
       </TableCell>
       <TableCell className="font-mono text-[11px] font-medium text-left py-1">
         {order.order_no}
