@@ -5,7 +5,7 @@
 [English](./README.md)
 
 [![License: Apache2.0](https://img.shields.io/badge/License-Apache2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Go Version](https://img.shields.io/badge/Go-1.25.5-blue.svg)](https://golang.org/)
+[![Go Version](https://img.shields.io/badge/Go-1.26-blue.svg)](https://golang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black.svg)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19-blue.svg)](https://reactjs.org/)
 
@@ -52,7 +52,7 @@ LINUX DO Credit 是一个为 Linux Do 社区打造的积分服务平台，旨在
 ## 🛠️ 技术栈
 
 ### 后端
-- **[Go 1.25.5](https://go.dev/doc)** - 主要开发语言
+- **[Go 1.26](https://go.dev/doc)** - 主要开发语言
 - **[GIN](https://github.com/gin-gonic/gin)** - Web 框架
 - **[GORM](https://github.com/go-gorm/gorm)** - ORM 框架
 - **[Redis](https://github.com/redis/redis)** - 缓存和会话存储
@@ -70,7 +70,7 @@ LINUX DO Credit 是一个为 Linux Do 社区打造的积分服务平台，旨在
 
 ## 📋 环境要求
 
-- **Go** >= 1.25.5
+- **Go** >= 1.26
 - **Node.js** >= 18.0
 - **PostgreSQL** >= 18
 - **Redis** >= 6.0
@@ -136,7 +136,8 @@ pnpm dev
 
 - **前端界面**: http://localhost:3000
 - **API 文档**: http://localhost:8000/swagger/index.html
-- **健康检查**: http://localhost:8000/api/health
+- **健康检查**: http://localhost:8000/api/v1/health
+- **就绪检查**: http://localhost:8000/api/v1/ready
 
 ## ⚙️ 配置说明
 
@@ -145,6 +146,8 @@ pnpm dev
 | 配置项 | 说明 | 示例 |
 |--------|------|------|
 | `app.addr` | 后端服务监听地址 | `:8000` |
+| `worker.port` | Worker 探针端口 | `8001` |
+| `scheduler.port` | Scheduler 探针端口 | `8002` |
 | `oauth2.client_id` | OAuth2 客户端 ID | `your_client_id` |
 | `database.host` | PostgreSQL 数据库地址 | `127.0.0.1` |
 | `database.port` | PostgreSQL 数据库端口 | `5432` |

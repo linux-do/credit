@@ -1438,6 +1438,21 @@ paths:
             $ref: '#/definitions/util.ResponseAny'
       tags:
       - payment
+  /api/v1/ready:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - health
   /api/v1/redenvelope/{id}:
     get:
       parameters:

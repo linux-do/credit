@@ -5,7 +5,7 @@
 [中文](./README_zh.md)
 
 [![License: Apache2.0](https://img.shields.io/badge/License-Apache2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Go Version](https://img.shields.io/badge/Go-1.25.5-blue.svg)](https://golang.org/)
+[![Go Version](https://img.shields.io/badge/Go-1.26-blue.svg)](https://golang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black.svg)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19-blue.svg)](https://reactjs.org/)
 
@@ -52,7 +52,7 @@ LINUX DO Credit is a credit service platform built for the Linux Do community, a
 ## 🛠️ Tech Stack
 
 ### Backend
-- **[Go 1.25.5](https://go.dev/doc)** - Primary development language
+- **[Go 1.26](https://go.dev/doc)** - Primary development language
 - **[GIN](https://github.com/gin-gonic/gin)** - Web Framework
 - **[GORM](https://github.com/go-gorm/gorm)** - ORM Framework
 - **[Redis](https://github.com/redis/redis)** - Cache and session store
@@ -70,7 +70,7 @@ LINUX DO Credit is a credit service platform built for the Linux Do community, a
 
 ## 📋 Requirements
 
-- **Go** >= 1.25.5
+- **Go** >= 1.26
 - **Node.js** >= 18.0
 - **PostgreSQL** >= 18
 - **Redis** >= 6.0
@@ -136,7 +136,8 @@ pnpm dev
 
 - **Frontend Interface**: http://localhost:3000
 - **API Documentation**: http://localhost:8000/swagger/index.html
-- **Health Check**: http://localhost:8000/api/health
+- **Health Check**: http://localhost:8000/api/v1/health
+- **Readiness Check**: http://localhost:8000/api/v1/ready
 
 ## ⚙️ Configuration
 
@@ -145,6 +146,8 @@ pnpm dev
 | Option | Description | Example |
 |--------|-------------|---------|
 | `app.addr` | Backend service listening address | `:8000` |
+| `worker.port` | Worker probe port | `8001` |
+| `scheduler.port` | Scheduler probe port | `8002` |
 | `oauth2.client_id` | OAuth2 Client ID | `your_client_id` |
 | `database.host` | PostgreSQL database host | `127.0.0.1` |
 | `database.port` | PostgreSQL database port | `5432` |

@@ -147,6 +147,7 @@ type logConfig struct {
 
 // schedulerConfig 定时任务配置
 type schedulerConfig struct {
+	Port                                     int    `mapstructure:"port"`
 	UpdateUserGamificationScoresTaskCron     string `mapstructure:"update_user_gamification_scores_task_cron"`
 	DisputeAutoRefundDispatchIntervalSeconds int    `mapstructure:"dispute_auto_refund_dispatch_interval_seconds"`
 	AutoRefundExpiredDisputesTaskCron        string `mapstructure:"auto_refund_expired_disputes_task_cron"`
@@ -158,6 +159,7 @@ type schedulerConfig struct {
 
 // workerConfig 工作配置
 type workerConfig struct {
+	Port                       int             `mapstructure:"port"`
 	Concurrency                int             `mapstructure:"concurrency"`
 	StrictPriority             bool            `mapstructure:"strict_priority"`
 	Queues                     []QueueConfig   `mapstructure:"queues"`
