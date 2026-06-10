@@ -105,6 +105,7 @@ log:
 
 # Scheduler
 scheduler:
+  port: 8002 # scheduler probe port
   update_user_gamification_scores_task_cron: "0 2 * * *"
   dispute_auto_refund_dispatch_interval_seconds: 3
   auto_refund_expired_disputes_task_cron: "0 0 * * *"
@@ -115,6 +116,7 @@ scheduler:
 
 # Worker
 worker:
+  port: 8001 # worker probe port
   concurrency: 20
   strict_priority: false
   queues:

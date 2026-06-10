@@ -1443,6 +1443,30 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/ready": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/util.ResponseAny"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/util.ResponseAny"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/redenvelope/claim": {
             "post": {
                 "consumes": [

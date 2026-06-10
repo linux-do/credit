@@ -68,9 +68,7 @@ func loggerMiddleware() gin.HandlerFunc {
 		latency := end.Sub(start)
 
 		// 打印日志
-		// 排除健康检查接口
-		healthPath := config.Config.App.APIPrefix + "/v1/health"
-		if c.Request.URL.Path != healthPath {
+		if !isProbePath(c.Request.URL.Path) {
 			logger.InfoF(
 				ctx,
 				"[LoggerMiddleware] %s %s\nStartTime: %s\nEndTime: %s\nLatency: %d\nClientIP: %s\nResponse: %d %d",
@@ -91,4 +89,9 @@ func loggerMiddleware() gin.HandlerFunc {
 			span.SetStatus(codes.Error, strconv.Itoa(c.Writer.Status()))
 		}
 	}
+}
+
+func isProbePath(path string) bool {
+	return path == config.Config.App.APIPrefix+"/v1/health" ||
+		path == config.Config.App.APIPrefix+"/v1/ready"
 }

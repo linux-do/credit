@@ -129,6 +129,7 @@ func Serve() {
 		{
 			// Health
 			apiV1Router.GET("/health", health.Health)
+			apiV1Router.GET("/ready", health.Ready)
 
 			// OAuth
 			apiV1Router.GET("/oauth/login", oauth.GetLoginURL)
