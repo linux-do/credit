@@ -92,7 +92,7 @@ type LeaderboardUser struct {
 
 type User struct {
 	ID               uint64          `json:"id" gorm:"primaryKey;index:idx_users_active_bal_id,priority:3"`
-	Username         string          `json:"username" gorm:"size:64;uniqueIndex"`
+	Username         string          `json:"username" gorm:"size:255;uniqueIndex"`
 	Nickname         string          `json:"nickname" gorm:"size:255"`
 	AvatarUrl        string          `json:"avatar_url" gorm:"size:255"`
 	TrustLevel       TrustLevel      `json:"trust_level" gorm:"index"`
