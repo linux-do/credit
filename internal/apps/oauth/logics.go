@@ -111,14 +111,13 @@ func doOAuth(ctx context.Context, code string, nonce string) (*model.User, error
 	err = db.DB(ctx).Transaction(func(tx *gorm.DB) error {
 		var holder model.User
 		if conflictErr := tx.Where("username = ? AND id != ?", userInfo.Username, userInfo.GetID()).First(&holder).Error; conflictErr == nil {
-			// 存在冲突 -> 将占用者改名并注销
-			newParams := map[string]interface{}{
-				"username":  fmt.Sprintf("%s已注销: %s", holder.Username, uuid.NewString()),
-				"is_active": false,
-			}
-			if updateErr := tx.Model(&holder).Updates(newParams).Error; updateErr != nil {
+			// 用户名来自 OAuth 且可能被改名复用；冲突时只释放旧用户名，不禁用原账号。
+			newUsername := fmt.Sprintf("__released_username__:%d:%s", holder.ID, uuid.NewString())
+			if updateErr := tx.Model(&holder).Update("username", newUsername).Error; updateErr != nil {
 				return updateErr
 			}
+		} else if !errors.Is(conflictErr, gorm.ErrRecordNotFound) {
+			return conflictErr
 		}
 
 		// 根据 ID 处理当前用户的 更新 或 创建
