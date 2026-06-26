@@ -2217,63 +2217,51 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "client_id": {
-                    "description": "ClientID 商户应用 Client ID。",
                     "type": "string",
                     "maxLength": 64
                 },
                 "end_time": {
-                    "description": "EndTime 创建时间终点。",
                     "type": "string"
                 },
                 "id": {
-                    "description": "ID 订单 ID。",
                     "type": "string",
                     "example": "0"
                 },
                 "merchant_order_no": {
-                    "description": "MerchantOrderNo 商户订单号。",
                     "type": "string",
                     "maxLength": 64
                 },
                 "order_name": {
-                    "description": "OrderName 订单名称前缀。",
                     "type": "string",
                     "maxLength": 64
                 },
                 "page": {
-                    "description": "Page 页码，从 1 开始。",
                     "type": "integer",
                     "minimum": 1
                 },
                 "page_size": {
-                    "description": "PageSize 每页数量。",
                     "type": "integer",
                     "maximum": 100,
                     "minimum": 1
                 },
                 "payee_username": {
-                    "description": "PayeeUsername 服务方用户名前缀。",
                     "type": "string",
                     "maxLength": 255
                 },
                 "payer_username": {
-                    "description": "PayerUsername 消费方用户名前缀。",
                     "type": "string",
                     "maxLength": 255
                 },
                 "start_time": {
-                    "description": "StartTime 创建时间起点。",
                     "type": "string"
                 },
                 "statuses": {
-                    "description": "Statuses 订单状态筛选。",
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
                 "types": {
-                    "description": "Types 订单类型筛选。",
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -2285,7 +2273,6 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "remark": {
-                    "description": "Remark 管理员备注，可选；有争议时追加到争议原因，无争议时追加到订单备注。",
                     "type": "string",
                     "maxLength": 100
                 }
