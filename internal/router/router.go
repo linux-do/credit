@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/linux-do/credit/internal/apps/admin"
+	admin_order "github.com/linux-do/credit/internal/apps/admin/order"
 	admin_task "github.com/linux-do/credit/internal/apps/admin/task"
 	admin_user "github.com/linux-do/credit/internal/apps/admin/user"
 	publicconfig "github.com/linux-do/credit/internal/apps/config"
@@ -251,6 +252,10 @@ func Serve() {
 				// Users
 				adminRouter.GET("/users", admin_user.ListUsers)
 				adminRouter.PUT("/users/:id/status", admin_user.UpdateUserStatus)
+
+				// Orders
+				adminRouter.POST("/orders", admin_order.ListOrders)
+				adminRouter.POST("/orders/:id/refund", admin_order.RefundOrder)
 
 				// System Config
 				adminRouter.POST("/system-configs", system_config.CreateSystemConfig)

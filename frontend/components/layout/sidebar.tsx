@@ -60,6 +60,7 @@ import {
   Layers,
   Trophy,
   ArrowUpRight,
+  ReceiptText,
 } from "lucide-react"
 
 import { useUser } from "@/contexts/user-context"
@@ -77,6 +78,7 @@ const data = {
     { title: "系统配置", url: "/admin/system", icon: ShieldCheck },
     { title: "积分配置", url: "/admin/credit", icon: Settings },
     { title: "用户管理", url: "/admin/users", icon: UserRound },
+    { title: "订单管理", url: "/admin/orders", icon: ReceiptText },
     { title: "任务管理", url: "/admin/tasks", icon: Layers },
   ],
   document: [

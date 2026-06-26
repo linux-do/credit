@@ -41,5 +41,11 @@ export type {
   ListUsersRequest,
   ListUsersResponse,
   UpdateUserStatusRequest,
+  AdminOrder,
+  AdminOrderType,
+  AdminOrderStatus,
+  AdminOrderTransferStatus,
+  ListAdminOrdersRequest,
+  ListAdminOrdersResponse,
+  RefundAdminOrderRequest,
 } from './types';
-

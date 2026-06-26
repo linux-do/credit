@@ -12,6 +12,9 @@ import type {
   ListUsersRequest,
   ListUsersResponse,
   UpdateUserStatusRequest,
+  ListAdminOrdersRequest,
+  ListAdminOrdersResponse,
+  RefundAdminOrderRequest,
 } from './types';
 
 export type { AdminUser } from './types';
@@ -368,5 +371,29 @@ export class AdminService extends BaseService {
     request: UpdateUserStatusRequest
   ): Promise<void> {
     return this.put<void>(`/users/${ id }/status`, request);
+  }
+
+  // ==================== 订单管理 ====================
+
+  /**
+   * 获取后台订单列表
+   * @param request - 查询参数
+   * @returns 订单列表及总数
+   */
+  static async listOrders(request: ListAdminOrdersRequest): Promise<ListAdminOrdersResponse> {
+    return this.post<ListAdminOrdersResponse>('/orders', request);
+  }
+
+  /**
+   * 管理员退款
+   * @param id - 订单 ID
+   * @param request - 退款备注
+   * @returns void
+   */
+  static async refundOrder(
+    id: string,
+    request: RefundAdminOrderRequest
+  ): Promise<void> {
+    return this.post<void>(`/orders/${ id }/refund`, request);
   }
 }

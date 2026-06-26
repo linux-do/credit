@@ -29,6 +29,133 @@ import { typeConfig } from "@/components/common/general/table-filter"
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 
 type DisputeViewer = 'payer' | 'payee'
+type DisputeTimelineStatus = Order['status'] | 'closed'
+
+function getDisputeTimelineConfig(status: DisputeTimelineStatus) {
+  switch (status) {
+    case 'refused':
+      return {
+        tooltip: '争议已拒绝，点击查看',
+        timelineText: '服务方驳回争议',
+        isRed: true,
+        showTimestamp: true,
+        showContent: false,
+        content: null
+      }
+    case 'refund':
+      return {
+        tooltip: '争议已退款',
+        timelineText: '服务方已退款',
+        isRed: false,
+        showTimestamp: true,
+        showContent: true,
+        content: '退款已完成'
+      }
+    case 'disputing':
+      return {
+        tooltip: '争议处理中，点击查看',
+        timelineText: '争议进行中，等待服务方处理',
+        isRed: false,
+        showTimestamp: false,
+        showContent: false,
+        content: null
+      }
+    case 'closed':
+      return {
+        tooltip: '争议已关闭，点击查看',
+        timelineText: '争议已关闭',
+        isRed: false,
+        showTimestamp: true,
+        showContent: false,
+        content: null
+      }
+  }
+}
+
+function parseDisputeReason(fullReason: string) {
+  let reason = fullReason.trim()
+  let adminRemark: string | null = null
+  let merchantReason: string | null = null
+
+  const adminMatch = reason.match(/\s*\[管理员备注:\s*([^\]]*)\]\s*$/)
+  if (adminMatch) {
+    adminRemark = adminMatch[1].trim()
+    reason = reason.slice(0, adminMatch.index).trim()
+  }
+
+  const merchantMatch = reason.match(/\s*\[(?:服务方|受托方)拒绝理由:\s*([^\]]*)\]\s*$/)
+  if (merchantMatch) {
+    merchantReason = merchantMatch[1].trim()
+    reason = reason.slice(0, merchantMatch.index).trim()
+  }
+
+  return { userReason: reason, merchantReason, adminRemark }
+}
+
+// DisputeHistoryTimeline 争议处理时间线，供活动页和后台退款确认共用。
+export function DisputeHistoryTimeline({
+  dispute,
+  status,
+}: {
+  dispute: Pick<Dispute, 'reason' | 'created_at' | 'updated_at'>
+  status: DisputeTimelineStatus
+}) {
+  const disputeConfig = getDisputeTimelineConfig(status)
+  if (!disputeConfig) return null
+
+  const parsedReason = parseDisputeReason(dispute.reason)
+
+  return (
+    <div className="py-4 relative pl-4 border-l border-border/50 space-y-8 ml-2">
+      <div className="relative">
+        <div className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-primary ring-4 ring-background" />
+        <div className="space-y-1">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">消费方发起争议</span>
+            <span className="text-xs text-muted-foreground">{formatDateTime(dispute.created_at)}</span>
+          </div>
+          <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
+            {parsedReason.userReason}
+          </div>
+        </div>
+      </div>
+
+      <div className="relative">
+        <div className={`absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full ${ disputeConfig.isRed ? 'bg-destructive' : 'bg-primary' } ring-4 ring-background`} />
+        <div className="space-y-1">
+          <div className="flex items-center justify-between">
+            <span className={`text-sm font-medium ${ disputeConfig.isRed ? 'text-destructive' : '' }`}>
+              {disputeConfig.timelineText}
+            </span>
+            {disputeConfig.showTimestamp && (
+              <span className="text-xs text-muted-foreground">
+                {formatDateTime(dispute.updated_at)}
+              </span>
+            )}
+          </div>
+
+          {status === 'refused' && (
+            <div className="text-sm text-muted-foreground bg-destructive/5 border border-destructive/10 p-3 rounded-md">
+              {parsedReason.merchantReason || "未提供拒绝理由"}
+            </div>
+          )}
+
+          {status === 'refund' && disputeConfig.showContent && disputeConfig.content && (
+            <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
+              {disputeConfig.content}
+            </div>
+          )}
+
+          {parsedReason.adminRemark && (
+            <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
+              管理员备注：{parsedReason.adminRemark}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 /**
  * 活动详情弹窗
@@ -358,37 +485,7 @@ export function ViewDisputeHistoryDialog({ order, viewer = 'payer' }: { order: O
   const [disputeHistory, setDisputeHistory] = useState<Dispute | null>(null)
   const [fetchingHistory, setFetchingHistory] = useState(false)
 
-  const disputeConfig = React.useMemo(() => {
-    switch (order.status) {
-      case 'refused':
-        return {
-          tooltip: '争议已拒绝，点击查看',
-          timelineText: '服务方驳回争议',
-          isRed: true,
-          showTimestamp: true,
-          showContent: false,
-          content: null
-        }
-      case 'refund':
-        return {
-          tooltip: '争议已退款',
-          timelineText: '服务方已退款',
-          isRed: false,
-          showTimestamp: true,
-          showContent: true,
-          content: '退款已完成'
-        }
-      case 'disputing':
-        return {
-          tooltip: '争议处理中，点击查看',
-          timelineText: '争议进行中，等待服务方处理',
-          isRed: false,
-          showTimestamp: false,
-          showContent: false,
-          content: null
-        }
-    }
-  }, [order.status])
+  const disputeConfig = React.useMemo(() => getDisputeTimelineConfig(order.status), [order.status])
 
   if (!disputeConfig) return null
 
@@ -438,14 +535,6 @@ export function ViewDisputeHistoryDialog({ order, viewer = 'payer' }: { order: O
     }
   }
 
-  const parseDisputeReason = (fullReason: string) => {
-    const match = fullReason.match(/^(.*?)\s*\[(?:服务方|受托方)拒绝理由:\s*(.*?)\]$/)
-    if (match) {
-      return { userReason: match[1].trim(), merchantReason: match[2].trim() }
-    }
-    return { userReason: fullReason, merchantReason: null }
-  }
-
   return (
     <>
       <Tooltip>
@@ -475,48 +564,7 @@ export function ViewDisputeHistoryDialog({ order, viewer = 'payer' }: { order: O
               <Spinner className="size-6" />
             </div>
           ) : disputeHistory ? (
-            <div className="py-4 relative pl-4 border-l border-border/50 space-y-8 ml-2">
-              <div className="relative">
-                <div className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-primary ring-4 ring-background" />
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">消费方发起争议</span>
-                    <span className="text-xs text-muted-foreground">{formatDateTime(disputeHistory.created_at)}</span>
-                  </div>
-                  <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
-                    {parseDisputeReason(disputeHistory.reason).userReason}
-                  </div>
-                </div>
-              </div>
-
-              <div className="relative">
-                <div className={`absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full ${ disputeConfig.isRed ? 'bg-destructive' : 'bg-primary' } ring-4 ring-background`} />
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className={`text-sm font-medium ${ disputeConfig.isRed ? 'text-destructive' : '' }`}>
-                      {disputeConfig.timelineText}
-                    </span>
-                    {disputeConfig.showTimestamp && (
-                      <span className="text-xs text-muted-foreground">
-                        {formatDateTime(disputeHistory.updated_at)}
-                      </span>
-                    )}
-                  </div>
-
-                  {order.status === 'refused' && (
-                    <div className="text-sm text-muted-foreground bg-destructive/5 border border-destructive/10 p-3 rounded-md">
-                      {parseDisputeReason(disputeHistory.reason).merchantReason || "未提供拒绝理由"}
-                    </div>
-                  )}
-
-                  {order.status === 'refund' && disputeConfig.showContent && disputeConfig.content && (
-                    <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
-                      {disputeConfig.content}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+            <DisputeHistoryTimeline dispute={disputeHistory} status={order.status} />
           ) : (
             <div className="py-8 text-center text-muted-foreground text-sm">
               无法加载争议记录

@@ -231,6 +231,65 @@ definitions:
           type: string
         type: array
     type: object
+  order.listOrdersRequest:
+    properties:
+      client_id:
+        description: ClientID 商户应用 Client ID。
+        maxLength: 64
+        type: string
+      end_time:
+        description: EndTime 创建时间终点。
+        type: string
+      id:
+        description: ID 订单 ID。
+        example: "0"
+        type: string
+      merchant_order_no:
+        description: MerchantOrderNo 商户订单号。
+        maxLength: 64
+        type: string
+      order_name:
+        description: OrderName 订单名称前缀。
+        maxLength: 64
+        type: string
+      page:
+        description: Page 页码，从 1 开始。
+        minimum: 1
+        type: integer
+      page_size:
+        description: PageSize 每页数量。
+        maximum: 100
+        minimum: 1
+        type: integer
+      payee_username:
+        description: PayeeUsername 服务方用户名前缀。
+        maxLength: 255
+        type: string
+      payer_username:
+        description: PayerUsername 消费方用户名前缀。
+        maxLength: 255
+        type: string
+      start_time:
+        description: StartTime 创建时间起点。
+        type: string
+      statuses:
+        description: Statuses 订单状态筛选。
+        items:
+          type: string
+        type: array
+      types:
+        description: Types 订单类型筛选。
+        items:
+          type: string
+        type: array
+    type: object
+  order.refundOrderRequest:
+    properties:
+      remark:
+        description: Remark 管理员备注，可选；有争议时追加到争议原因，无争议时追加到订单备注。
+        maxLength: 100
+        type: string
+    type: object
   payment.CreateOrderRequest:
     properties:
       amount:
@@ -583,6 +642,50 @@ paths:
             $ref: '#/definitions/payment.RefundMerchantOrderResponse'
       tags:
       - payment
+  /api/v1/admin/orders:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/order.listOrdersRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - admin
+  /api/v1/admin/orders/{id}/refund:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 订单ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: request body
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/order.refundOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - admin
   /api/v1/admin/system-configs:
     get:
       produces:

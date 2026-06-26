@@ -28,6 +28,7 @@ import (
 	"github.com/linux-do/credit/internal/db"
 	"github.com/linux-do/credit/internal/logger"
 	"github.com/linux-do/credit/internal/model"
+	"github.com/linux-do/credit/internal/service"
 	"github.com/linux-do/credit/internal/task"
 	"github.com/linux-do/credit/internal/task/scheduler"
 	"gorm.io/gorm"
@@ -129,11 +130,8 @@ func HandleAutoRefundSingleDispute(ctx context.Context, t *asynq.Task) error {
 			return err
 		}
 
-		// 获取付款方和收款方用户
-		var payerUser, payeeUser model.User
-		if err := payerUser.GetByID(tx, order.PayerUserID); err != nil {
-			return fmt.Errorf("查询付款方用户失败: %w", err)
-		}
+		// 获取收款方用户
+		var payeeUser model.User
 		if err := payeeUser.GetByID(tx, order.PayeeUserID); err != nil {
 			return fmt.Errorf("查询收款方用户失败: %w", err)
 		}
@@ -142,31 +140,6 @@ func HandleAutoRefundSingleDispute(ctx context.Context, t *asynq.Task) error {
 		var merchantPayConfig model.UserPayConfig
 		if err := merchantPayConfig.GetByPayScore(tx, payeeUser.PayScore); err != nil {
 			return fmt.Errorf("查询商家支付配置失败: %w", err)
-		}
-
-		// 计算商家积分减少：订单金额 × 商家的 score_rate
-		merchantScoreDecrease := order.Amount.Mul(merchantPayConfig.ScoreRate).Round(0).IntPart()
-
-		// 商家(收款方)退款：扣除可用余额、总收款和积分
-		if err := tx.Model(&model.User{}).
-			Where("id = ?", payeeUser.ID).
-			UpdateColumns(map[string]interface{}{
-				"available_balance": gorm.Expr("available_balance - ?", order.Amount),
-				"total_receive":     gorm.Expr("total_receive - ?", order.Amount),
-				"pay_score":         gorm.Expr("pay_score - ?", merchantScoreDecrease),
-			}).Error; err != nil {
-			return fmt.Errorf("商家退款失败: %w", err)
-		}
-
-		// 付款方收到退款：增加可用余额，减少总支付和支付积分
-		if err := tx.Model(&model.User{}).
-			Where("id = ?", payerUser.ID).
-			UpdateColumns(map[string]interface{}{
-				"available_balance": gorm.Expr("available_balance + ?", order.Amount),
-				"total_payment":     gorm.Expr("total_payment - ?", order.Amount),
-				"pay_score":         gorm.Expr("pay_score - ?", order.Amount.Round(0).IntPart()),
-			}).Error; err != nil {
-			return fmt.Errorf("付款方退款失败: %w", err)
 		}
 
 		// 更新争议状态为已退款，handler_user_id 设为 0（系统自动处理）
@@ -179,15 +152,12 @@ func HandleAutoRefundSingleDispute(ctx context.Context, t *asynq.Task) error {
 			return fmt.Errorf("更新争议状态失败: %w", err)
 		}
 
-		// 更新订单状态为已退款
-		if err := tx.Model(&model.Order{}).
-			Where("id = ?", order.ID).
-			Update("status", model.OrderStatusRefund).Error; err != nil {
-			return fmt.Errorf("更新订单状态失败: %w", err)
+		if err := service.RefundOrder(tx, &order, &merchantPayConfig); err != nil {
+			return fmt.Errorf("订单退款失败: %w", err)
 		}
 
-		logger.InfoF(ctx, "自动退款成功: 争议[ID:%d] 订单[ID:%d] 金额[%s] 付款方[%s] 商家[%s]",
-			dispute.ID, order.ID, order.Amount.String(), payerUser.Username, payeeUser.Username)
+		logger.InfoF(ctx, "自动退款成功: 争议[ID:%d] 订单[ID:%d] 金额[%s] 付款方[ID:%d] 商家[%s]",
+			dispute.ID, order.ID, order.Amount.String(), order.PayerUserID, payeeUser.Username)
 
 		return nil
 	}); err != nil {
