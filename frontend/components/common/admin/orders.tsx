@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { toast } from "sonner"
-import { Eye, Layers, Loader2, ReceiptText, RotateCw, Search, Undo2, X } from "lucide-react"
+import { Eye, Layers, Loader2, ReceiptText, RotateCw, Search, Undo2 } from "lucide-react"
 
 import { AdminService, type AdminOrder, type AdminOrderStatus, type AdminOrderType, type ListAdminOrdersRequest } from "@/lib/services"
 import { Button } from "@/components/ui/button"
@@ -12,7 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
@@ -21,7 +21,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { ErrorInline } from "@/components/layout/error"
 import { EmptyStateWithBorder } from "@/components/layout/empty"
 import { LoadingStateWithBorder } from "@/components/layout/loading"
-import { FilterSelect, TablePagination, statusConfig } from "@/components/common/general/table-filter"
+import { FilterSelect, TableFilterToolbar, TimeRangeFilter, statusConfig } from "@/components/common/general/table-filter"
+import { DataTableActionCell, DataTableFrame } from "@/components/common/general/table-data"
 import { DisputeHistoryTimeline } from "@/components/common/general/dispute-dialog"
 import { cn, formatDateTime } from "@/lib/utils"
 
@@ -34,8 +35,10 @@ const ADMIN_TYPE_CONFIG: Record<AdminOrderType, { label: string; color: string }
   distribute: { label: "商户分发", color: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300" },
   red_envelope_send: { label: "红包支出", color: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300" },
   red_envelope_receive: { label: "红包收入", color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300" },
-  red_envelope_refund: { label: "红包退款", color: "bg-muted/50 text-gray-800 dark:bg-gray-900 dark:text-gray-300" },
+  red_envelope_refund: { label: "红包退回", color: "bg-muted/50 text-gray-800 dark:bg-gray-900 dark:text-gray-300" },
 }
+
+const DEFAULT_SELECTED_TYPES: AdminOrderType[] = ["payment", "transfer", "online", "distribute"]
 
 const ADMIN_STATUS_CONFIG = statusConfig as Record<AdminOrderStatus, { label: string; color: string }>
 
@@ -46,7 +49,7 @@ const TRANSFER_STATUS_LABEL: Record<string, string> = {
 
 const DISPUTE_STATUS_LABEL: Record<string, string> = {
   disputing: "处理中",
-  refund: "已退款",
+  refund: "已退回",
   closed: "已关闭",
 }
 
@@ -68,10 +71,17 @@ const EMPTY_SEARCH: SearchValues = {
   payee_username: "",
 }
 
-function toISODateTime(value: string, endOfDay = false) {
-  if (!value) return undefined
-  const time = endOfDay ? "23:59:59" : "00:00:00"
-  return new Date(`${ value }T${ time }`).toISOString()
+function startTimeFromRange(range: { from: Date; to: Date } | null) {
+  return range?.from.toISOString()
+}
+
+function endTimeFromRange(range: { from: Date; to: Date } | null, quickSelection: string | null) {
+  if (!range) return undefined
+  if (quickSelection) return range.to.toISOString()
+
+  const end = new Date(range.to)
+  end.setDate(end.getDate() + 1)
+  return end.toISOString()
 }
 
 function isRefundable(order: AdminOrder) {
@@ -92,12 +102,12 @@ export function OrdersManager() {
   const [total, setTotal] = React.useState(0)
   const [page, setPage] = React.useState(1)
   const [pageSize, setPageSize] = React.useState(20)
-  const [selectedTypes, setSelectedTypes] = React.useState<AdminOrderType[]>([])
+  const [selectedTypes, setSelectedTypes] = React.useState<AdminOrderType[]>(DEFAULT_SELECTED_TYPES)
   const [selectedStatuses, setSelectedStatuses] = React.useState<AdminOrderStatus[]>([])
   const [searchValues, setSearchValues] = React.useState<SearchValues>(EMPTY_SEARCH)
   const [draftSearchValues, setDraftSearchValues] = React.useState<SearchValues>(EMPTY_SEARCH)
-  const [startDate, setStartDate] = React.useState("")
-  const [endDate, setEndDate] = React.useState("")
+  const [selectedQuickSelection, setSelectedQuickSelection] = React.useState<string | null>(null)
+  const [selectedTimeRange, setSelectedTimeRange] = React.useState<{ from: Date; to: Date } | null>(null)
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState<Error | null>(null)
   const [selectedOrder, setSelectedOrder] = React.useState<AdminOrder | null>(null)
@@ -108,22 +118,22 @@ export function OrdersManager() {
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
   const hasSearchValues = Object.values(searchValues).some(Boolean)
-  const hasDateFilter = Boolean(startDate || endDate)
+  const hasDateFilter = Boolean(selectedQuickSelection || selectedTimeRange)
 
   const buildRequest = React.useCallback((targetPage: number): ListAdminOrdersRequest => ({
     page: targetPage,
     page_size: pageSize,
     types: selectedTypes.length ? selectedTypes : undefined,
     statuses: selectedStatuses.length ? selectedStatuses : undefined,
-    start_time: toISODateTime(startDate),
-    end_time: toISODateTime(endDate, true),
+    start_time: startTimeFromRange(selectedTimeRange),
+    end_time: endTimeFromRange(selectedTimeRange, selectedQuickSelection),
     id: searchValues.id || undefined,
     order_name: searchValues.order_name || undefined,
     client_id: searchValues.client_id || undefined,
     merchant_order_no: searchValues.merchant_order_no || undefined,
     payer_username: searchValues.payer_username || undefined,
     payee_username: searchValues.payee_username || undefined,
-  }), [endDate, pageSize, searchValues, selectedStatuses, selectedTypes, startDate])
+  }), [pageSize, searchValues, selectedQuickSelection, selectedStatuses, selectedTimeRange, selectedTypes])
 
   const fetchOrders = React.useCallback(async (targetPage: number) => {
     try {
@@ -155,8 +165,8 @@ export function OrdersManager() {
     setSelectedStatuses([])
     setSearchValues(EMPTY_SEARCH)
     setDraftSearchValues(EMPTY_SEARCH)
-    setStartDate("")
-    setEndDate("")
+    setSelectedQuickSelection(null)
+    setSelectedTimeRange(null)
     setPage(1)
   }
 
@@ -168,14 +178,14 @@ export function OrdersManager() {
       await AdminService.refundOrder(refundOrder.id, {
         remark: refundRemark.trim() || undefined,
       })
-      toast.success("退款成功", {
-        description: `订单 ${ refundOrder.order_no } 已退款`,
+      toast.success("退回成功", {
+        description: `订单 ${ refundOrder.order_no } 已退回`,
       })
       setRefundOrder(null)
       setRefundRemark("")
       await fetchOrders(page)
     } catch (err) {
-      toast.error("退款失败", {
+      toast.error("退回失败", {
         description: err instanceof Error ? err.message : "未知错误",
       })
     } finally {
@@ -191,84 +201,67 @@ export function OrdersManager() {
         <div className="text-2xl font-semibold">订单管理</div>
       </div>
 
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-        <div className="flex items-center gap-2 flex-wrap">
-          <OrderSearchFilter
-            values={draftSearchValues}
-            applied={hasSearchValues}
-            onChange={setDraftSearchValues}
-            onApply={handleApplySearch}
-            onClear={() => {
-              setDraftSearchValues(EMPTY_SEARCH)
-              setSearchValues(EMPTY_SEARCH)
-              setPage(1)
-            }}
-          />
-          <FilterSelect<AdminOrderType>
-            label="类型"
-            selectedValues={selectedTypes}
-            options={ADMIN_TYPE_CONFIG}
-            onToggleValue={(type) => {
-              setPage(1)
-              setSelectedTypes(prev => prev.includes(type) ? prev.filter(item => item !== type) : [...prev, type])
-            }}
-          />
-          <FilterSelect<AdminOrderStatus>
-            label="状态"
-            selectedValues={selectedStatuses}
-            options={ADMIN_STATUS_CONFIG}
-            onToggleValue={(status) => {
-              setPage(1)
-              setSelectedStatuses(prev => prev.includes(status) ? prev.filter(item => item !== status) : [...prev, status])
-            }}
-          />
-          <DateFilter
-            startDate={startDate}
-            endDate={endDate}
-            onStartChange={(value) => {
-              setStartDate(value)
-              setPage(1)
-            }}
-            onEndChange={(value) => {
-              setEndDate(value)
-              setPage(1)
-            }}
-          />
-          {activeFilter && (
-            <>
-              <Separator orientation="vertical" className="h-6 hidden sm:block" />
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-5 px-2 lg:px-3 text-[11px] font-medium text-muted-foreground hover:text-foreground"
-                onClick={handleClearFilters}
-              >
-                <X className="size-3" />
-                清空筛选
-              </Button>
-            </>
-          )}
-        </div>
-
-        <Separator className="lg:hidden" />
-
-        <TablePagination
-          currentPage={page}
-          totalPages={totalPages}
-          total={total}
-          pageSize={pageSize}
-          onPageChange={(targetPage) => {
-            setPage(targetPage)
-            fetchOrders(targetPage)
-          }}
-          onPageSizeChange={(size) => {
-            setPageSize(size)
+      <TableFilterToolbar
+        hasActiveFilters={activeFilter}
+        onClearAll={handleClearFilters}
+        enablePagination
+        currentPage={page}
+        totalPages={totalPages}
+        total={total}
+        pageSize={pageSize}
+        onPageChange={(targetPage) => {
+          setPage(targetPage)
+          fetchOrders(targetPage)
+        }}
+        onPageSizeChange={(size) => {
+          setPageSize(size)
+          setPage(1)
+        }}
+        onRefresh={() => fetchOrders(page)}
+        loading={loading}
+      >
+        <OrderSearchFilter
+          values={draftSearchValues}
+          applied={hasSearchValues}
+          onChange={setDraftSearchValues}
+          onApply={handleApplySearch}
+          onClear={() => {
+            setDraftSearchValues(EMPTY_SEARCH)
+            setSearchValues(EMPTY_SEARCH)
             setPage(1)
           }}
-          onRefresh={() => fetchOrders(page)}
-          loading={loading}
         />
-      </div>
+        <FilterSelect<AdminOrderType>
+          label="类型"
+          selectedValues={selectedTypes}
+          options={ADMIN_TYPE_CONFIG}
+          onToggleValue={(type) => {
+            setPage(1)
+            setSelectedTypes(prev => prev.includes(type) ? prev.filter(item => item !== type) : [...prev, type])
+          }}
+        />
+        <FilterSelect<AdminOrderStatus>
+          label="状态"
+          selectedValues={selectedStatuses}
+          options={ADMIN_STATUS_CONFIG}
+          onToggleValue={(status) => {
+            setPage(1)
+            setSelectedStatuses(prev => prev.includes(status) ? prev.filter(item => item !== status) : [...prev, status])
+          }}
+        />
+        <TimeRangeFilter
+          selectedQuickSelection={selectedQuickSelection}
+          selectedTimeRange={selectedTimeRange}
+          onTimeRangeChange={(range) => {
+            setSelectedTimeRange(range)
+            setPage(1)
+          }}
+          onQuickSelectionChange={(selection) => {
+            setSelectedQuickSelection(selection)
+            setPage(1)
+          }}
+        />
+      </TableFilterToolbar>
 
       {error ? (
         <div className="p-8 border border-dashed rounded-lg">
@@ -368,47 +361,6 @@ function SearchInput({ label, value, onChange }: { label: string; value: string;
   )
 }
 
-function DateFilter({
-  startDate,
-  endDate,
-  onStartChange,
-  onEndChange,
-}: {
-  startDate: string
-  endDate: string
-  onStartChange: (value: string) => void
-  onEndChange: (value: string) => void
-}) {
-  const active = Boolean(startDate || endDate)
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className={cn("h-5 border-dashed text-[10px] font-medium shadow-none focus-visible:ring-0", active && "bg-primary/5 border-primary/20")}
-        >
-          <ReceiptText className="size-3" />
-          时间
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-[260px] p-4" align="start">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label className="text-xs">开始日期</Label>
-            <Input type="date" value={startDate} onChange={(event) => onStartChange(event.target.value)} className="h-8 text-xs" />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">结束日期</Label>
-            <Input type="date" value={endDate} onChange={(event) => onEndChange(event.target.value)} className="h-8 text-xs" />
-          </div>
-        </div>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
-}
-
 function OrdersTable({
   orders,
   loading,
@@ -423,25 +375,23 @@ function OrdersTable({
   onRefund: (order: AdminOrder) => void
 }) {
   return (
-    <div className="border border-dashed shadow-none rounded-lg overflow-hidden">
-      <div className="overflow-x-auto">
-        <Table className="w-full caption-bottom text-sm min-w-[1200px]">
-          <TableHeader className="sticky top-0 z-20 bg-background">
+    <DataTableFrame minWidthClassName="min-w-[1200px]">
+          <TableHeader className="sticky top-0 z-30 bg-background">
             <TableRow className="border-b border-dashed hover:bg-transparent">
-              <TableHead className="w-[150px] whitespace-nowrap">名称</TableHead>
-              <TableHead className="text-right whitespace-nowrap w-[80px]">积分</TableHead>
-              <TableHead className="text-center whitespace-nowrap w-[80px]">类型</TableHead>
-              <TableHead className="text-center whitespace-nowrap w-[80px]">状态</TableHead>
-              <TableHead className="text-center whitespace-nowrap w-[100px]">积分动向</TableHead>
-              <TableHead className="whitespace-nowrap text-center w-[110px]">应用名</TableHead>
-              <TableHead className="whitespace-nowrap w-[150px]">编号</TableHead>
-              <TableHead className="whitespace-nowrap w-[130px]">业务单号</TableHead>
-              <TableHead className="text-center whitespace-nowrap w-[80px]">结算</TableHead>
-              <TableHead className="whitespace-nowrap w-[140px]">创建时间</TableHead>
-              <TableHead className="sticky right-0 text-center whitespace-nowrap w-[120px] bg-background shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)]">操作</TableHead>
+              <TableHead className="whitespace-nowrap w-[120px]">名称</TableHead>
+              <TableHead className="whitespace-nowrap text-center min-w-[76px]">积分</TableHead>
+              <TableHead className="whitespace-nowrap text-center min-w-[50px]">类型</TableHead>
+              <TableHead className="whitespace-nowrap text-center min-w-[84px]">状态</TableHead>
+              <TableHead className="whitespace-nowrap text-center min-w-[80px]">积分动向</TableHead>
+              <TableHead className="whitespace-nowrap text-center min-w-[80px]">应用名</TableHead>
+              <TableHead className="whitespace-nowrap text-left min-w-[120px]">编号</TableHead>
+              <TableHead className="whitespace-nowrap text-left min-w-[120px]">业务单号</TableHead>
+              <TableHead className="whitespace-nowrap text-center min-w-[80px]">结算</TableHead>
+              <TableHead className="whitespace-nowrap text-left w-[120px]">创建时间</TableHead>
+              <TableHead className="sticky right-0 whitespace-nowrap text-center bg-background shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] w-[80px] z-40">操作</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
+          <TableBody className="animate-in fade-in duration-200">
             {orders.map(order => {
               const typeMeta = ADMIN_TYPE_CONFIG[order.type]
               const statusMeta = ADMIN_STATUS_CONFIG[order.status]
@@ -454,15 +404,15 @@ function OrdersTable({
                     isDisputing && "bg-yellow-50 dark:bg-yellow-900/20 hover:bg-yellow-100/50 dark:hover:bg-yellow-900/30"
                   )}
                 >
-                  <TableCell className="text-[11px] font-medium max-w-[150px] truncate" title={order.order_name}>{order.order_name}</TableCell>
-                  <TableCell className="text-[11px] font-mono text-right">{displayAmount(order.amount)}</TableCell>
-                  <TableCell className="text-center">
+                  <TableCell className="text-[11px] font-medium whitespace-nowrap py-1 max-w-[120px] truncate" title={order.order_name}>{order.order_name}</TableCell>
+                  <TableCell className="text-[11px] font-mono font-medium whitespace-nowrap text-center py-1">{displayAmount(order.amount)}</TableCell>
+                  <TableCell className="text-[11px] font-medium whitespace-nowrap text-center py-1">
                     <Badge variant="secondary" className={cn("text-[10px] px-1", typeMeta.color)}>{typeMeta.label}</Badge>
                   </TableCell>
-                  <TableCell className="text-center">
+                  <TableCell className="text-[11px] font-medium whitespace-nowrap text-center py-1">
                     <Badge variant="secondary" className={cn("text-[10px] px-1", statusMeta.color)}>{statusMeta.label}</Badge>
                   </TableCell>
-                  <TableCell className="text-center">
+                  <TableCell className="text-[11px] font-medium whitespace-nowrap text-center py-1">
                     <OrderFlow order={order} />
                   </TableCell>
                   <TableCell className="text-[11px] font-medium text-center py-1 max-w-[110px] truncate" title={order.app_name || ""}>
@@ -483,20 +433,13 @@ function OrdersTable({
                       "-"
                     )}
                   </TableCell>
-                  <TableCell className="text-[11px] font-mono">{order.order_no}</TableCell>
-                  <TableCell className="text-[11px] font-mono max-w-[130px] truncate" title={order.merchant_order_no || ""}>{order.merchant_order_no || "-"}</TableCell>
-                  <TableCell className="text-center text-[11px]">{TRANSFER_STATUS_LABEL[order.payee_transfer_status] || "-"}</TableCell>
-                  <TableCell className="text-[11px]">{formatDateTime(order.created_at)}</TableCell>
-                  <TableCell
-                    className={cn(
-                      "sticky right-0 text-center shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)]",
-                      isDisputing
-                        ? "bg-yellow-50 dark:bg-yellow-900/20 group-hover:bg-yellow-100/50 dark:group-hover:bg-yellow-900/30"
-                        : "bg-background group-hover:bg-muted/50"
-                    )}
-                  >
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onShowDetail(order)} title="查看详情">
-                      <Eye className="size-3.5" />
+                  <TableCell className="font-mono text-[11px] font-medium text-left py-1 max-w-[160px] truncate" title={order.order_no}>{order.order_no}</TableCell>
+                  <TableCell className="font-mono text-[11px] font-medium text-left py-1 max-w-[160px] truncate" title={order.merchant_order_no || ""}>{order.merchant_order_no || "-"}</TableCell>
+                  <TableCell className="text-[11px] font-medium whitespace-nowrap text-center py-1">{TRANSFER_STATUS_LABEL[order.payee_transfer_status] || "-"}</TableCell>
+                  <TableCell className="text-[11px] font-medium text-left py-1">{formatDateTime(order.created_at)}</TableCell>
+                  <DataTableActionCell highlighted={isDisputing} className="w-[80px] px-1">
+                    <Button variant="ghost" size="icon" className="h-6 w-6 p-1" onClick={() => onShowDetail(order)} title="查看详情">
+                      <Eye className="size-3" />
                     </Button>
                     {order.dispute_id && (
                       <Button
@@ -510,18 +453,16 @@ function OrdersTable({
                       </Button>
                     )}
                     {isRefundable(order) && (
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" disabled={loading} onClick={() => onRefund(order)} title="退款">
-                        <Undo2 className="size-3.5" />
+                      <Button variant="ghost" size="icon" className="h-6 w-6 p-1 text-destructive hover:text-destructive" disabled={loading} onClick={() => onRefund(order)} title="退回">
+                        <Undo2 className="size-3" />
                       </Button>
                     )}
-                  </TableCell>
+                  </DataTableActionCell>
                 </TableRow>
               )
             })}
           </TableBody>
-        </Table>
-      </div>
-    </div>
+    </DataTableFrame>
   )
 }
 
@@ -572,49 +513,59 @@ function OrderFlow({ order }: { order: AdminOrder }) {
 function OrderDetailSheet({ order, onOpenChange }: { order: AdminOrder | null; onOpenChange: (open: boolean) => void }) {
   return (
     <Sheet open={Boolean(order)} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
-        <SheetHeader>
+      <SheetContent className="sm:max-w-[420px] w-full p-0 flex flex-col gap-0">
+        <SheetHeader className="px-5 py-3 border-b border-border/50">
           <SheetTitle>订单详情</SheetTitle>
-          <SheetDescription>{order?.order_no}</SheetDescription>
+          <SheetDescription className="font-mono text-xs">{order?.order_no}</SheetDescription>
         </SheetHeader>
         {order && (
-          <div className="px-4 pb-4 space-y-4">
-            <DetailGroup
-              rows={[
-                ["订单 ID", order.id],
-                ["订单名称", order.order_name],
-                ["业务单号", order.merchant_order_no || "-"],
-                ["Client ID", order.client_id || "-"],
-                ["应用名", order.app_name || "-"],
-                ["支付类型", order.payment_type || "-"],
-              ]}
-            />
-            <DetailGroup
-              rows={[
-                ["积分", displayAmount(order.amount)],
-                ["类型", ADMIN_TYPE_CONFIG[order.type].label],
-                ["状态", ADMIN_STATUS_CONFIG[order.status].label],
-                ["结算状态", TRANSFER_STATUS_LABEL[order.payee_transfer_status] || "-"],
-                ["结算时间", order.payee_transfer_at ? formatDateTime(order.payee_transfer_at) : "-"],
-              ]}
-            />
-            <DetailGroup
-              rows={[
-                ["消费方", `${ order.payer_username || "-" } (${ order.payer_user_id })`],
-                ["服务方", `${ order.payee_username || "-" } (${ order.payee_user_id })`],
-                ["争议 ID", order.dispute_id || "-"],
-                ["争议状态", order.dispute_status || "-"],
-              ]}
-            />
-            <DetailGroup
-              rows={[
-                ["创建时间", formatDateTime(order.created_at)],
-                ["交易时间", order.trade_time ? formatDateTime(order.trade_time) : "-"],
-                ["过期时间", formatDateTime(order.expires_at)],
-                ["更新时间", formatDateTime(order.updated_at)],
-                ["备注", order.remark || "-"],
-              ]}
-            />
+          <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
+            <div className="p-5 space-y-5">
+              <DetailSection title="基础信息">
+                <DetailGroup
+                  rows={[
+                    ["订单 ID", order.id],
+                    ["订单名称", order.order_name],
+                    ["业务单号", order.merchant_order_no || "-"],
+                    ["Client ID", order.client_id || "-"],
+                    ["应用名", order.app_name || "-"],
+                    ["支付类型", order.payment_type || "-"],
+                  ]}
+                />
+              </DetailSection>
+              <DetailSection title="积分状态">
+                <DetailGroup
+                  rows={[
+                    ["积分", displayAmount(order.amount)],
+                    ["类型", ADMIN_TYPE_CONFIG[order.type].label],
+                    ["状态", ADMIN_STATUS_CONFIG[order.status].label],
+                    ["结算状态", TRANSFER_STATUS_LABEL[order.payee_transfer_status] || "-"],
+                    ["结算时间", order.payee_transfer_at ? formatDateTime(order.payee_transfer_at) : "-"],
+                  ]}
+                />
+              </DetailSection>
+              <DetailSection title="参与方">
+                <DetailGroup
+                  rows={[
+                    ["消费方", `${ order.payer_username || "-" } (${ order.payer_user_id })`],
+                    ["服务方", `${ order.payee_username || "-" } (${ order.payee_user_id })`],
+                    ["争议 ID", order.dispute_id || "-"],
+                    ["争议状态", order.dispute_status || "-"],
+                  ]}
+                />
+              </DetailSection>
+              <DetailSection title="系统记录">
+                <DetailGroup
+                  rows={[
+                    ["创建时间", formatDateTime(order.created_at)],
+                    ["交易时间", order.trade_time ? formatDateTime(order.trade_time) : "-"],
+                    ["过期时间", formatDateTime(order.expires_at)],
+                    ["更新时间", formatDateTime(order.updated_at)],
+                    ["备注", order.remark || "-"],
+                  ]}
+                />
+              </DetailSection>
+            </div>
           </div>
         )}
       </SheetContent>
@@ -622,11 +573,20 @@ function OrderDetailSheet({ order, onOpenChange }: { order: AdminOrder | null; o
   )
 }
 
+function DetailSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-2">
+      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1">{title}</h4>
+      {children}
+    </div>
+  )
+}
+
 function DetailGroup({ rows }: { rows: Array<[string, string]> }) {
   return (
-    <div className="border border-dashed rounded-lg overflow-hidden">
+    <div className="rounded-lg border divide-y bg-background/50">
       {rows.map(([label, value]) => (
-        <div key={label} className="grid grid-cols-[96px_1fr] gap-3 px-3 py-2 border-b border-dashed last:border-b-0 text-xs">
+        <div key={label} className="grid grid-cols-[88px_1fr] gap-3 p-3 text-xs">
           <span className="text-muted-foreground">{label}</span>
           <span className="font-medium break-all">{value}</span>
         </div>
@@ -647,13 +607,13 @@ function AdminDisputeDialog({ order, onOpenChange }: { order: AdminOrder | null;
 
   return (
     <Dialog open={Boolean(order)} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>争议详情</DialogTitle>
           <DialogDescription>{order ? `订单 ${ order.order_no }` : "查看争议处理记录"}</DialogDescription>
         </DialogHeader>
         {order && (
-          <div className="space-y-4">
+          <div className="grid gap-4 py-2">
             <div className="border border-dashed rounded-lg overflow-hidden text-xs">
               <div className="grid grid-cols-[88px_1fr] gap-3 px-3 py-2 border-b border-dashed">
                 <span className="text-muted-foreground">争议 ID</span>
@@ -685,7 +645,7 @@ function AdminDisputeDialog({ order, onOpenChange }: { order: AdminOrder | null;
           </div>
         )}
         <DialogFooter>
-          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>关闭</Button>
+          <Button variant="ghost" onClick={() => onOpenChange(false)} className="h-8 text-xs">关闭</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -717,15 +677,15 @@ function RefundDialog({
 
   return (
     <Dialog open={Boolean(order)} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>确认退款</DialogTitle>
+          <DialogTitle>确认退回</DialogTitle>
           <DialogDescription>
-            退款会退还消费方订单全额，商家手续费不退。该操作提交后不能二次退款。
+            退回会返还消费方订单全额，商家手续费不退。该操作提交后不能二次退回。
           </DialogDescription>
         </DialogHeader>
         {order && (
-          <div className="space-y-4">
+          <div className="grid gap-4 py-2">
             <div className="border border-dashed rounded-lg overflow-hidden text-xs">
               <div className="grid grid-cols-[88px_1fr] gap-3 px-3 py-2 border-b border-dashed">
                 <span className="text-muted-foreground">编号</span>
@@ -764,10 +724,10 @@ function RefundDialog({
           </div>
         )}
         <DialogFooter>
-          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={refunding}>取消</Button>
-          <Button variant="destructive" size="sm" onClick={onConfirm} disabled={refunding}>
+          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={refunding} className="h-8 text-xs">取消</Button>
+          <Button variant="destructive" onClick={onConfirm} disabled={refunding} className="h-8 text-xs">
             {refunding ? <Loader2 className="size-3 animate-spin" /> : <RotateCw className="size-3" />}
-            确认退款
+            确认退回
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -232,15 +232,28 @@ export function TableFilter({
   }
 
   /* 是否有激活的筛选 */
-  const hasActiveFilters =
+  const hasActiveFilters = Boolean(
     (enabledFilters.type && selectedTypes.length > 0) ||
     (enabledFilters.status && selectedStatus !== null) ||
     (enabledFilters.timeRange && selectedTimeRange !== null) ||
     (enabledFilters.search && Object.values(searchValues || {}).some(v => v))
+  )
 
   return (
-    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-      <div className="flex items-center gap-2 flex-wrap">
+    <TableFilterToolbar
+      hasActiveFilters={hasActiveFilters}
+      showClearButton={showClearButton}
+      onClearAll={onClearAll}
+      enablePagination={enablePagination}
+      currentPage={currentPage}
+      totalPages={totalPages}
+      total={total}
+      pageSize={pageSize}
+      onPageChange={onPageChange}
+      onPageSizeChange={onPageSizeChange}
+      onRefresh={onRefresh}
+      loading={loading}
+    >
         {enabledFilters.search && (
           <SearchFilter
             values={searchValues}
@@ -274,7 +287,48 @@ export function TableFilter({
             onQuickSelectionChange={onQuickSelectionChange}
           />
         )}
+    </TableFilterToolbar>
+  )
+}
 
+
+interface TableFilterToolbarProps {
+  children: React.ReactNode
+  hasActiveFilters: boolean
+  showClearButton?: boolean
+  onClearAll?: () => void
+  enablePagination?: boolean
+  currentPage?: number
+  totalPages?: number
+  total?: number
+  pageSize?: number
+  onPageChange?: (page: number) => void
+  onPageSizeChange?: (size: number) => void
+  onRefresh?: () => void
+  loading?: boolean
+}
+
+export function TableFilterToolbar({
+  children,
+  hasActiveFilters,
+  showClearButton = true,
+  onClearAll,
+  enablePagination = false,
+  currentPage = 1,
+  totalPages = 1,
+  total = 0,
+  pageSize = 20,
+  onPageChange,
+  onPageSizeChange,
+  onRefresh,
+  loading = false,
+}: TableFilterToolbarProps) {
+  const showPagination = enablePagination && onPageChange && onPageSizeChange
+
+  return (
+    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+      <div className="flex items-center gap-2 flex-wrap">
+        {children}
         {showClearButton && hasActiveFilters && onClearAll && (
           <>
             <Separator orientation="vertical" className="h-6 hidden sm:block" />
@@ -291,11 +345,11 @@ export function TableFilter({
         )}
       </div>
 
-      {enablePagination && onPageChange && onPageSizeChange && (
+      {showPagination && (
         <Separator className="lg:hidden" />
       )}
 
-      {enablePagination && onPageChange && onPageSizeChange && (
+      {showPagination && (
         <TablePagination
           currentPage={currentPage}
           totalPages={totalPages}
@@ -514,7 +568,7 @@ interface TimeRangeFilterProps {
   onQuickSelectionChange?: (selection: string | null) => void
 }
 
-function TimeRangeFilter({
+export function TimeRangeFilter({
   selectedQuickSelection,
   selectedTimeRange,
   onTimeRangeChange,

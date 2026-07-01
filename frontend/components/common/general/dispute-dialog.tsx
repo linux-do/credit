@@ -44,12 +44,12 @@ function getDisputeTimelineConfig(status: DisputeTimelineStatus) {
       }
     case 'refund':
       return {
-        tooltip: '争议已退款',
-        timelineText: '服务方已退款',
+        tooltip: '争议已退回',
+        timelineText: '服务方已退回',
         isRed: false,
         showTimestamp: true,
         showContent: true,
-        content: '退款已完成'
+        content: '退回已完成'
       }
     case 'disputing':
       return {
