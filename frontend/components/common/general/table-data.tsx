@@ -11,7 +11,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { EmptyStateWithBorder } from "@/components/layout/empty"
 import { LoadingStateWithBorder } from "@/components/layout/loading"
 import { Lightbulb, ListRestart, Layers, LucideIcon } from "lucide-react"
-import { formatDateTime } from "@/lib/utils"
+import { cn, formatDateTime } from "@/lib/utils"
 import type { Order } from "@/lib/services"
 import { useUser } from "@/contexts/user-context"
 import {
@@ -28,6 +28,54 @@ const FALLBACK_TYPE_CONFIG = {
 }
 
 const ROW_HEIGHT = 36
+
+interface DataTableFrameProps {
+  children: React.ReactNode
+  minWidthClassName?: string
+  scrollClassName?: string
+}
+
+export const DataTableFrame = React.forwardRef<HTMLDivElement, DataTableFrameProps>(function DataTableFrame({
+  children,
+  minWidthClassName = "min-w-full",
+  scrollClassName,
+}, ref) {
+  return (
+    <div className="border border-dashed shadow-none rounded-lg overflow-hidden">
+      <ScrollArea ref={ref} className={cn("w-full whitespace-nowrap", scrollClassName)}>
+        <table className={cn("w-full caption-bottom text-sm", minWidthClassName)}>
+          {children}
+        </table>
+        <ScrollBar orientation="horizontal" />
+      </ScrollArea>
+    </div>
+  )
+})
+
+export function DataTableActionCell({
+  children,
+  highlighted,
+  className,
+}: {
+  children: React.ReactNode
+  highlighted?: boolean
+  className?: string
+}) {
+  return (
+    <TableCell
+      className={cn(
+        "sticky right-0 whitespace-nowrap text-center shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] py-1 z-20",
+        "bg-background after:absolute after:inset-0 after:z-[-1] after:content-[''] after:pointer-events-none after:transition-colors",
+        highlighted
+          ? "after:bg-yellow-50 dark:after:bg-yellow-900/20 group-hover:after:bg-yellow-100/50 dark:group-hover:after:bg-yellow-900/30"
+          : "group-hover:after:bg-muted/50",
+        className
+      )}
+    >
+      {children}
+    </TableCell>
+  )
+}
 
 /**
  * 虚拟化交易数据表格组件
@@ -57,12 +105,7 @@ export const TransactionDataTable = React.memo(function TransactionDataTable({
   const paddingBottom = virtualItems.length > 0 ? totalSize - virtualItems[virtualItems.length - 1].end : 0
 
   return (
-    <div className="border border-dashed shadow-none rounded-lg overflow-hidden">
-      <ScrollArea
-        ref={scrollAreaRef}
-        className="w-full h-[600px] whitespace-nowrap"
-      >
-        <table className="w-full caption-bottom text-sm min-w-full">
+    <DataTableFrame ref={scrollAreaRef} scrollClassName="h-[600px]">
           <TableHeader className="sticky top-0 z-30 bg-background">
             <TableRow className="border-b border-dashed hover:bg-transparent">
               <TableHead className="whitespace-nowrap w-[120px]">名称</TableHead>
@@ -106,10 +149,7 @@ export const TransactionDataTable = React.memo(function TransactionDataTable({
               </tr>
             )}
           </TableBody>
-        </table>
-        <ScrollBar orientation="horizontal" />
-      </ScrollArea>
-    </div>
+    </DataTableFrame>
   )
 })
 
@@ -287,14 +327,7 @@ const TransactionTableRow = React.memo(React.forwardRef<HTMLTableRowElement, {
       <TableCell className="text-[11px] font-medium text-left py-1 max-w-[250px] truncate" title={order.remark || ''}>
         {order.remark || '-'}
       </TableCell>
-      <TableCell className={`
-        sticky right-0 whitespace-nowrap text-center shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] py-1 z-20
-        bg-background
-        after:absolute after:inset-0 after:z-[-1] after:content-[''] after:pointer-events-none after:transition-colors
-        ${ isDisputing
-          ? 'after:bg-yellow-50 dark:after:bg-yellow-900/20 group-hover:after:bg-yellow-100/50 dark:group-hover:after:bg-yellow-900/30'
-          : 'group-hover:after:bg-muted/50' }
-      `}>
+      <DataTableActionCell highlighted={isDisputing}>
         <OrderDetailDialog order={order} />
 
         {/* 场景1：消费方对成功的订单发起争议 */}
@@ -321,7 +354,7 @@ const TransactionTableRow = React.memo(React.forwardRef<HTMLTableRowElement, {
         {isDisputeSupported && isCurrentUserPayee && (order.status === 'refused' || order.status === 'refund') && (
           <ViewDisputeHistoryDialog order={order} viewer="payee" />
         )}
-      </TableCell>
+      </DataTableActionCell>
     </TableRow>
   )
 }))

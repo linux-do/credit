@@ -26,6 +26,7 @@ import (
 	"github.com/linux-do/credit/internal/apps/oauth"
 	"github.com/linux-do/credit/internal/db"
 	"github.com/linux-do/credit/internal/model"
+	"github.com/linux-do/credit/internal/service"
 	"github.com/linux-do/credit/internal/util"
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
@@ -292,35 +293,9 @@ func RefundReview(c *gin.Context) {
 			}
 
 			if status == model.DisputeStatusRefund {
-				var payerUser model.User
-				if err := payerUser.GetByID(tx, order.PayerUserID); err != nil {
-					return err
-				}
-
 				// 获取商家的支付配置
 				var merchantPayConfig model.UserPayConfig
 				if err := merchantPayConfig.GetByPayScore(tx, merchantUser.PayScore); err != nil {
-					return err
-				}
-
-				merchantScoreDecrease := order.Amount.Mul(merchantPayConfig.ScoreRate).Round(0).IntPart()
-				if err := tx.Model(&model.User{}).
-					Where("id = ?", merchantUser.ID).
-					UpdateColumns(map[string]interface{}{
-						"available_balance": gorm.Expr("available_balance - ?", order.Amount),
-						"total_receive":     gorm.Expr("total_receive - ?", order.Amount),
-						"pay_score":         gorm.Expr("pay_score - ?", merchantScoreDecrease),
-					}).Error; err != nil {
-					return err
-				}
-
-				if err := tx.Model(&model.User{}).
-					Where("id = ?", payerUser.ID).
-					UpdateColumns(map[string]interface{}{
-						"available_balance": gorm.Expr("available_balance + ?", order.Amount),
-						"total_payment":     gorm.Expr("total_payment - ?", order.Amount),
-						"pay_score":         gorm.Expr("pay_score - ?", order.Amount.Round(0).IntPart()),
-					}).Error; err != nil {
 					return err
 				}
 
@@ -333,9 +308,7 @@ func RefundReview(c *gin.Context) {
 					return err
 				}
 
-				if err := tx.Model(&model.Order{}).
-					Where("id = ?", order.ID).
-					Update("status", model.OrderStatusRefund).Error; err != nil {
+				if err := service.RefundOrder(tx, &order, &merchantPayConfig); err != nil {
 					return err
 				}
 			} else if status == model.DisputeStatusClosed {

@@ -231,6 +231,52 @@ definitions:
           type: string
         type: array
     type: object
+  order.listOrdersRequest:
+    properties:
+      client_id:
+        maxLength: 64
+        type: string
+      end_time:
+        type: string
+      id:
+        example: "0"
+        type: string
+      merchant_order_no:
+        maxLength: 64
+        type: string
+      order_name:
+        maxLength: 64
+        type: string
+      page:
+        minimum: 1
+        type: integer
+      page_size:
+        maximum: 100
+        minimum: 1
+        type: integer
+      payee_username:
+        maxLength: 255
+        type: string
+      payer_username:
+        maxLength: 255
+        type: string
+      start_time:
+        type: string
+      statuses:
+        items:
+          type: string
+        type: array
+      types:
+        items:
+          type: string
+        type: array
+    type: object
+  order.refundOrderRequest:
+    properties:
+      remark:
+        maxLength: 100
+        type: string
+    type: object
   payment.CreateOrderRequest:
     properties:
       amount:
@@ -583,6 +629,50 @@ paths:
             $ref: '#/definitions/payment.RefundMerchantOrderResponse'
       tags:
       - payment
+  /api/v1/admin/orders:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/order.listOrdersRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - admin
+  /api/v1/admin/orders/{id}/refund:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 订单ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: request body
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/order.refundOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - admin
   /api/v1/admin/system-configs:
     get:
       produces:

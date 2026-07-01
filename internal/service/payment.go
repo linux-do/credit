@@ -39,6 +39,13 @@ const (
 	BalanceDeduct
 )
 
+const (
+	RefundOrderStatusInvalid    = "订单状态不允许退款"
+	RefundOrderTypeInvalid      = "订单类型不允许退款"
+	RefundOrderPayerNotFound    = "付款方不存在"
+	RefundOrderMerchantNotFound = "商家不存在"
+)
+
 // BalanceUpdateOptions 余额更新选项
 type BalanceUpdateOptions struct {
 	UserID        uint64
@@ -159,6 +166,66 @@ func CalculateFee(amount decimal.Decimal, feeRate decimal.Decimal) (fee decimal.
 	merchantAmount = amount.Sub(fee)
 	feePercent = feeRate.Mul(decimal.NewFromInt(100)).IntPart()
 	return
+}
+
+// RefundOrder 回滚订单资金并将订单置为已退款。调用方需要先在事务内锁定订单行。
+func RefundOrder(tx *gorm.DB, order *model.Order, merchantPayConfig *model.UserPayConfig) error {
+	if order.Type != model.OrderTypePayment && order.Type != model.OrderTypeOnline {
+		return errors.New(RefundOrderTypeInvalid)
+	}
+
+	switch order.Status {
+	case model.OrderStatusSuccess, model.OrderStatusDisputing, model.OrderStatusRefused:
+	default:
+		return errors.New(RefundOrderStatusInvalid)
+	}
+
+	payerResult := tx.Model(&model.User{}).
+		Where("id = ?", order.PayerUserID).
+		UpdateColumns(map[string]interface{}{
+			"available_balance": gorm.Expr("available_balance + ?", order.Amount),
+			"total_payment":     gorm.Expr("total_payment - ?", order.Amount),
+			"pay_score":         gorm.Expr("pay_score - ?", order.Amount.Round(0).IntPart()),
+		})
+	if payerResult.Error != nil {
+		return payerResult.Error
+	}
+	if payerResult.RowsAffected == 0 {
+		return errors.New(RefundOrderPayerNotFound)
+	}
+
+	merchantScoreDecrease := order.Amount.Mul(merchantPayConfig.ScoreRate).Round(0).IntPart()
+	merchantResult := tx.Model(&model.User{}).
+		Where("id = ?", order.PayeeUserID).
+		UpdateColumns(map[string]interface{}{
+			"available_balance": gorm.Expr("available_balance - ?", order.Amount),
+			"total_receive":     gorm.Expr("total_receive - ?", order.Amount),
+			"pay_score":         gorm.Expr("pay_score - ?", merchantScoreDecrease),
+		})
+	if merchantResult.Error != nil {
+		return merchantResult.Error
+	}
+	if merchantResult.RowsAffected == 0 {
+		return errors.New(RefundOrderMerchantNotFound)
+	}
+
+	// 更新订单状态
+	result := tx.Model(&model.Order{}).
+		Where("id = ? AND status IN ?", order.ID, []model.OrderStatus{
+			model.OrderStatusSuccess,
+			model.OrderStatusDisputing,
+			model.OrderStatusRefused,
+		}).
+		Update("status", model.OrderStatusRefund)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return errors.New(RefundOrderStatusInvalid)
+	}
+
+	order.Status = model.OrderStatusRefund
+	return nil
 }
 
 // ValidateTestModePayment 验证测试模式下的支付权限

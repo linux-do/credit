@@ -264,16 +264,11 @@ func RefundMerchantOrder(c *gin.Context) {
 	if err := db.DB(c.Request.Context()).Transaction(func(tx *gorm.DB) error {
 		var order model.Order
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
-			Where("id = ? AND client_id = ? AND status = ? AND amount = ? AND type IN ?", req.TradeNo, req.ClientID, model.OrderStatusSuccess, req.Amount, []model.OrderType{model.OrderTypePayment, model.OrderTypeOnline}).
+			Where("id = ? AND client_id = ? AND payee_user_id = ? AND status = ? AND amount = ? AND type IN ?", req.TradeNo, req.ClientID, apiKey.UserID, model.OrderStatusSuccess, req.Amount, []model.OrderType{model.OrderTypePayment, model.OrderTypeOnline}).
 			First(&order).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return errors.New(OrderNotFound)
 			}
-			return err
-		}
-
-		var payerUser model.User
-		if err := payerUser.GetByID(tx, order.PayerUserID); err != nil {
 			return err
 		}
 
@@ -287,30 +282,7 @@ func RefundMerchantOrder(c *gin.Context) {
 			return err
 		}
 
-		merchantScoreDecrease := order.Amount.Mul(merchantPayConfig.ScoreRate).Round(0).IntPart()
-		if err := tx.Model(&model.User{}).
-			Where("id = ?", merchantUser.ID).
-			UpdateColumns(map[string]interface{}{
-				"available_balance": gorm.Expr("available_balance - ?", order.Amount),
-				"total_receive":     gorm.Expr("total_receive - ?", order.Amount),
-				"pay_score":         gorm.Expr("pay_score - ?", merchantScoreDecrease),
-			}).Error; err != nil {
-			return err
-		}
-
-		if err := tx.Model(&model.User{}).
-			Where("id = ?", payerUser.ID).
-			UpdateColumns(map[string]interface{}{
-				"available_balance": gorm.Expr("available_balance + ?", order.Amount),
-				"total_payment":     gorm.Expr("total_payment - ?", order.Amount),
-				"pay_score":         gorm.Expr("pay_score - ?", order.Amount.Round(0).IntPart()),
-			}).Error; err != nil {
-			return err
-		}
-
-		if err := tx.Model(&model.Order{}).
-			Where("id = ?", order.ID).
-			Update("status", model.OrderStatusRefund).Error; err != nil {
+		if err := service.RefundOrder(tx, &order, &merchantPayConfig); err != nil {
 			return err
 		}
 

@@ -164,6 +164,13 @@ export type {
   ListUsersRequest,
   ListUsersResponse,
   UpdateUserStatusRequest,
+  AdminOrder,
+  AdminOrderType,
+  AdminOrderStatus,
+  AdminOrderTransferStatus,
+  ListAdminOrdersRequest,
+  ListAdminOrdersResponse,
+  RefundAdminOrderRequest,
 } from './admin';
 
 // 用户服务

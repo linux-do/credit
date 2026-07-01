@@ -229,3 +229,91 @@ export interface UpdateUserStatusRequest {
   /** 是否激活 */
   is_active: boolean;
 }
+
+// ==================== 订单管理 ====================
+
+/**
+ * 后台订单类型
+ */
+export type AdminOrderType = 'payment' | 'transfer' | 'community' | 'online' | 'test' | 'distribute' | 'red_envelope_send' | 'red_envelope_receive' | 'red_envelope_refund';
+
+/**
+ * 后台订单状态
+ */
+export type AdminOrderStatus = 'success' | 'pending' | 'failed' | 'expired' | 'disputing' | 'refund' | 'refused';
+
+/**
+ * 后台订单结算状态
+ */
+export type AdminOrderTransferStatus = 'pending' | 'completed';
+
+/**
+ * 后台订单信息
+ */
+export interface AdminOrder {
+  id: string;
+  order_no: string;
+  order_name: string;
+  merchant_order_no: string | null;
+  client_id: string;
+  payer_user_id: number;
+  payee_user_id: number;
+  payer_username: string;
+  payee_username: string;
+  payer_avatar_url?: string;
+  payee_avatar_url?: string;
+  amount: string;
+  status: AdminOrderStatus;
+  type: AdminOrderType;
+  remark: string;
+  payment_type: string;
+  app_name?: string;
+  app_homepage_url?: string;
+  app_description?: string;
+  dispute_id?: string;
+  dispute_status?: 'disputing' | 'refund' | 'closed';
+  dispute_reason?: string;
+  dispute_created_at?: string | null;
+  dispute_updated_at?: string | null;
+  payee_transfer_status: AdminOrderTransferStatus;
+  payee_transfer_at?: string | null;
+  trade_time: string;
+  expires_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * 后台订单列表查询请求
+ */
+export interface ListAdminOrdersRequest {
+  page: number;
+  page_size: number;
+  types?: AdminOrderType[];
+  statuses?: AdminOrderStatus[];
+  client_id?: string;
+  merchant_order_no?: string;
+  start_time?: string;
+  end_time?: string;
+  id?: string;
+  order_name?: string;
+  payer_username?: string;
+  payee_username?: string;
+}
+
+/**
+ * 后台订单列表响应
+ */
+export interface ListAdminOrdersResponse {
+  orders: AdminOrder[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+/**
+ * 后台退款请求
+ */
+export interface RefundAdminOrderRequest {
+  remark?: string;
+}
