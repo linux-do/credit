@@ -151,9 +151,8 @@ func Serve() {
 			{
 				dashboardRouter.GET("/stats/daily", dashboard.GetDailyStats)
 				dashboardRouter.GET("/stats/top-customers", dashboard.GetTopCustomers)
+				dashboardRouter.GET("/stats/user-balance", dashboard.GetUserBalanceStats)
 			}
-
-			apiV1Router.GET("/dashboard/stats/user-balance", dashboard.GetUserBalanceStats)
 
 			// Leaderboard
 			leaderboardRouter := apiV1Router.Group("/leaderboard")
