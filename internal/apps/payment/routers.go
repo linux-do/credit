@@ -117,26 +117,17 @@ func CreateMerchantOrder(c *gin.Context) {
 	}
 
 	var payURL string
+	expiresAt := time.Now().Add(time.Duration(expireMinutes) * time.Minute)
 
 	if err := db.DB(c.Request.Context()).Transaction(
 		func(tx *gorm.DB) error {
-			// 创建订单
-			order := model.Order{
-				OrderName:       req.OrderName,
-				ClientID:        apiKey.ClientID,
-				MerchantOrderNo: req.MerchantOrderNo,
-				PayeeUserID:     merchantUser.ID,
-				Amount:          req.Amount,
-				Status:          model.OrderStatusPending,
-				Type:            model.OrderTypePayment,
-				Remark:          req.Remark,
-				PaymentType:     req.PaymentType,
-				RedirectURI:     req.ReturnURL,
-				NotifyURL:       req.NotifyURL,
-				ExpiresAt:       time.Now().Add(time.Duration(expireMinutes) * time.Minute),
-			}
-			if err := tx.Create(&order).Error; err != nil {
+			order, err := createOrReuseMerchantOrder(tx, req, apiKey, merchantUser.ID, expiresAt)
+			if err != nil {
 				return err
+			}
+			remainingTTL := time.Until(order.ExpiresAt)
+			if remainingTTL <= 0 {
+				return errors.New(OrderExpired)
 			}
 
 			encryptString, err := util.Encrypt(merchantUser.SignKey, strconv.FormatUint(order.ID, 10))
@@ -145,12 +136,12 @@ func CreateMerchantOrder(c *gin.Context) {
 			}
 
 			merchantIDStr := strconv.FormatUint(merchantUser.ID, 10)
-			if errSet := db.Redis.Set(c.Request.Context(), db.PrefixedKey(fmt.Sprintf(OrderMerchantIDCacheKeyFormat, encryptString)), merchantIDStr, time.Duration(expireMinutes)*time.Minute).Err(); errSet != nil {
+			if errSet := db.Redis.Set(c.Request.Context(), db.PrefixedKey(fmt.Sprintf(OrderMerchantIDCacheKeyFormat, encryptString)), merchantIDStr, remainingTTL).Err(); errSet != nil {
 				return fmt.Errorf("failed to set redis key: %w", errSet)
 			}
 
 			expireKey := db.PrefixedKey(fmt.Sprintf(OrderExpireKeyFormat, order.ID))
-			if errSet := db.Redis.Set(c.Request.Context(), expireKey, order.ID, time.Duration(expireMinutes)*time.Minute).Err(); errSet != nil {
+			if errSet := db.Redis.Set(c.Request.Context(), expireKey, order.ID, remainingTTL).Err(); errSet != nil {
 				return fmt.Errorf("failed to set order expire key: %w", errSet)
 			}
 
@@ -158,7 +149,14 @@ func CreateMerchantOrder(c *gin.Context) {
 			return nil
 		},
 	); err != nil {
-		c.JSON(http.StatusInternalServerError, util.Err(err.Error()))
+		switch err.Error() {
+		case OrderRequestConflict:
+			c.JSON(http.StatusConflict, util.Err(err.Error()))
+		case OrderStatusInvalid, OrderExpired:
+			c.JSON(http.StatusBadRequest, util.Err(err.Error()))
+		default:
+			c.JSON(http.StatusInternalServerError, util.Err(err.Error()))
+		}
 		return
 	}
 
@@ -460,35 +458,56 @@ func GetPaymentPageDetails(c *gin.Context) {
 	}
 
 	var order model.Order
-	if err := db.DB(c.Request.Context()).
-		Select("orders.*, payee_user.username as payee_username").
-		Joins("LEFT JOIN users as payee_user ON orders.payee_user_id = payee_user.id").
-		Where("orders.id = ? AND orders.status = ?", orderCtx.OrderID, model.OrderStatusPending).
-		First(&order).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(http.StatusNotFound, util.Err(OrderNotFound))
-			return
+	if err := db.DB(c.Request.Context()).Transaction(func(tx *gorm.DB) error {
+		now := time.Now()
+		result := tx.Model(&model.Order{}).
+			Where("id = ? AND status = ? AND payer_user_id = ? AND expires_at > ?",
+				orderCtx.OrderID, model.OrderStatusPending, 0, now).
+			Update("payer_user_id", orderCtx.CurrentUser.ID)
+		if result.Error != nil {
+			return result.Error
 		}
-		c.JSON(http.StatusInternalServerError, util.Err(err.Error()))
+
+		if err := tx.
+			Select("orders.*, payee_user.username as payee_username").
+			Joins("LEFT JOIN users as payee_user ON orders.payee_user_id = payee_user.id").
+			Where("orders.id = ? AND orders.status = ?", orderCtx.OrderID, model.OrderStatusPending).
+			First(&order).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return errors.New(OrderNotFound)
+			}
+			return err
+		}
+		if !order.ExpiresAt.After(time.Now()) {
+			return errors.New(OrderExpired)
+		}
+		if err := validateExpectedPayer(order.PayerUserID, orderCtx.CurrentUser.ID); err != nil {
+			return err
+		}
+
+		order.PayerUsername = orderCtx.CurrentUser.Username
+		return nil
+	}); err != nil {
+		switch err.Error() {
+		case OrderNotFound:
+			c.JSON(http.StatusNotFound, util.Err(err.Error()))
+		case OrderExpired:
+			c.JSON(http.StatusBadRequest, util.Err(err.Error()))
+		case OrderPayerMismatch:
+			c.JSON(http.StatusForbidden, util.Err(err.Error()))
+		default:
+			c.JSON(http.StatusInternalServerError, util.Err(err.Error()))
+		}
 		return
 	}
-	order.PayerUsername = orderCtx.CurrentUser.Username
 
-	var merchant model.MerchantAPIKey
-	if err := db.DB(c.Request.Context()).
-		Where("client_id = ?", order.ClientID).
-		First(&merchant).Error; err != nil {
-		c.JSON(http.StatusNotFound, util.Err(MerchantInfoNotFound))
-		return
-	}
-
-	redirectURI := cmp.Or(order.RedirectURI, merchant.RedirectURI)
+	redirectURI := cmp.Or(order.RedirectURI, orderCtx.MerchantAPIKey.RedirectURI)
 
 	c.JSON(http.StatusOK, util.OK(GetOrderResponse{
 		Order:   &order,
 		FeeRate: orderCtx.MerchantPayConfig.FeeRate,
 		Merchant: MerchantInfo{
-			AppName:     merchant.AppName,
+			AppName:     orderCtx.MerchantAPIKey.AppName,
 			RedirectURI: redirectURI,
 		},
 	}))
@@ -512,11 +531,6 @@ func PayMerchantOrder(c *gin.Context) {
 		return
 	}
 
-	if !orderCtx.CurrentUser.VerifyPayKey(req.PayKey) {
-		c.JSON(http.StatusBadRequest, util.Err(common.PayKeyIncorrect))
-		return
-	}
-
 	if err := db.DB(c.Request.Context()).Transaction(
 		func(tx *gorm.DB) error {
 			var order model.Order
@@ -530,8 +544,14 @@ func PayMerchantOrder(c *gin.Context) {
 			}
 
 			// 检查订单是否过期
-			if order.ExpiresAt.Before(time.Now()) {
+			if !order.ExpiresAt.After(time.Now()) {
 				return errors.New(OrderExpired)
+			}
+			if err := validateExpectedPayer(order.PayerUserID, orderCtx.CurrentUser.ID); err != nil {
+				return err
+			}
+			if !orderCtx.CurrentUser.VerifyPayKey(req.PayKey) {
+				return errors.New(common.PayKeyIncorrect)
 			}
 
 			isTestMode := orderCtx.MerchantAPIKey.TestMode
@@ -548,7 +568,6 @@ func PayMerchantOrder(c *gin.Context) {
 
 			// 更新订单状态
 			order.Status = model.OrderStatusSuccess
-			order.PayerUserID = orderCtx.CurrentUser.ID
 			order.TradeTime = time.Now()
 
 			if isTestMode {
@@ -618,8 +637,10 @@ func PayMerchantOrder(c *gin.Context) {
 	); err != nil {
 		errMsg := err.Error()
 		switch errMsg {
-		case common.InsufficientBalance, OrderExpired, common.DailyLimitExceeded:
+		case common.InsufficientBalance, OrderExpired, common.DailyLimitExceeded, common.PayKeyIncorrect:
 			c.JSON(http.StatusBadRequest, util.Err(errMsg))
+		case OrderPayerMismatch:
+			c.JSON(http.StatusForbidden, util.Err(errMsg))
 		case OrderNotFound:
 			c.JSON(http.StatusNotFound, util.Err(errMsg))
 		default:
