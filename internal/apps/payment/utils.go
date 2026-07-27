@@ -25,6 +25,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/linux-do/credit/internal/apps/oauth"
@@ -35,6 +36,7 @@ import (
 	"github.com/linux-do/credit/internal/util"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // HandleParseOrderNoError 处理 ParseOrderNo 返回的错误，返回对应的 HTTP 响应
@@ -67,6 +69,74 @@ type OrderContext struct {
 	PayerPayConfig    *model.UserPayConfig
 	MerchantPayConfig *model.UserPayConfig
 	MerchantAPIKey    *model.MerchantAPIKey
+}
+
+// validateExpectedPayer 校验当前用户是否为订单绑定的预期付款人。
+func validateExpectedPayer(expectedPayerUserID, currentUserID uint64) error {
+	if expectedPayerUserID == 0 || expectedPayerUserID != currentUserID {
+		return errors.New(OrderPayerMismatch)
+	}
+	return nil
+}
+
+// createOrReuseMerchantOrder 创建商户订单；幂等键冲突时复用原待支付订单。
+func createOrReuseMerchantOrder(tx *gorm.DB, req *CreateOrderRequest, apiKey *model.MerchantAPIKey, merchantUserID uint64, expiresAt time.Time) (*model.Order, error) {
+	order := model.Order{
+		OrderName:       req.OrderName,
+		ClientID:        apiKey.ClientID,
+		MerchantOrderNo: req.MerchantOrderNo,
+		PayeeUserID:     merchantUserID,
+		Amount:          req.Amount,
+		Status:          model.OrderStatusPending,
+		Type:            model.OrderTypePayment,
+		Remark:          req.Remark,
+		PaymentType:     req.PaymentType,
+		RedirectURI:     req.ReturnURL,
+		NotifyURL:       req.NotifyURL,
+		ExpiresAt:       expiresAt,
+	}
+
+	result := tx.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "client_id"}, {Name: "merchant_order_no"}},
+		DoNothing: true,
+	}).Create(&order)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	if result.RowsAffected > 0 {
+		return &order, nil
+	}
+
+	// BeforeCreate 已为冲突请求生成新 ID，查询原订单前必须清空主键条件。
+	order = model.Order{}
+	if err := tx.Where("client_id = ? AND merchant_order_no = ?", apiKey.ClientID, req.MerchantOrderNo).
+		First(&order).Error; err != nil {
+		return nil, err
+	}
+	if order.Status != model.OrderStatusPending {
+		return nil, errors.New(OrderStatusInvalid)
+	}
+	if !order.ExpiresAt.After(time.Now()) {
+		return nil, errors.New(OrderExpired)
+	}
+
+	// 同一幂等键仅允许复用原始参数完全一致的订单，避免商户误用业务单号。
+	merchantOrderNoMatches := (order.MerchantOrderNo == nil && req.MerchantOrderNo == nil) ||
+		(order.MerchantOrderNo != nil && req.MerchantOrderNo != nil && *order.MerchantOrderNo == *req.MerchantOrderNo)
+	if order.ClientID != apiKey.ClientID ||
+		!merchantOrderNoMatches ||
+		order.OrderName != req.OrderName ||
+		order.PayeeUserID != merchantUserID ||
+		!order.Amount.Equal(req.Amount) ||
+		order.Type != model.OrderTypePayment ||
+		order.Remark != req.Remark ||
+		order.PaymentType != req.PaymentType ||
+		order.RedirectURI != req.ReturnURL ||
+		order.NotifyURL != req.NotifyURL {
+		return nil, errors.New(OrderRequestConflict)
+	}
+
+	return &order, nil
 }
 
 // ParseOrderNo 解析订单号，获取订单上下文信息

@@ -20,6 +20,8 @@ const (
 	OrderNotFound          = "订单不存在或已完成"
 	OrderStatusInvalid     = "订单状态不允许支付"
 	OrderExpired           = "订单已过期"
+	OrderPayerMismatch     = "当前用户不是该订单的预期付款人"
+	OrderRequestConflict   = "同一业务订单号的订单信息不一致"
 	MerchantInfoNotFound   = "商户信息不存在"
 	RecipientNotFound      = "收款人不存在"
 	OrderNoFormatError     = "订单号格式错误"
