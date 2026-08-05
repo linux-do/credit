@@ -1,5 +1,6 @@
 import { AxiosHeaders, type InternalAxiosRequestConfig } from 'axios';
 import { BaseService } from '../core/base.service';
+import type { ApiResponse } from '../core/types';
 import { encodeBase64 } from '../../utils';
 import type {
   MerchantAPIKey,
@@ -457,14 +458,14 @@ export class MerchantService extends BaseService {
    * 
    * @example
    * ```typescript
-   * const result = await MerchantService.distribute({
-  *   user_id: 123,
+   * const response = await MerchantService.distribute({
+   *   user_id: 123,
    *   username: 'alice',
    *   amount: 100,
    *   out_trade_no: 'DIST20251231001',
    *   remark: '新年奖励'
    * });
-   * console.log('订单号:', result.trade_no);
+   * console.log('订单号:', response.data.trade_no);
    * ```
    * 
    * @remarks
@@ -477,7 +478,7 @@ export class MerchantService extends BaseService {
   static async distribute(
     request: MerchantDistributeRequest,
     auth?: { client_id: string; client_secret: string }
-  ): Promise<MerchantDistributeResponse> {
+  ): Promise<ApiResponse<MerchantDistributeResponse>> {
     const config: InternalAxiosRequestConfig | undefined = auth
       ? {
           headers: new AxiosHeaders({
@@ -486,6 +487,6 @@ export class MerchantService extends BaseService {
         }
       : undefined;
     
-    return this.rawPost<MerchantDistributeResponse>('/lpay/distribute', request, config);
+    return this.rawPost<ApiResponse<MerchantDistributeResponse>>('/lpay/distribute', request, config);
   }
 }
