@@ -348,7 +348,7 @@ func Claim(c *gin.Context) {
 			if redEnvelope.RemainingCount == 1 {
 				claimedAmount = redEnvelope.RemainingAmount
 			} else {
-				claimedAmount = redEnvelope.TotalAmount.Div(decimal.NewFromInt(int64(redEnvelope.TotalCount))).Round(2)
+				claimedAmount = redEnvelope.TotalAmount.Div(decimal.NewFromInt(int64(redEnvelope.TotalCount))).Truncate(2)
 			}
 		} else {
 			// 拼手气红包：使用二倍均值算法
