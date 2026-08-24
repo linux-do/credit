@@ -284,4 +284,4 @@ docker run -d -p 8000:8000 linux-do-credit
 
 ## 📈 项目趋势
 
-[![Star History Chart](https://api.star-history.com/svg?repos=linux-do/credit&type=Date)](https://star-history.com/#linux-do/credit&Date)
+[![Star History Chart](https://star-history.dera.page/svg?repos=linux-do/credit&type=Date)](https://star-history.dera.page/#linux-do/credit&Date)

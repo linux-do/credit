@@ -284,4 +284,4 @@ Thanks to all developers who contributed to this project and the support of the 
 
 ## 📈 Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=linux-do/credit&type=Date)](https://star-history.com/#linux-do/credit&Date)
+[![Star History Chart](https://star-history.dera.page/svg?repos=linux-do/credit&type=Date)](https://star-history.dera.page/#linux-do/credit&Date)
