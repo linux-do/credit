@@ -210,6 +210,9 @@ importers:
       eslint-config-next:
         specifier: 15.5.6
         version: 15.5.6(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
+      jiti:
+        specifier: ^2.6.1
+        version: 2.6.1
       tailwindcss:
         specifier: ^4
         version: 4.1.16
