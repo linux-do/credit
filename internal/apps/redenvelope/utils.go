@@ -18,9 +18,14 @@ package redenvelope
 
 import (
 	"math/rand"
+	"time"
 
 	"github.com/shopspring/decimal"
 )
+
+func startOfDay(now time.Time) time.Time {
+	return time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+}
 
 // calculateRandomAmount 二倍均值算法计算随机红包金额
 func calculateRandomAmount(remaining decimal.Decimal, count int) decimal.Decimal {
