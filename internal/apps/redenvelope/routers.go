@@ -150,7 +150,7 @@ func Create(c *gin.Context) {
 
 	// 查询今日已发送的红包数量
 	var todayCount int64
-	today := time.Now().Truncate(24 * time.Hour)
+	today := startOfDay(time.Now())
 	if err := db.DB(c.Request.Context()).Model(&model.RedEnvelope{}).
 		Where("creator_id = ? AND created_at >= ?", currentUser.ID, today).
 		Count(&todayCount).Error; err != nil {
