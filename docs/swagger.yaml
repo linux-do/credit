@@ -516,8 +516,9 @@ definitions:
     type: object
   user.UpdatePayKeyRequest:
     properties:
+      current_pay_key:
+        type: string
       pay_key:
-        maxLength: 6
         type: string
     required:
     - pay_key

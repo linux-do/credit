@@ -17,7 +17,9 @@ limitations under the License.
 package user
 
 import (
+	"errors"
 	"net/http"
+	"regexp"
 
 	"github.com/gin-gonic/gin"
 	"github.com/linux-do/credit/internal/apps/oauth"
@@ -28,7 +30,29 @@ import (
 
 // UpdatePayKeyRequest 更新支付密钥请求
 type UpdatePayKeyRequest struct {
-	PayKey string `json:"pay_key" binding:"required,max=6"`
+	CurrentPayKey string `json:"current_pay_key" binding:"omitempty,len=6,numeric"`
+	PayKey        string `json:"pay_key" binding:"required,len=6,numeric"`
+}
+
+var payKeyPattern = regexp.MustCompile(`^\d{6}$`)
+
+func validatePayKeyUpdate(user *model.User, currentPayKey, newPayKey string) error {
+	if !payKeyPattern.MatchString(newPayKey) {
+		return errors.New(InvalidPayKeyFormat)
+	}
+	if user.PayKey == "" {
+		return nil
+	}
+	if !payKeyPattern.MatchString(currentPayKey) {
+		if currentPayKey == "" {
+			return errors.New(InvalidCurrentPayKey)
+		}
+		return errors.New(InvalidPayKeyFormat)
+	}
+	if !user.VerifyPayKey(currentPayKey) {
+		return errors.New(InvalidCurrentPayKey)
+	}
+	return nil
 }
 
 // UpdatePayKey 更新用户支付密钥
@@ -46,6 +70,14 @@ func UpdatePayKey(c *gin.Context) {
 	}
 
 	user, _ := util.GetFromContext[*model.User](c, oauth.UserObjKey)
+	if user == nil {
+		c.JSON(http.StatusUnauthorized, util.Err("未授权"))
+		return
+	}
+	if err := validatePayKeyUpdate(user, req.CurrentPayKey, req.PayKey); err != nil {
+		c.JSON(http.StatusBadRequest, util.Err(err.Error()))
+		return
+	}
 
 	encryptedPayKey, err := util.Encrypt(user.SignKey, req.PayKey)
 	if err != nil {

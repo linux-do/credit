@@ -2620,9 +2620,11 @@ const docTemplate = `{
                 "pay_key"
             ],
             "properties": {
+                "current_pay_key": {
+                    "type": "string"
+                },
                 "pay_key": {
-                    "type": "string",
-                    "maxLength": 6
+                    "type": "string"
                 }
             }
         },

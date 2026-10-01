@@ -11,18 +11,34 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { Button } from "@/components/ui/button"
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp"
 import { Spinner } from "@/components/ui/spinner"
+import { useUser } from "@/contexts/user-context"
 import { UserService } from "@/lib/services/user"
 
 export function SecurityMain() {
   const router = useRouter()
-  const [setupStep, setSetupStep] = React.useState<'password' | 'confirm'>('password')
+  const { user } = useUser()
+  const hasPayKey = user?.is_pay_key ?? true
+  const [setupStep, setSetupStep] = React.useState<'current' | 'password' | 'confirm'>('current')
+  const [currentPayKey, setCurrentPayKey] = React.useState("")
   const [payKey, setPayKey] = React.useState("")
   const [confirmPayKey, setConfirmPayKey] = React.useState("")
   const [isSubmitting, setIsSubmitting] = React.useState(false)
 
+  const isCurrentPayKeyValid = currentPayKey.length === 6 && /^\d{6}$/.test(currentPayKey)
   const isPayKeyValid = payKey.length === 6 && /^\d{6}$/.test(payKey)
   const isConfirmValid = confirmPayKey.length === 6 && /^\d{6}$/.test(confirmPayKey)
   const passwordsMatch = payKey === confirmPayKey
+
+  React.useEffect(() => {
+    if (user && !user.is_pay_key) {
+      setSetupStep('password')
+    }
+  }, [user])
+
+  /* 原安全密码输入 */
+  const handleCurrentPayKeyChange = (value: string) => {
+    setCurrentPayKey(value.replaceAll(/\D/g, ''))
+  }
 
   /* 安全密码输入 */
   const handlePayKeyChange = (value: string) => {
@@ -39,7 +55,13 @@ export function SecurityMain() {
   const handlePayKeySubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (setupStep === 'password') {
+    if (setupStep === 'current') {
+      if (!isCurrentPayKeyValid) {
+        toast.error("原安全密码必须为6位数字")
+        return
+      }
+      setSetupStep('password')
+    } else if (setupStep === 'password') {
       if (!isPayKeyValid) {
         toast.error("安全密码必须为6位数字")
         return
@@ -60,7 +82,7 @@ export function SecurityMain() {
 
       setIsSubmitting(true)
       try {
-        await UserService.updatePayKey(payKey)
+        await UserService.updatePayKey(payKey, hasPayKey ? currentPayKey : undefined)
         toast.success("修改成功", {
           description: "您的安全密码已成功更新",
         })
@@ -71,7 +93,9 @@ export function SecurityMain() {
         toast.error("修改失败", {
           description: error instanceof Error ? error.message : "更新密码时发生错误，请稍后重试",
         })
-        setSetupStep('password')
+        setSetupStep(hasPayKey ? 'current' : 'password')
+        setCurrentPayKey("")
+        setPayKey("")
         setConfirmPayKey("")
       } finally {
         setIsSubmitting(false)
@@ -121,18 +145,38 @@ export function SecurityMain() {
               >
                 <div className="flex flex-col items-center gap-2 mb-4">
                   <h3 className="text-xl font-bold tracking-tight text-center">
-                    {setupStep === 'password' ? '设置新密码' : '确认新密码'}
+                    {setupStep === 'current'
+                      ? '验证原密码'
+                      : setupStep === 'password'
+                        ? '设置新密码'
+                        : '确认新密码'}
                   </h3>
                   <p className="text-sm text-muted-foreground text-center max-w-[320px] mx-auto">
-                    {setupStep === 'password'
-                      ? '请输入新的6位数字安全密码'
-                      : '请再次输入密码进行确认'}
+                    {setupStep === 'current'
+                      ? '请输入当前的6位数字安全密码'
+                      : setupStep === 'password'
+                        ? '请输入新的6位数字安全密码'
+                        : '请再次输入密码进行确认'}
                   </p>
                 </div>
 
                 <form onSubmit={handlePayKeySubmit} className="space-y-6">
                   <div className="flex justify-center">
-                    {setupStep === 'password' ? (
+                    {setupStep === 'current' ? (
+                      <InputOTP
+                        maxLength={6}
+                        value={currentPayKey}
+                        onChange={handleCurrentPayKeyChange}
+                        disabled={isSubmitting}
+                        autoFocus
+                      >
+                        <InputOTPGroup className="gap-2">
+                          {[0, 1, 2, 3, 4, 5].map((i) => (
+                            <InputOTPSlot key={i} index={i} className="w-10 h-10 sm:w-11 sm:h-11 border-input transition-all ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2" />
+                          ))}
+                        </InputOTPGroup>
+                      </InputOTP>
+                    ) : setupStep === 'password' ? (
                       <InputOTP
                         maxLength={6}
                         value={payKey}
@@ -175,13 +219,18 @@ export function SecurityMain() {
                   </div>
 
                   <div className="flex gap-4 sm:mx-8">
-                    {setupStep === 'confirm' && (
+                    {setupStep !== 'current' && hasPayKey && (
                       <Button
                         type="button"
                         variant="secondary"
                         onClick={() => {
-                          setSetupStep('password')
-                          setConfirmPayKey('')
+                          if (setupStep === 'confirm') {
+                            setSetupStep('password')
+                            setConfirmPayKey('')
+                          } else {
+                            setSetupStep('current')
+                            setPayKey('')
+                          }
                         }}
                         className="flex-1 h-10 rounded-full tracking-wide text-sm font-bold transition-all active:scale-95"
                       >
@@ -190,15 +239,17 @@ export function SecurityMain() {
                     )}
                     <Button
                       type="submit"
-                      className={`flex-1 h-10 rounded-full tracking-wide bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all active:scale-95 ${setupStep === 'password' ? 'w-full' : ''}`}
+                      className={`flex-1 h-10 rounded-full tracking-wide bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all active:scale-95 ${setupStep === 'current' || (!hasPayKey && setupStep === 'password') ? 'w-full' : ''}`}
                       disabled={
-                        setupStep === 'password'
+                        setupStep === 'current'
+                          ? !isCurrentPayKeyValid
+                          : setupStep === 'password'
                           ? !isPayKeyValid
                           : isSubmitting || !isConfirmValid
                       }
                     >
                       {isSubmitting && <Spinner className="mr-2" />}
-                      {setupStep === 'password' ? '继续' : '保存修改'}
+                      {setupStep === 'confirm' ? '保存修改' : '继续'}
                     </Button>
                   </div>
                 </form>
