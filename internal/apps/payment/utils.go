@@ -72,7 +72,7 @@ type OrderContext struct {
 }
 
 // validateExpectedPayer 校验当前用户是否为订单绑定的预期付款人。
-func validateExpectedPayer(expectedPayerUserID, currentUserID uint64) error {
+func validateExpectedPayer(expectedPayerUserID, currentUserID int64) error {
 	if expectedPayerUserID == 0 || expectedPayerUserID != currentUserID {
 		return errors.New(OrderPayerMismatch)
 	}
@@ -80,7 +80,7 @@ func validateExpectedPayer(expectedPayerUserID, currentUserID uint64) error {
 }
 
 // createOrReuseMerchantOrder 创建商户订单；幂等键冲突时复用原待支付订单。
-func createOrReuseMerchantOrder(tx *gorm.DB, req *CreateOrderRequest, apiKey *model.MerchantAPIKey, merchantUserID uint64, expiresAt time.Time) (*model.Order, error) {
+func createOrReuseMerchantOrder(tx *gorm.DB, req *CreateOrderRequest, apiKey *model.MerchantAPIKey, merchantUserID int64, expiresAt time.Time) (*model.Order, error) {
 	order := model.Order{
 		OrderName:       req.OrderName,
 		ClientID:        apiKey.ClientID,
@@ -149,7 +149,7 @@ func ParseOrderNo(c *gin.Context, orderNo string) (*OrderContext, error) {
 		return nil, errGet
 	}
 
-	merchantID, errParse := strconv.ParseUint(merchantIDStr, 10, 64)
+	merchantID, errParse := strconv.ParseInt(merchantIDStr, 10, 64)
 	if errParse != nil {
 		return nil, errors.New(OrderNoFormatError)
 	}

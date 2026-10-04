@@ -344,7 +344,7 @@ func PayByLink(c *gin.Context) {
 			}
 
 			// 计算手续费
-			_, merchantAmount, feePercent := service.CalculateFee(paymentLink.Amount, merchantPayConfig.FeeRate)
+			fee, merchantAmount, feePercent := service.CalculateFee(paymentLink.Amount, merchantPayConfig.FeeRate)
 
 			var remark string
 			var orderType model.OrderType
@@ -408,6 +408,18 @@ func PayByLink(c *gin.Context) {
 					AsyncTransfer: true,
 				}); err != nil {
 					return err
+				}
+
+				// 手续费进入公共账户
+				if fee.IsPositive() {
+					if err := service.UpdateBalance(tx, service.BalanceUpdateOptions{
+						UserID:     model.CentralAccountID,
+						Amount:     fee,
+						Operation:  service.BalanceAdd,
+						TotalField: "total_receive",
+					}); err != nil {
+						return err
+					}
 				}
 
 				// 创建异步流转记录

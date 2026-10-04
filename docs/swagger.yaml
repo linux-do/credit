@@ -510,7 +510,8 @@ definitions:
       task_type:
         type: string
       user_id:
-        type: integer
+        example: "0"
+        type: string
     required:
     - task_type
     type: object
@@ -919,6 +920,24 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/user.updateUserStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - admin
+  /api/v1/admin/users/{id}/switch:
+    post:
+      parameters:
+      - description: 目标账号ID
+        format: int64
+        in: path
+        name: id
+        required: true
+        type: integer
       produces:
       - application/json
       responses:

@@ -43,7 +43,7 @@ type DispatchTaskRequest struct {
 	TaskType  string     `json:"task_type" binding:"required"`
 	StartTime *time.Time `json:"start_time"`
 	EndTime   *time.Time `json:"end_time"`
-	UserID    *uint64    `json:"user_id"`
+	UserID    *int64     `json:"user_id,string"`
 }
 
 // DispatchTask 下发任务

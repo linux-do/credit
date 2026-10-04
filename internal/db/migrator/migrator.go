@@ -21,6 +21,7 @@ import (
 	"log"
 
 	"github.com/linux-do/credit/internal/model"
+	"github.com/linux-do/credit/internal/util"
 
 	"github.com/linux-do/credit/internal/config"
 	"github.com/linux-do/credit/internal/db"
@@ -54,6 +55,9 @@ func Migrate() {
 
 	// 初始化用户支付配置数据
 	initUserPayConfigs()
+
+	// 初始化公共账户（id=-1）
+	initCentralAccount()
 }
 
 // initSystemConfigs 初始化系统配置数据
@@ -177,7 +181,7 @@ func initUserPayConfigs() {
 	defaultConfigs := []model.UserPayConfig{
 		{
 			Level:          model.PayLevelFree,
-			MinScore:       0,
+			MinScore:       -999999,
 			MaxScore:       int64Ptr(2000),
 			DailyLimit:     int64Ptr(1000),
 			FeeRate:        decimal.Zero,
@@ -217,5 +221,34 @@ func initUserPayConfigs() {
 		log.Printf("[PostgreSQL] failed to create default user pay configs: %v\n", err)
 	} else {
 		log.Printf("[PostgreSQL] initialized %d default user pay configs\n", len(defaultConfigs))
+	}
+}
+
+// initCentralAccount 初始化公共账户（id=-1），不存在时自动插入
+func initCentralAccount() {
+	tx := db.DB(context.Background())
+
+	var count int64
+	if err := tx.Model(&model.User{}).Where("id = ?", model.CentralAccountID).Count(&count).Error; err != nil {
+		log.Printf("[PostgreSQL] failed to check central account: %v\n", err)
+		return
+	}
+
+	if count > 0 {
+		return
+	}
+
+	centralAccount := model.User{
+		ID:        model.CentralAccountID,
+		Username:  model.CentralAccountUsername,
+		Nickname:  model.CentralAccountUsername,
+		AvatarUrl: "https://cdn3.ldstatic.com/original/4X/c/c/d/ccd8c210609d498cbeb3d5201d4c259348447562.png",
+		SignKey:   util.GenerateUniqueIDSimple(),
+		IsActive:  true,
+	}
+	if err := tx.Create(&centralAccount).Error; err != nil {
+		log.Printf("[PostgreSQL] failed to create central account: %v\n", err)
+	} else {
+		log.Printf("[PostgreSQL] initialized central account (id=%d)\n", model.CentralAccountID)
 	}
 }

@@ -65,7 +65,7 @@ type riskBlockDetails struct {
 	Risks      []openAPIUserRiskItem `json:"risks"`
 }
 
-func checkOpenAPIUserRisk(ctx context.Context, userID uint64) (*openAPIUserRiskResponse, bool) {
+func checkOpenAPIUserRisk(ctx context.Context, userID int64) (*openAPIUserRiskResponse, bool) {
 	cfg := config.Config.OpenAPIRisk
 	if !cfg.Enabled || strings.TrimSpace(cfg.BaseURL) == "" {
 		return nil, false
@@ -98,7 +98,7 @@ func checkOpenAPIUserRisk(ctx context.Context, userID uint64) (*openAPIUserRiskR
 	return risk, true
 }
 
-func fetchOpenAPIUserRisk(ctx context.Context, userID uint64) (*openAPIUserRiskResponse, error) {
+func fetchOpenAPIUserRisk(ctx context.Context, userID int64) (*openAPIUserRiskResponse, error) {
 	cfg := config.Config.OpenAPIRisk
 	endpoint := fmt.Sprintf(
 		"%s/api/open/v1/risk/users/%d",

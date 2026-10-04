@@ -40,7 +40,7 @@ type dailyAmountResult struct {
 
 // queryDailyAmounts 查询每日金额
 // isIncome: true=收入(payee), false=支出(payer)
-func queryDailyAmounts(ctx context.Context, userID uint64, isIncome bool, startDate, endDate time.Time) (map[string]decimal.Decimal, error) {
+func queryDailyAmounts(ctx context.Context, userID int64, isIncome bool, startDate, endDate time.Time) (map[string]decimal.Decimal, error) {
 	var results []dailyAmountResult
 	var err error
 

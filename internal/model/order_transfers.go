@@ -34,7 +34,7 @@ const (
 type OrderTransfer struct {
 	ID          uint64              `json:"id,string" gorm:"primaryKey;autoIncrement"`
 	OrderID     uint64              `json:"order_id,string" gorm:"index;uniqueIndex:uk_order_id;index:idx_order_status,priority:1"`
-	PayeeUserID uint64              `json:"payee_user_id" gorm:"index"`
+	PayeeUserID int64               `json:"payee_user_id" gorm:"index"`
 	Amount      decimal.Decimal     `json:"amount" gorm:"type:numeric(20,2);not null"`
 	Status      OrderTransferStatus `json:"status" gorm:"type:varchar(20);not null;index:idx_status_transfer_at,priority:1;index:idx_order_status,priority:2"`
 	TransferAt  time.Time           `json:"transfer_at" gorm:"not null;index:idx_status_transfer_at,priority:2"`

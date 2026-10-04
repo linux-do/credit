@@ -56,7 +56,7 @@ func getList(ctx context.Context, req *ListRequest) (*ListResponse, error) {
 	return response, nil
 }
 
-func getUserRank(ctx context.Context, userID uint64) (*UserRankResponse, error) {
+func getUserRank(ctx context.Context, userID int64) (*UserRankResponse, error) {
 	// 检查缓存
 	cacheKey := fmt.Sprintf("%suser:%d", cacheKeyPrefix, userID)
 	if data, err := db.Redis.Get(ctx, db.PrefixedKey(cacheKey)).Bytes(); err == nil {

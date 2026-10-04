@@ -174,6 +174,7 @@ const TransactionTableRow = React.memo(React.forwardRef<HTMLTableRowElement, {
   const { config: publicConfig } = usePublicConfig()
 
   const isDisputeSupported = order.type === 'payment' || order.type === 'online' || order.type === 'receive'
+  // 用户 ID 统一为精确字符串（后端 json:",string"），直接比较即可
   const isCurrentUserPayer = user?.id === order.payer_user_id
   const isCurrentUserPayee = user?.id === order.payee_user_id
   const isDisputing = order.status === 'disputing' && isCurrentUserPayee

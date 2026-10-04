@@ -20,6 +20,8 @@ import { ErrorInline } from "@/components/layout/error"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 import { useAdminUsers } from "@/contexts/admin-users-context"
+import { useUser } from "@/contexts/user-context"
+import { SwitchAccountButton } from "@/components/common/admin/switch-account"
 
 export function UsersManager() {
   const {
@@ -40,6 +42,8 @@ export function UsersManager() {
     fetchUsers,
     updateUserStatus
   } = useAdminUsers()
+
+  const { user: currentUser } = useUser()
 
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
@@ -387,41 +391,47 @@ export function UsersManager() {
                   </TableCell>
                   <TableCell className="sticky right-0 text-center bg-background z-10 py-1" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-center gap-0.5">
-                      <TooltipProvider delayDuration={0}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div>
-                              <Switch
-                                checked={user.is_active}
-                                onCheckedChange={() => handleStatusToggle(user)}
-                                disabled={user.is_admin}
-                                className="scale-75 data-[state=checked]:bg-green-600 h-4 w-7"
-                              />
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent side="top" className="text-xs">
-                            {user.is_admin ? '管理员账户' : user.is_active ? '禁用账户' : '启用账户'}
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                      <TooltipProvider delayDuration={0}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 text-muted-foreground hover:text-foreground"
-                              onClick={() => handleUpdateCredits(user)}
-                              disabled={updatingUserId === user.id}
-                            >
-                              <Loader2 className={cn("size-3", updatingUserId === user.id && "animate-spin")} />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent side="top" className="text-xs">
-                            更新积分
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      {!user.is_admin && (
+                        <TooltipProvider delayDuration={0}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div>
+                                <Switch
+                                  checked={user.is_active}
+                                  onCheckedChange={() => handleStatusToggle(user)}
+                                  className="scale-75 data-[state=checked]:bg-green-600 h-4 w-7"
+                                />
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="text-xs">
+                              {user.is_active ? '禁用账户' : '启用账户'}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                      {Number(user.id) >= 0 && (
+                        <TooltipProvider delayDuration={0}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                                onClick={() => handleUpdateCredits(user)}
+                                disabled={updatingUserId === user.id}
+                              >
+                                <Loader2 className={cn("size-3", updatingUserId === user.id && "animate-spin")} />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="text-xs">
+                              更新积分
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                      {currentUser?.id !== user.id && (
+                        <SwitchAccountButton accountId={user.id} username={user.username} />
+                      )}
                       <TooltipProvider delayDuration={0}>
                         <Tooltip>
                           <TooltipTrigger asChild>

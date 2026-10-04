@@ -46,9 +46,17 @@ const (
 	TrustLevelLeader
 )
 
+// 系统账号相关常量
+const (
+	// CentralAccountID 公共账户 ID，负数用户 ID 的默认值
+	CentralAccountID int64 = -1
+	// CentralAccountUsername 公共账户保留用户名
+	CentralAccountUsername = "system"
+)
+
 // OAuthUserInfo 用户信息结构（同时支持 OIDC ID Token claims 和 UserEndpoint 响应）
 type OAuthUserInfo struct {
-	Id         uint64     `json:"id"`
+	Id         int64      `json:"id"`
 	Sub        string     `json:"sub"`
 	Username   string     `json:"username"`
 	Name       string     `json:"name"`
@@ -58,13 +66,13 @@ type OAuthUserInfo struct {
 }
 
 // GetID 获取用户 ID
-func (u *OAuthUserInfo) GetID() uint64 {
+func (u *OAuthUserInfo) GetID() int64 {
 	if u.Id != 0 {
 		return u.Id
 	}
 	// 从 sub 解析（OIDC 格式）
 	if u.Sub != "" {
-		if id, err := strconv.ParseUint(u.Sub, 10, 64); err == nil {
+		if id, err := strconv.ParseInt(u.Sub, 10, 64); err == nil {
 			return id
 		}
 	}
@@ -85,13 +93,13 @@ type LeaderboardResponse struct {
 
 // LeaderboardUser 排行榜用户信息
 type LeaderboardUser struct {
-	ID         uint64 `json:"id"`
+	ID         int64  `json:"id"`
 	Username   string `json:"username"`
 	TotalScore int64  `json:"total_score"`
 }
 
 type User struct {
-	ID               uint64          `json:"id" gorm:"primaryKey;index:idx_users_active_bal_id,priority:3"`
+	ID               int64           `json:"id" gorm:"primaryKey;index:idx_users_active_bal_id,priority:3"`
 	Username         string          `json:"username" gorm:"size:255;uniqueIndex"`
 	Nickname         string          `json:"nickname" gorm:"size:255"`
 	AvatarUrl        string          `json:"avatar_url" gorm:"size:255"`
@@ -113,7 +121,7 @@ type User struct {
 	UpdatedAt        time.Time       `json:"updated_at" gorm:"autoUpdateTime;index"`
 }
 
-func (u *User) GetByID(tx *gorm.DB, id uint64) error {
+func (u *User) GetByID(tx *gorm.DB, id int64) error {
 	if err := tx.Where("id = ?", id).First(u).Error; err != nil {
 		return err
 	}
@@ -121,7 +129,7 @@ func (u *User) GetByID(tx *gorm.DB, id uint64) error {
 }
 
 // GetByIDs 批量查询用户
-func GetByIDs(tx *gorm.DB, ids []uint64) ([]User, error) {
+func GetByIDs(tx *gorm.DB, ids []int64) ([]User, error) {
 	var users []User
 	if err := tx.Where("id IN ?", ids).Find(&users).Error; err != nil {
 		return nil, err

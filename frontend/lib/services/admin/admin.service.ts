@@ -373,6 +373,24 @@ export class AdminService extends BaseService {
     return this.put<void>(`/users/${ id }/status`, request);
   }
 
+  // ==================== 账号切换 ====================
+
+  /**
+   * 切换到指定账号身份（模拟登录）
+   * @param id - 目标账号 ID
+   * @returns void
+   * @throws {UnauthorizedError} 当未登录时
+   * @throws {ForbiddenError} 当无管理员权限时
+   * @throws {NotFoundError} 当目标账号不存在或不可用时
+   * 
+   * @remarks
+   * - 切换后 session 绑定用户被替换为目标账号，不影响目标账号自身的登录会话
+   * - 只能退出登录后重新登录恢复原账号
+   */
+  static async switchAccount(id: string): Promise<void> {
+    return this.post<void>(`/users/${ id }/switch`);
+  }
+
   // ==================== 订单管理 ====================
 
   /**

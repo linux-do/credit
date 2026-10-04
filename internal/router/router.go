@@ -252,6 +252,7 @@ func Serve() {
 				// Users
 				adminRouter.GET("/users", admin_user.ListUsers)
 				adminRouter.PUT("/users/:id/status", admin_user.UpdateUserStatus)
+				adminRouter.POST("/users/:id/switch", admin_user.SwitchAccount)
 
 				// Orders
 				adminRouter.POST("/orders", admin_order.ListOrders)

@@ -109,7 +109,7 @@ func Callback(c *gin.Context) {
 }
 
 type BasicUserInfo struct {
-	ID               uint64           `json:"id"`
+	ID               int64            `json:"id,string"`
 	Username         string           `json:"username"`
 	Nickname         string           `json:"nickname"`
 	TrustLevel       model.TrustLevel `json:"trust_level"`

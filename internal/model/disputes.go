@@ -34,10 +34,10 @@ const (
 type Dispute struct {
 	ID                uint64        `json:"id,string" gorm:"primaryKey"`
 	OrderID           uint64        `json:"order_id,string" gorm:"uniqueIndex:idx_dispute_order;index:idx_dispute_order_status,priority:1;not null"`
-	InitiatorUserID   uint64        `json:"initiator_user_id" gorm:"not null;index:idx_initiator_status_created,priority:1"`
+	InitiatorUserID   int64         `json:"initiator_user_id" gorm:"not null;index:idx_initiator_status_created,priority:1"`
 	Reason            string        `json:"reason" gorm:"size:500;not null"`
 	Status            DisputeStatus `json:"status" gorm:"type:varchar(20);index;index:idx_dispute_order_status,priority:2;index:idx_initiator_status_created,priority:2;not null;default:'disputing'"`
-	HandlerUserID     *uint64       `json:"handler_user_id" gorm:"index"`
+	HandlerUserID     *int64        `json:"handler_user_id" gorm:"index"`
 	InitiatorUsername string        `json:"initiator_username" gorm:"-:migration;->"`
 	HandlerUsername   string        `json:"handler_username" gorm:"-:migration;->"`
 	CreatedAt         time.Time     `json:"created_at" gorm:"autoCreateTime;index:idx_initiator_status_created,priority:3"`

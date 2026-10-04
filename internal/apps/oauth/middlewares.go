@@ -17,6 +17,7 @@ limitations under the License.
 package oauth
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -25,10 +26,11 @@ import (
 	"github.com/linux-do/credit/internal/model"
 	"github.com/linux-do/credit/internal/otel_trace"
 	"github.com/linux-do/credit/internal/util"
+	"gorm.io/gorm"
 )
 
 type loginRequiredAuditLog struct {
-	UserID     uint64 `json:"user_id"`
+	UserID     int64  `json:"user_id"`
 	Username   string `json:"username"`
 	ClientIP   string `json:"client_ip"`
 	Method     string `json:"method"`
@@ -46,7 +48,7 @@ func LoginRequired() gin.HandlerFunc {
 
 		// load user
 		userId := GetUserIDFromContext(c)
-		if userId <= 0 {
+		if userId == 0 {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error_msg": common.UnAuthorized, "data": nil})
 			return
 		}
@@ -55,6 +57,10 @@ func LoginRequired() gin.HandlerFunc {
 		var user model.User
 		tx := db.DB(ctx).Where("id = ? AND is_active = ?", userId, true).First(&user)
 		if tx.Error != nil {
+			if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error_msg": common.UnAuthorized, "data": nil})
+				return
+			}
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error_msg": tx.Error.Error(), "data": nil})
 			return
 		}
@@ -65,9 +71,12 @@ func LoginRequired() gin.HandlerFunc {
 		// set user info
 		util.SetToContext(c, UserObjKey, &user)
 
-		if risk, ok := checkOpenAPIUserRisk(ctx, user.ID); ok {
-			if blocked := applyOpenAPIUserRisk(c, risk); blocked {
-				return
+		// 负数 ID 的公共账号不参与 OpenAPI 风险检查
+		if user.ID > 0 {
+			if risk, ok := checkOpenAPIUserRisk(ctx, user.ID); ok {
+				if blocked := applyOpenAPIUserRisk(c, risk); blocked {
+					return
+				}
 			}
 		}
 

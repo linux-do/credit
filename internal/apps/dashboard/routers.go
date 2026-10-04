@@ -48,7 +48,7 @@ type TopCustomersRequest struct {
 
 // TopCustomer Top客户项
 type TopCustomer struct {
-	UserID      uint64          `json:"user_id"`
+	UserID      int64           `json:"user_id"`
 	Username    string          `json:"username"`
 	TotalAmount decimal.Decimal `json:"total_amount"`
 	OrderCount  int64           `json:"order_count"`

@@ -93,7 +93,7 @@ func listOrders(ctx context.Context, req *listOrdersRequest) (*listOrdersRespons
 }
 
 // refundOrder 执行管理员退款；有争议时更新争议，无争议时只按需追加订单备注。
-func refundOrder(ctx context.Context, id uint64, req *refundOrderRequest, adminUserID uint64) error {
+func refundOrder(ctx context.Context, id uint64, req *refundOrderRequest, adminUserID int64) error {
 	return db.DB(ctx).Transaction(func(tx *gorm.DB) error {
 		var order model.Order
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).

@@ -566,6 +566,34 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/admin/users/{id}/switch": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "目标账号ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/util.ResponseAny"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/config/public": {
             "get": {
                 "consumes": [
@@ -2610,7 +2638,8 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "user_id": {
-                    "type": "integer"
+                    "type": "string",
+                    "example": "0"
                 }
             }
         },

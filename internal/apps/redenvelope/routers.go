@@ -238,6 +238,18 @@ func Create(c *gin.Context) {
 			return err
 		}
 
+		// 手续费进入公共账户
+		if feeAmount.IsPositive() {
+			if err := service.UpdateBalance(tx, service.BalanceUpdateOptions{
+				UserID:     model.CentralAccountID,
+				Amount:     feeAmount,
+				Operation:  service.BalanceAdd,
+				TotalField: "total_receive",
+			}); err != nil {
+				return err
+			}
+		}
+
 		// 创建红包
 		redEnvelope = model.RedEnvelope{
 			ID:                  idgen.NextUint64ID(),

@@ -2,14 +2,18 @@ CREATE DATABASE IF NOT EXISTS linux_do_credit;
 
 USE linux_do_credit;
 
+-- 注意：payer_user_id / payee_user_id 使用 Int64（支持负数用户 ID，如中央银行账号 id=-1）。
+-- 已有环境升级时需先执行：
+--   ALTER TABLE linux_do_credit.orders MODIFY COLUMN payer_user_id Int64;
+--   ALTER TABLE linux_do_credit.orders MODIFY COLUMN payee_user_id Int64;
 CREATE TABLE IF NOT EXISTS orders
 (
     id                UInt64,
     order_name        String,
     merchant_order_no String,
     client_id         String,
-    payer_user_id     UInt64,
-    payee_user_id     UInt64,
+    payer_user_id     Int64,
+    payee_user_id     Int64,
     amount            Decimal(20, 2),
     status            LowCardinality(String),
     type              LowCardinality(String),

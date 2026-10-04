@@ -66,7 +66,7 @@ type GetOrderResponse struct {
 
 // TransferRequest 转账请求
 type TransferRequest struct {
-	RecipientID       uint64          `json:"recipient_id,string" binding:"required"`
+	RecipientID       int64           `json:"recipient_id,string" binding:"required"`
 	RecipientUsername string          `json:"recipient_username" binding:"required"`
 	Amount            decimal.Decimal `json:"amount" binding:"required"`
 	PayKey            string          `json:"pay_key" binding:"required,max=6"`
@@ -135,7 +135,7 @@ func CreateMerchantOrder(c *gin.Context) {
 				return err
 			}
 
-			merchantIDStr := strconv.FormatUint(merchantUser.ID, 10)
+			merchantIDStr := strconv.FormatInt(merchantUser.ID, 10)
 			if errSet := db.Redis.Set(c.Request.Context(), db.PrefixedKey(fmt.Sprintf(OrderMerchantIDCacheKeyFormat, encryptString)), merchantIDStr, remainingTTL).Err(); errSet != nil {
 				return fmt.Errorf("failed to set redis key: %w", errSet)
 			}
@@ -298,7 +298,7 @@ func RefundMerchantOrder(c *gin.Context) {
 
 // MerchantDistributeRequest 商户分发请求
 type MerchantDistributeRequest struct {
-	RecipientID       uint64          `json:"user_id" binding:"required"`
+	RecipientID       int64           `json:"user_id" binding:"required"`
 	RecipientUsername string          `json:"username" binding:"required"`
 	Amount            decimal.Decimal `json:"amount" binding:"required"`
 	MerchantOrderNo   *string         `json:"out_trade_no" binding:"omitempty,min=1,max=64"`
@@ -361,7 +361,7 @@ func MerchantDistribute(c *gin.Context) {
 			return err
 		}
 
-		_, recipientAmount, distributePercent := service.CalculateFee(req.Amount, merchantPayConfig.DistributeRate)
+		fee, recipientAmount, distributePercent := service.CalculateFee(req.Amount, merchantPayConfig.DistributeRate)
 		merchantScore := req.Amount.Mul(merchantPayConfig.ScoreRate).Round(0).IntPart()
 
 		order := model.Order{
@@ -400,6 +400,18 @@ func MerchantDistribute(c *gin.Context) {
 			CheckBalance: true,
 		}); err != nil {
 			return err
+		}
+
+		// 分发费率差额（手续费）进入公共账户
+		if fee.IsPositive() {
+			if err := service.UpdateBalance(tx, service.BalanceUpdateOptions{
+				UserID:     model.CentralAccountID,
+				Amount:     fee,
+				Operation:  service.BalanceAdd,
+				TotalField: "total_receive",
+			}); err != nil {
+				return err
+			}
 		}
 
 		// 增加收款人余额（按分发费率计算后的金额）
@@ -564,7 +576,7 @@ func PayMerchantOrder(c *gin.Context) {
 			}
 
 			// 计算手续费
-			_, merchantAmount, feePercent := service.CalculateFee(order.Amount, orderCtx.MerchantPayConfig.FeeRate)
+			fee, merchantAmount, feePercent := service.CalculateFee(order.Amount, orderCtx.MerchantPayConfig.FeeRate)
 
 			// 更新订单状态
 			order.Status = model.OrderStatusSuccess
@@ -612,6 +624,18 @@ func PayMerchantOrder(c *gin.Context) {
 					AsyncTransfer: true,
 				}); err != nil {
 					return err
+				}
+
+				// 手续费进入公共账户
+				if fee.IsPositive() {
+					if err := service.UpdateBalance(tx, service.BalanceUpdateOptions{
+						UserID:     model.CentralAccountID,
+						Amount:     fee,
+						Operation:  service.BalanceAdd,
+						TotalField: "total_receive",
+					}); err != nil {
+						return err
+					}
 				}
 
 				// 异步到账任务
