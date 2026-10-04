@@ -19,6 +19,7 @@ package db
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -148,10 +149,11 @@ func HGetJSON[T any](ctx context.Context, hashKey, fieldKey string, data *T) err
 
 // GetJSON 从Redis获取数据并反序列化为泛型类型
 // ctx: 上下文
+// client: Redis客户端或事务客户端
 // key: Redis key
 // data: 用于接收数据的指针（泛型）
-func GetJSON[T any](ctx context.Context, key string, data *T) error {
-	val, err := Redis.Get(ctx, PrefixedKey(key)).Bytes()
+func GetJSON[T any](ctx context.Context, client redis.Cmdable, key string, data *T) error {
+	val, err := client.Get(ctx, PrefixedKey(key)).Bytes()
 	if err != nil {
 		return err
 	}
@@ -165,18 +167,47 @@ func GetJSON[T any](ctx context.Context, key string, data *T) error {
 
 // SetJSON 将泛型数据序列化为JSON并设置到Redis
 // ctx: 上下文
+// client: Redis客户端或事务管道
 // key: Redis key
 // data: 要存储的数据（泛型）
 // expiration: 过期时间
-func SetJSON[T any](ctx context.Context, key string, data T, expiration time.Duration) error {
+func SetJSON[T any](ctx context.Context, client redis.Cmdable, key string, data T, expiration time.Duration) error {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return fmt.Errorf("failed to marshal data: %w", err)
 	}
 
-	if err := Redis.Set(ctx, PrefixedKey(key), jsonData, expiration).Err(); err != nil {
+	if err := client.Set(ctx, PrefixedKey(key), jsonData, expiration).Err(); err != nil {
 		return fmt.Errorf("failed to set redis key: %w", err)
 	}
 
 	return nil
+}
+
+// UpdateJSON 通过事务原子读取并更新Redis中的JSON数据
+// ctx: 上下文
+// key: Redis key
+// update: 更新回调，接收数据指针（key不存在时为零值），返回过期时间、是否写入和错误
+// expiration: 过期时间，0表示不过期，负数表示删除key
+// write: 是否写入，false表示保持原值和过期时间不变
+// err: 回调返回错误时取消更新，并发修改导致事务冲突时返回redis.TxFailedErr
+func UpdateJSON[T any](ctx context.Context, key string, update func(*T) (expiration time.Duration, write bool, err error)) error {
+	return Redis.Watch(ctx, func(tx *redis.Tx) error {
+		var data T
+		if err := GetJSON(ctx, tx, key, &data); err != nil && !errors.Is(err, redis.Nil) {
+			return err
+		}
+		expiration, write, err := update(&data)
+		if err != nil || !write {
+			return err
+		}
+		_, err = tx.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
+			if expiration < 0 {
+				pipe.Del(ctx, PrefixedKey(key))
+				return nil
+			}
+			return SetJSON(ctx, pipe, key, data, expiration)
+		})
+		return err
+	}, PrefixedKey(key))
 }

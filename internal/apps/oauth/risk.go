@@ -77,9 +77,9 @@ func checkOpenAPIUserRisk(ctx context.Context, userID uint64) (*openAPIUserRiskR
 
 	cacheKey := fmt.Sprintf(openAPIRiskCacheKeyFormat, userID)
 	var cached openAPIUserRiskResponse
-	if err := db.GetJSON(ctx, cacheKey, &cached); err == nil {
+	if err := db.GetJSON(ctx, db.Redis, cacheKey, &cached); err == nil {
 		return &cached, true
-	} else if err != nil && !errors.Is(err, redis.Nil) {
+	} else if !errors.Is(err, redis.Nil) {
 		logger.ErrorF(ctx, "[OpenAPIRisk] read cache failed, skip risk check: %v", err)
 		return nil, false
 	}
@@ -90,7 +90,7 @@ func checkOpenAPIUserRisk(ctx context.Context, userID uint64) (*openAPIUserRiskR
 		return nil, false
 	}
 
-	if err := db.SetJSON(ctx, cacheKey, risk, openAPIRiskCacheTTL()); err != nil {
+	if err := db.SetJSON(ctx, db.Redis, cacheKey, risk, openAPIRiskCacheTTL()); err != nil {
 		logger.ErrorF(ctx, "[OpenAPIRisk] write cache failed, skip risk check: %v", err)
 		return nil, false
 	}

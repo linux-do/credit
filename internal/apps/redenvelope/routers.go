@@ -304,13 +304,26 @@ func Create(c *gin.Context) {
 // @Success 200 {object} util.ResponseAny
 // @Router /api/v1/redenvelope/claim [post]
 func Claim(c *gin.Context) {
-	var req ClaimRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, util.Err(err.Error()))
+	currentUser, _ := util.GetFromContext[*model.User](c, oauth.UserObjKey)
+	risk, err := newClaimRisk(c.Request.Context(), currentUser.ID)
+	if err != nil {
+		respondClaimRiskError(c, err)
+		return
+	}
+	if err := risk.update(c.Request.Context(), "check"); err != nil {
+		respondClaimRiskError(c, err)
 		return
 	}
 
-	currentUser, _ := util.GetFromContext[*model.User](c, oauth.UserObjKey)
+	var req ClaimRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		if riskErr := risk.update(c.Request.Context(), "invalid"); riskErr != nil {
+			respondClaimRiskError(c, riskErr)
+			return
+		}
+		c.JSON(http.StatusBadRequest, util.Err(err.Error()))
+		return
+	}
 
 	var claimedAmount decimal.Decimal
 	var redEnvelope model.RedEnvelope
@@ -320,10 +333,18 @@ func Claim(c *gin.Context) {
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE", Options: "NOWAIT"}).
 			Where("id = ?", req.ID).First(&redEnvelope).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
+				if riskErr := risk.update(c.Request.Context(), "invalid"); riskErr != nil {
+					return riskErr
+				}
 				return errors.New(RedEnvelopeNotFound)
 			}
 			// 捕获锁等待超时错误，返回友好提示
 			return errors.New(RedEnvelopeTooPopular)
+		}
+
+		// An existing ID ends the invalid-ID streak even if it cannot be claimed.
+		if err := risk.update(c.Request.Context(), "valid"); err != nil {
+			return err
 		}
 
 		// 检查红包状态
@@ -413,6 +434,11 @@ func Claim(c *gin.Context) {
 
 		return tx.Create(&order).Error
 	}); err != nil {
+		var cooldown *claimCooldownError
+		if errors.As(err, &cooldown) {
+			respondClaimRiskError(c, cooldown)
+			return
+		}
 		errMsg := err.Error()
 		switch errMsg {
 		case RedEnvelopeNotFound:

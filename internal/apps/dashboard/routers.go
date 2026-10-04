@@ -162,7 +162,7 @@ func GetUserBalanceStats(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	var cachedStats UserBalanceStatsResponse
-	if err := db.GetJSON(ctx, dashboardCacheKeyPrefix, &cachedStats); err == nil {
+	if err := db.GetJSON(ctx, db.Redis, dashboardCacheKeyPrefix, &cachedStats); err == nil {
 		c.JSON(http.StatusOK, util.OK(cachedStats))
 		return
 	}
@@ -190,7 +190,7 @@ func GetUserBalanceStats(c *gin.Context) {
 	}
 
 	if cacheTTL, errGet := model.GetIntByKey(ctx, model.ConfigKeyUserBalanceStatsCacheTTL); errGet == nil && cacheTTL > 0 {
-		_ = db.SetJSON(ctx, dashboardCacheKeyPrefix, response, time.Duration(cacheTTL)*time.Second)
+		_ = db.SetJSON(ctx, db.Redis, dashboardCacheKeyPrefix, response, time.Duration(cacheTTL)*time.Second)
 	}
 
 	c.JSON(http.StatusOK, util.OK(response))

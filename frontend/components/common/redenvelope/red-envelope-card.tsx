@@ -118,7 +118,7 @@ export function RedEnvelopeCard({
           animate={status === "opening" ? {
             scale: [1, 0.92, 0],
             opacity: [1, 0]
-          } : {}}
+          } : { scale: 1, opacity: 1 }}
           transition={status === "opening" ? {
             duration: 0.55,
             ease: "easeInOut"

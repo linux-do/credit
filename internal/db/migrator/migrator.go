@@ -127,6 +127,16 @@ func initSystemConfigs() {
 			Description: "每个红包的最大可领取人数上限",
 		},
 		{
+			Key:         model.ConfigKeyRedEnvelopeClaimErrorLimit,
+			Value:       "5",
+			Description: "红包领取连续错误次数上限",
+		},
+		{
+			Key:         model.ConfigKeyRedEnvelopeClaimCooldownSeconds,
+			Value:       "900",
+			Description: "红包领取冷却时间（秒）",
+		},
+		{
 			Key:         model.ConfigKeyUserBalanceStatsCacheTTL,
 			Value:       "600",
 			Description: "用户余额统计缓存过期时间（秒）",

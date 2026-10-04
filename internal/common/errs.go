@@ -34,6 +34,7 @@ const (
 	RedEnvelopeDailyLimitExceeded = "今日发红包数量已达上限"
 	RedEnvelopeRecipientsExceeded = "红包个数超过最大可领取人数上限"
 	RedEnvelopeMinAmountRequired  = "红包总金额不能低于1LDC"
+	RedEnvelopeClaimCooldown      = "连续输入错误红包ID次数过多，已暂停领取，请在%d秒后重试"
 )
 
 const (
