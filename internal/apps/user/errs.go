@@ -16,6 +16,19 @@ limitations under the License.
 
 package user
 
+import "errors"
+
 const (
-	EncryptPayKeyFailed = "加密支付密码失败"
+	EncryptPayKeyFailed  = "加密支付密码失败"
+	InvalidCurrentPayKey = "原安全密码错误"
+	InvalidPayKeyFormat  = "安全密码必须为6位数字"
+
+	ErrorCodeInvalidCurrentPayKey = "INVALID_CURRENT_PAY_KEY"
+	ErrorCodeInvalidPayKeyFormat  = "INVALID_PAY_KEY_FORMAT"
+)
+
+var (
+	errEncryptPayKeyFailed  = errors.New(EncryptPayKeyFailed)
+	errInvalidCurrentPayKey = errors.New(InvalidCurrentPayKey)
+	errInvalidPayKeyFormat  = errors.New(InvalidPayKeyFormat)
 )

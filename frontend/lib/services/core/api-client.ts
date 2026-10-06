@@ -262,6 +262,7 @@ apiClient.interceptors.response.use(
         new ValidationError(
           error.response.data?.error_msg || '请求参数验证失败',
           error.response.data?.details,
+          error.response.data?.error_code || 'VALIDATION_ERROR',
         ),
       );
     }

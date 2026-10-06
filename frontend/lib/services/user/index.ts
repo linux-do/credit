@@ -10,7 +10,7 @@
  * import { UserService } from '@/lib/services';
  * 
  * // 更新支付密钥
- * await UserService.updatePayKey('123456');
+ * await UserService.updatePayKey('654321', '123456');
  * ```
  */
 

@@ -88,8 +88,12 @@ export class ServerError extends ApiErrorBase {
  * 验证错误 (400)
  */
 export class ValidationError extends ApiErrorBase {
-  constructor(message = '请求参数验证失败', details?: unknown) {
-    super(message, 'VALIDATION_ERROR', 400, details);
+  constructor(
+    message = '请求参数验证失败',
+    details?: unknown,
+    code = 'VALIDATION_ERROR',
+  ) {
+    super(message, code, 400, details);
     this.name = 'ValidationError';
     Object.setPrototypeOf(this, ValidationError.prototype);
   }

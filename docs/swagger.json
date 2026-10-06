@@ -1743,6 +1743,24 @@
                         "schema": {
                             "$ref": "#/definitions/util.ResponseAny"
                         }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/util.ResponseAny"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/util.ResponseAny"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/util.ResponseAny"
+                        }
                     }
                 }
             }
@@ -2611,9 +2629,19 @@
                 "pay_key"
             ],
             "properties": {
-                "pay_key": {
+                "current_pay_key": {
+                    "description": "CurrentPayKey 当前安全密码；已设置安全密码的用户修改时必须提供",
                     "type": "string",
-                    "maxLength": 6
+                    "maxLength": 6,
+                    "minLength": 6,
+                    "example": "123456"
+                },
+                "pay_key": {
+                    "description": "PayKey 新安全密码，必须为6位数字",
+                    "type": "string",
+                    "maxLength": 6,
+                    "minLength": 6,
+                    "example": "654321"
                 }
             }
         },
@@ -2688,6 +2716,10 @@
             "type": "object",
             "properties": {
                 "data": {},
+                "error_code": {
+                    "type": "string",
+                    "example": ""
+                },
                 "error_msg": {
                     "type": "string",
                     "example": ""
