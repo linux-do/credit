@@ -312,14 +312,14 @@ func Claim(c *gin.Context) {
 		respondClaimRiskError(c, err)
 		return
 	}
-	if err := risk.update(c.Request.Context(), "check"); err != nil {
-		respondClaimRiskError(c, err)
-		return
-	}
 
 	var req ClaimRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, util.Err(err.Error()))
+		return
+	}
+	if err := risk.update(c.Request.Context(), "check"); err != nil {
+		respondClaimRiskError(c, err)
 		return
 	}
 
@@ -338,11 +338,6 @@ func Claim(c *gin.Context) {
 			}
 			// 捕获锁等待超时错误，返回友好提示
 			return errors.New(RedEnvelopeTooPopular)
-		}
-
-		// An existing ID ends the invalid-ID streak even if it cannot be claimed.
-		if err := risk.update(c.Request.Context(), "valid"); err != nil {
-			return err
 		}
 
 		// 检查红包状态
