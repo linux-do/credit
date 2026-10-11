@@ -64,44 +64,36 @@ func (e *claimCooldownError) Error() string {
 	return fmt.Sprintf(common.RedEnvelopeClaimCooldown, e.seconds)
 }
 
-type claimRiskState struct {
-	Count        int       `json:"count"`
-	BlockedUntil time.Time `json:"blocked_until"`
-}
-
 func (r *claimRisk) update(ctx context.Context, outcome string) error {
 	if r == nil {
 		return nil
 	}
-	blocked := false
-	err := db.UpdateJSON(ctx, r.key, func(state *claimRiskState) (time.Duration, bool, error) {
-		if remaining := time.Until(state.BlockedUntil); remaining > 0 {
-			return 0, false, &claimCooldownError{seconds: int64((remaining-1)/time.Second) + 1}
+	switch outcome {
+	case "check":
+		count, err := db.GetCounter(ctx, r.key)
+		if err != nil {
+			return err
 		}
-		switch outcome {
-		case "valid":
-			return -1, true, nil
-		case "invalid":
-			if !state.BlockedUntil.IsZero() {
-				state.Count = 0
-			}
-			state.Count++
-			cooldown := time.Duration(r.cooldown) * time.Second
-			if state.Count >= r.limit {
-				blocked = true
-				state.BlockedUntil = time.Now().Add(cooldown)
-				return cooldown, true, nil
-			}
-			return cooldown, true, nil
-		default:
-			return 0, false, nil
+		if count < int64(r.limit) {
+			return nil
 		}
-	})
-	if err != nil {
-		return err
-	}
-	if blocked {
-		return &claimCooldownError{seconds: int64(r.cooldown)}
+		ttl, err := db.GetKeyTTL(ctx, r.key)
+		if err != nil {
+			return err
+		}
+		if ttl <= 0 {
+			return nil
+		}
+		return &claimCooldownError{seconds: int64((ttl-1)/time.Second) + 1}
+	case "invalid":
+		cooldown := time.Duration(r.cooldown) * time.Second
+		count, err := db.IncrementCounter(ctx, r.key, cooldown)
+		if err != nil {
+			return err
+		}
+		if count >= int64(r.limit) {
+			return &claimCooldownError{seconds: int64(r.cooldown)}
+		}
 	}
 	return nil
 }

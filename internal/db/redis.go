@@ -184,6 +184,47 @@ func SetJSON[T any](ctx context.Context, client redis.Cmdable, key string, data 
 	return nil
 }
 
+// GetCounter 获取 Redis 中的整数计数。
+// key: Redis key，函数内部会自动添加配置的 key 前缀。
+// key 不存在时返回 0。
+func GetCounter(ctx context.Context, key string) (int64, error) {
+	count, err := Redis.Get(ctx, PrefixedKey(key)).Int64()
+	if errors.Is(err, redis.Nil) {
+		return 0, nil
+	}
+	return count, err
+}
+
+// GetKeyTTL 获取 Redis key 的剩余有效期。
+// key: Redis key，函数内部会自动添加配置的 key 前缀。
+// 返回值为正数时表示剩余有效期，redis -1 表示永不过期，redis -2 表示 key 不存在。
+func GetKeyTTL(ctx context.Context, key string) (time.Duration, error) {
+	return Redis.TTL(ctx, PrefixedKey(key)).Result()
+}
+
+// IncrementCounter 原子增加 Redis 中的整数计数并更新过期时间。
+// key: Redis key，函数内部会自动添加配置的 key 前缀。
+// expiration: 计数 key 的过期时间。
+// 返回值为自增后的计数。
+func IncrementCounter(ctx context.Context, key string, expiration time.Duration) (int64, error) {
+	var count *redis.IntCmd
+	_, err := Redis.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
+		count = pipe.Incr(ctx, PrefixedKey(key))
+		pipe.Expire(ctx, PrefixedKey(key), expiration)
+		return nil
+	})
+	if err != nil {
+		return 0, err
+	}
+	return count.Result()
+}
+
+// DeleteKey 删除 Redis key。
+// key: Redis key，函数内部会自动添加配置的 key 前缀。
+func DeleteKey(ctx context.Context, key string) error {
+	return Redis.Del(ctx, PrefixedKey(key)).Err()
+}
+
 // UpdateJSON 通过事务原子读取并更新Redis中的JSON数据
 // ctx: 上下文
 // key: Redis key
