@@ -717,12 +717,13 @@ export function RedEnvelope({ onSuccess }: { onSuccess?: () => void }) {
                 aria-label="分享红包"
                 title="分享红包"
                 onClick={async () => {
-                  if (!navigator.share) {
-                    toast.info("当前浏览器不支持系统分享，请复制链接分享")
+                  const shareData = { title: "领取红包", url: resultLink }
+                  if (!navigator.share || !navigator.canShare?.(shareData)) {
+                    window.open(resultLink, "_blank", "noopener,noreferrer")
                     return
                   }
                   try {
-                    await navigator.share({ title: "领取红包", url: resultLink })
+                    await navigator.share(shareData)
                   } catch (error) {
                     if (error instanceof Error && error.name === "AbortError") return
                     toast.error("分享失败")

@@ -302,6 +302,8 @@ func Create(c *gin.Context) {
 // @Produce json
 // @Param request body ClaimRequest true "领取红包请求"
 // @Success 200 {object} util.ResponseAny
+// @Failure 429 {object} util.ResponseAny "连续输入错误红包ID次数过多"
+// @Header 429 {integer} Retry-After "再次尝试前需等待的秒数"
 // @Router /api/v1/redenvelope/claim [post]
 func Claim(c *gin.Context) {
 	currentUser, _ := util.GetFromContext[*model.User](c, oauth.UserObjKey)
@@ -317,10 +319,6 @@ func Claim(c *gin.Context) {
 
 	var req ClaimRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		if riskErr := risk.update(c.Request.Context(), "invalid"); riskErr != nil {
-			respondClaimRiskError(c, riskErr)
-			return
-		}
 		c.JSON(http.StatusBadRequest, util.Err(err.Error()))
 		return
 	}

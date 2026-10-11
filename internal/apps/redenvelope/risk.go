@@ -86,13 +86,13 @@ func (r *claimRisk) update(ctx context.Context, outcome string) error {
 				state.Count = 0
 			}
 			state.Count++
+			cooldown := time.Duration(r.cooldown) * time.Second
 			if state.Count >= r.limit {
 				blocked = true
-				cooldown := time.Duration(r.cooldown) * time.Second
 				state.BlockedUntil = time.Now().Add(cooldown)
 				return cooldown, true, nil
 			}
-			return 0, true, nil
+			return cooldown, true, nil
 		default:
 			return 0, false, nil
 		}
