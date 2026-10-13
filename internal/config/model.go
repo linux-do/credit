@@ -35,25 +35,40 @@ type configModel struct {
 
 // appConfig 应用基本配置
 type appConfig struct {
-	AppName                 string `mapstructure:"app_name"`
-	Env                     string `mapstructure:"env"`
-	Addr                    string `mapstructure:"addr"`
-	NodeID                  int64  `mapstructure:"node_id"`
-	APIPrefix               string `mapstructure:"api_prefix"`
-	GracefulShutdownTimeout int    `mapstructure:"graceful_shutdown_timeout"`
-	FrontendURL             string `mapstructure:"frontend_url"`
-	FrontendPayURL          string `mapstructure:"frontend_pay_url"`
-	SessionCookieName       string `mapstructure:"session_cookie_name"`
-	SessionSecret           string `mapstructure:"session_secret"`
-	SessionDomain           string `mapstructure:"session_domain"`
-	SessionAge              int    `mapstructure:"session_age"`
-	SessionHttpOnly         bool   `mapstructure:"session_http_only"`
-	SessionSecure           bool   `mapstructure:"session_secure"`
+	AppName                 string   `mapstructure:"app_name"`
+	Env                     string   `mapstructure:"env"`
+	Addr                    string   `mapstructure:"addr"`
+	NodeID                  int64    `mapstructure:"node_id"`
+	APIPrefix               string   `mapstructure:"api_prefix"`
+	GracefulShutdownTimeout int      `mapstructure:"graceful_shutdown_timeout"`
+	FrontendURL             string   `mapstructure:"frontend_url"`
+	FrontendPayURL          string   `mapstructure:"frontend_pay_url"`
+	SessionCookieName       string   `mapstructure:"session_cookie_name"`
+	SessionSecret           string   `mapstructure:"session_secret"`
+	SessionDomain           string   `mapstructure:"session_domain"`
+	SessionAge              int      `mapstructure:"session_age"`
+	SessionHttpOnly         bool     `mapstructure:"session_http_only"`
+	SessionSecure           bool     `mapstructure:"session_secure"`
+	UserWhitelist           []string `mapstructure:"user_whitelist"`
 }
 
 // IsProduction 检查当前环境是否为生产环境
 func (a *appConfig) IsProduction() bool {
 	return a.Env == "production"
+}
+
+// IsUserAllowed 检查用户名是否允许访问，未配置白名单时不限制访问。
+func (a *appConfig) IsUserAllowed(username string) bool {
+	if len(a.UserWhitelist) == 0 {
+		return true
+	}
+
+	for _, allowed := range a.UserWhitelist {
+		if allowed == username {
+			return true
+		}
+	}
+	return false
 }
 
 // OAuth2Config OAuth2/OIDC认证配置
