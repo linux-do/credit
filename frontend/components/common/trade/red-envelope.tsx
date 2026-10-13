@@ -4,7 +4,7 @@ import * as React from "react"
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { toast } from "sonner"
-import { Gift, Copy, Check, ExternalLink, Pencil, X, ImagePlus, History } from "lucide-react"
+import { Gift, Copy, Check, Share2, Pencil, X, ImagePlus, History } from "lucide-react"
 import type { UploadImageResponse } from "@/lib/services"
 import { getFileUrl } from "@/lib/services/upload/upload.service"
 import { Input } from "@/components/ui/input"
@@ -18,6 +18,7 @@ import { ListData } from "@/components/common/general/list-data"
 import { ImageCropper } from "@/components/common/redenvelope/image-cropper"
 import { motion } from "motion/react"
 import { RedEnvelopeCard } from "@/components/common/redenvelope/red-envelope-card"
+import { RedEnvelopeShare } from "@/components/common/redenvelope/red-envelope-share"
 import { useUser } from "@/contexts/user-context"
 import services from "@/lib/services"
 import type { RedEnvelopeType, CreateRedEnvelopeRequest, PublicConfigResponse, RedEnvelope, RedEnvelopeListResponse } from "@/lib/services"
@@ -696,7 +697,7 @@ export function RedEnvelope({ onSuccess }: { onSuccess?: () => void }) {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="py-2">
+          <div className="pt-2">
             <div className="flex gap-2">
               <Input
                 value={resultLink}
@@ -713,12 +714,28 @@ export function RedEnvelope({ onSuccess }: { onSuccess?: () => void }) {
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => window.open(resultLink, "_blank")}
+                aria-label="分享红包"
+                title="分享红包"
+                onClick={async () => {
+                  const shareData = { title: "领取红包", url: resultLink }
+                  if (!navigator.share || !navigator.canShare?.(shareData)) {
+                    window.open(resultLink, "_blank", "noopener,noreferrer")
+                    return
+                  }
+                  try {
+                    await navigator.share(shareData)
+                  } catch (error) {
+                    if (error instanceof Error && error.name === "AbortError") return
+                    toast.error("分享失败")
+                  }
+                }}
               >
-                <ExternalLink className="size-3" />
+                <Share2 className="size-3" />
               </Button>
             </div>
           </div>
+
+          {isResultOpen && resultLink && <RedEnvelopeShare link={resultLink} />}
 
           <div className="flex justify-end">
             <Button onClick={() => setIsResultOpen(false)} className="h-8 text-xs">

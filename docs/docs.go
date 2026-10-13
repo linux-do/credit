@@ -1565,6 +1565,18 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/util.ResponseAny"
                         }
+                    },
+                    "429": {
+                        "description": "连续输入错误红包ID次数过多",
+                        "schema": {
+                            "$ref": "#/definitions/util.ResponseAny"
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "type": "integer",
+                                "description": "再次尝试前需等待的秒数"
+                            }
+                        }
                     }
                 }
             }

@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="26 8 128 252" width="128" height="252" fill="none">
+  <title>手机扫码领取红包</title>
+  <style>
+    text { font-family: system-ui, sans-serif; }
+    .scanner { animation: hide 0.2s 2.4s forwards; }
+    .scan-line { opacity: 0; animation: scan 2s 0.4s forwards; }
+    .envelope, .check { opacity: 0; animation: reveal 0.3s 2.4s forwards; }
+    @keyframes hide { to { opacity: 0; } }
+    @keyframes reveal { to { opacity: 1; } }
+    @keyframes scan {
+      0% { opacity: 0; transform: translateY(0); }
+      10% { opacity: 1; transform: translateY(0); }
+      40% { opacity: 1; transform: translateY(57px); }
+      70% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(57px); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .scanner, .scan-line { animation: none; opacity: 0; }
+      .envelope, .check { animation: none; opacity: 1; }
+    }
+  </style>
+  <rect x="28" y="8" width="124" height="252" rx="29" fill="#A1A1AA"/>
+  <rect x="30" y="10" width="120" height="248" rx="27" fill="#18181B"/>
+  <rect x="35" y="15" width="110" height="238" rx="23" fill="#F5F5F7"/>
+  <path d="M27 64v18m0 9v27m126-40v36" stroke="#71717A" stroke-width="2" stroke-linecap="round"/>
+  <g class="scanner">
+    <text x="90" y="65" text-anchor="middle" font-size="11" font-weight="600" fill="#27272A">扫一扫</text>
+    <rect x="45" y="86" width="90" height="104" rx="12" fill="#E4E4E7"/>
+    <g fill="#71717A">
+      <path fill-rule="evenodd" d="M65 111h17v17H65Zm4 4v9h9v-9ZM98 111h17v17H98Zm4 4v9h9v-9ZM65 144h17v17H65Zm4 4v9h9v-9Z"/>
+      <path d="M88 111h5v10h-5zm0 16h5v11H82v-5h6zm-23 6h11v5H65zm33 0h6v11h-6zm11 0h6v6h-6zm-21 11h5v17h-5zm10 6h17v5h-11v6h-6zm11-6h6v5h-6z"/>
+    </g>
+    <path d="M58 118v-14h14m36 0h14v14m0 36v14h-14m-36 0H58v-14" stroke="#EF5949" stroke-width="2.5" stroke-linecap="round"/>
+    <path class="scan-line" d="M61 107h58" stroke="#EF5949" stroke-width="2"/>
+    <text x="90" y="211" text-anchor="middle" font-size="8" fill="#71717A">将二维码放入框内</text>
+  </g>
+  <!-- 与 RedEnvelopeCard 保持相同的卡片比例、配色和 78% 开启按钮位置。 -->
+  <g class="envelope">
+    <rect x="50" y="72" width="80" height="133.25" rx="3" fill="#F25542"/>
+    <path d="M53 72h74q3 0 3 3v80.2q0 20.7-40 20.7t-40-20.7V75q0-3 3-3Z" fill="#E75240"/>
+    <path d="M50 155.2q0 20.7 40 20.7t40-20.7" stroke="#CC4939" stroke-opacity="0.5" stroke-width="0.5"/>
+    <rect x="74" y="100" width="8" height="8" rx="1.5" fill="#FAE5AE"/>
+    <text x="78" y="106" text-anchor="middle" font-size="4" fill="#E75240">你</text>
+    <text x="84" y="105.5" font-size="4" fill="#FAE5AE">你的红包</text>
+    <text x="90" y="117" text-anchor="middle" font-size="5" fill="#FAE5AE">恭喜发财，大吉大利</text>
+    <circle cx="90" cy="175.935" r="10" fill="#EFC77A"/>
+    <text x="90" y="178.5" text-anchor="middle" font-size="7.5" font-weight="700" fill="#4D4753" style="font-family: serif">開</text>
+  </g>
+  <rect x="64" y="23" width="52" height="15" rx="7.5" fill="#09090B"/>
+  <circle cx="107" cy="30.5" r="3" fill="#181C2A"/>
+  <circle cx="107" cy="30.5" r="1.2" fill="#334166"/>
+  <path class="check" d="m74 30 3 3 5-5" stroke="#86EFAC" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="70" y="243" width="40" height="3" rx="1.5" fill="#18181B" opacity="0.7"/>
+</svg>

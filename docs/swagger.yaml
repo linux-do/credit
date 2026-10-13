@@ -1578,6 +1578,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/util.ResponseAny'
+        "429":
+          description: 连续输入错误红包ID次数过多
+          headers:
+            Retry-After:
+              description: 再次尝试前需等待的秒数
+              type: integer
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
       tags:
       - redenvelope
   /api/v1/redenvelope/covers:
