@@ -47,7 +47,7 @@ export const apiSections: PolicySection[] = [
         <div className="space-y-4">
           <ol className="list-decimal pl-4 md:pl-5 space-y-2">
             <li>取除 <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">sign</code> 以外的所有非空请求参数</li>
-            <li>将参数按参数名 ASCII 码从到大排序（字典序）</li>
+            <li>将参数按参数名 ASCII 码从小到大排序（字典序）</li>
             <li>使用 <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono before:content-none after:content-none">k1=v1&k2=v2...</code> 格式拼接成字符串</li>
             <li>将 <strong>应用密钥 (Client Secret)</strong> 直接追加到字符串末尾</li>
             <li>使用商户私钥对最终字符串进行 <strong>Ed25519</strong> 签名</li>
@@ -304,7 +304,7 @@ sign=$(echo -n "\${payload}\${SECRET}" | md5)  # 输出小写`}
     content: (
       <div className="space-y-4 text-sm leading-relaxed">
         <div className="bg-muted/50 border border-border/50 rounded-lg px-3 py-2 mb-6">
-          <p className="text-muted-foreground m-0">官方接口与易支付兼容接口公用接口。</p>
+          <p className="text-muted-foreground m-0">官方接口与易支付兼容接口共用接口。</p>
         </div>
 
         <h3 id="3-1-order" className="text-base md:text-lg font-semibold text-foreground mt-6 md:mt-8 mb-3 md:mb-4">3.1 订单查询</h3>
