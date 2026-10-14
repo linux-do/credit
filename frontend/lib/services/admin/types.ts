@@ -190,6 +190,8 @@ export interface AdminUser {
   is_active: boolean;
   /** 是否管理员 */
   is_admin: boolean;
+  /** 绑定的公共账号 ID 列表 */
+  public_account_ids: string[];
   /** 最后登录时间 */
   last_login_at: string;
   /** 创建时间 */
@@ -218,6 +220,32 @@ export interface ListUsersRequest {
 export interface ListUsersResponse {
   /** 用户列表 */
   users: AdminUser[];
+  /** 总数 */
+  total: number;
+}
+
+/**
+ * 公共账号信息（管理端列表）
+ */
+export interface PublicAccount {
+  /** 公共账号 ID */
+  id: string;
+  /** 用户名 */
+  username: string;
+  /** 昵称 */
+  nickname: string;
+  /** 头像 URL */
+  avatar_url: string;
+  /** 是否激活 */
+  is_active: boolean;
+}
+
+/**
+ * 公共账号列表响应
+ */
+export interface ListPublicAccountsResponse {
+  /** 公共账号列表 */
+  users: PublicAccount[];
   /** 总数 */
   total: number;
 }
@@ -256,8 +284,8 @@ export interface AdminOrder {
   order_name: string;
   merchant_order_no: string | null;
   client_id: string;
-  payer_user_id: number;
-  payee_user_id: number;
+  payer_user_id: string;
+  payee_user_id: string;
   payer_username: string;
   payee_username: string;
   payer_avatar_url?: string;
