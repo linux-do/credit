@@ -62,8 +62,8 @@ type Order struct {
 	OrderName       string          `json:"order_name" gorm:"size:64;not null;index"`
 	MerchantOrderNo *string         `json:"merchant_order_no" gorm:"size:64;index:idx_orders_merchant_order_no;uniqueIndex:idx_orders_client_merchant_order,priority:2"`
 	ClientID        string          `json:"client_id" gorm:"size:64;index:idx_orders_client_status_created,priority:1;index:idx_orders_client_payee,priority:1;index:idx_orders_client_payer,priority:1;uniqueIndex:idx_orders_client_merchant_order,priority:1"`
-	PayerUserID     uint64          `json:"payer_user_id" gorm:"index:idx_orders_payer_status_type_created,priority:1;index:idx_orders_payer_status_type_trade,priority:1;index:idx_orders_client_payer,priority:2"`
-	PayeeUserID     uint64          `json:"payee_user_id" gorm:"index:idx_orders_payee_status_type_created,priority:1;index:idx_orders_client_payee,priority:2"`
+	PayerUserID     int64           `json:"payer_user_id,string" gorm:"index:idx_orders_payer_status_type_created,priority:1;index:idx_orders_payer_status_type_trade,priority:1;index:idx_orders_client_payer,priority:2"`
+	PayeeUserID     int64           `json:"payee_user_id,string" gorm:"index:idx_orders_payee_status_type_created,priority:1;index:idx_orders_client_payee,priority:2"`
 	PayerUsername   string          `json:"payer_username" gorm:"-:migration;->"`
 	PayeeUsername   string          `json:"payee_username" gorm:"-:migration;->"`
 	Amount          decimal.Decimal `json:"amount" gorm:"type:numeric(20,2);not null;index"`

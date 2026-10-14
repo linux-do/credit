@@ -44,6 +44,7 @@ func Migrate() {
 		&model.RedEnvelope{},
 		&model.RedEnvelopeClaim{},
 		&model.Upload{},
+		&model.PublicAccountBinding{},
 	); err != nil {
 		log.Fatalf("[PostgreSQL] auto migrate failed: %v\n", err)
 	}
@@ -177,7 +178,7 @@ func initUserPayConfigs() {
 	defaultConfigs := []model.UserPayConfig{
 		{
 			Level:          model.PayLevelFree,
-			MinScore:       0,
+			MinScore:       -999999,
 			MaxScore:       int64Ptr(2000),
 			DailyLimit:     int64Ptr(1000),
 			FeeRate:        decimal.Zero,

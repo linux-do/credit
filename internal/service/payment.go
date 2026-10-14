@@ -48,7 +48,7 @@ const (
 
 // BalanceUpdateOptions 余额更新选项
 type BalanceUpdateOptions struct {
-	UserID        uint64
+	UserID        int64
 	Amount        decimal.Decimal
 	Operation     BalanceOperation
 	ScoreChange   int64
@@ -97,7 +97,7 @@ func UpdateBalance(tx *gorm.DB, opts BalanceUpdateOptions) error {
 }
 
 // SettlePendingToAvailable 将资金从 PendingBalance 转入 AvailableBalance
-func SettlePendingToAvailable(tx *gorm.DB, userID uint64, amount decimal.Decimal) error {
+func SettlePendingToAvailable(tx *gorm.DB, userID int64, amount decimal.Decimal) error {
 	result := tx.Model(&model.User{}).
 		Where("id = ? AND pending_balance >= ?", userID, amount).
 		UpdateColumns(map[string]interface{}{
@@ -115,14 +115,14 @@ func SettlePendingToAvailable(tx *gorm.DB, userID uint64, amount decimal.Decimal
 
 // CheckDailyLimit 检查用户每日支付限额
 // 返回 nil 表示未超限额，返回 error 表示超限或查询失败
-func CheckDailyLimit(tx *gorm.DB, userID uint64, amount decimal.Decimal, dailyLimit *int64) error {
+func CheckDailyLimit(tx *gorm.DB, userID int64, amount decimal.Decimal, dailyLimit *int64) error {
 	if dailyLimit == nil || *dailyLimit <= 0 {
 		return nil
 	}
 
 	now := time.Now()
 	datePart := int64(now.Year()*10000 + int(now.Month())*100 + now.Day())
-	lockID := int64(userID)*100000000 + datePart
+	lockID := userID*100000000 + datePart
 	if err := tx.Exec("SELECT pg_advisory_xact_lock(?)", lockID).Error; err != nil {
 		return err
 	}
@@ -140,7 +140,7 @@ func CheckDailyLimit(tx *gorm.DB, userID uint64, amount decimal.Decimal, dailyLi
 }
 
 // GetTodayUsedAmount 获取用户当日已使用的支付额度
-func GetTodayUsedAmount(db *gorm.DB, userID uint64) (decimal.Decimal, error) {
+func GetTodayUsedAmount(db *gorm.DB, userID int64) (decimal.Decimal, error) {
 	now := time.Now()
 	todayStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 	todayEnd := todayStart.Add(24 * time.Hour)
@@ -194,6 +194,7 @@ func RefundOrder(tx *gorm.DB, order *model.Order, merchantPayConfig *model.UserP
 		return errors.New(RefundOrderPayerNotFound)
 	}
 
+	// 商家按订单全额退回（手续费由商家承担）
 	merchantScoreDecrease := order.Amount.Mul(merchantPayConfig.ScoreRate).Round(0).IntPart()
 	merchantResult := tx.Model(&model.User{}).
 		Where("id = ?", order.PayeeUserID).
@@ -230,7 +231,7 @@ func RefundOrder(tx *gorm.DB, order *model.Order, merchantPayConfig *model.UserP
 
 // ValidateTestModePayment 验证测试模式下的支付权限
 // 返回 error：nil 表示允许支付，非 nil 表示拒绝支付
-func ValidateTestModePayment(currentUserID, merchantUserID uint64, isTestMode bool) error {
+func ValidateTestModePayment(currentUserID, merchantUserID int64, isTestMode bool) error {
 	if currentUserID == merchantUserID {
 		if !isTestMode {
 			return errors.New(common.CannotPaySelf)

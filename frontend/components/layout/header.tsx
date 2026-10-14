@@ -12,6 +12,7 @@ import { useTheme } from "next-themes"
 import { useRouter } from "next/navigation"
 import { SearchDialog } from "@/components/layout/search-dialog"
 import { Kbd } from "@/components/ui/kbd"
+import { PublicAccountSwitchButton } from "@/components/common/public-account/switch-button"
 
 
 /**
@@ -89,6 +90,7 @@ export function SiteHeader({ isFullWidth = false, onToggleFullWidth }: { isFullW
               <span className="sr-only">搜索</span>
             </Button>
             <BellButton />
+            <PublicAccountSwitchButton />
             <Button variant="ghost" size="icon" className="size-9 text-muted-foreground hover:text-foreground" onClick={() => router.push('/settings')}>
               <Settings className="size-[18px]" />
               <span className="sr-only">设置</span>
@@ -110,6 +112,7 @@ export function SiteHeader({ isFullWidth = false, onToggleFullWidth }: { isFullW
 
           <div className="ml-auto flex items-center gap-1">
             <BellButton />
+            <PublicAccountSwitchButton />
             <Button variant="ghost" size="icon" className="size-9 text-muted-foreground hover:text-foreground" onClick={() => router.push('/settings')}>
               <Settings className="size-[18px]" />
               <span className="sr-only">设置</span>

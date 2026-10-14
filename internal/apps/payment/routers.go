@@ -66,7 +66,7 @@ type GetOrderResponse struct {
 
 // TransferRequest 转账请求
 type TransferRequest struct {
-	RecipientID       uint64          `json:"recipient_id,string" binding:"required"`
+	RecipientID       int64           `json:"recipient_id,string" binding:"required"`
 	RecipientUsername string          `json:"recipient_username" binding:"required"`
 	Amount            decimal.Decimal `json:"amount" binding:"required"`
 	PayKey            string          `json:"pay_key" binding:"required,max=6"`
@@ -135,7 +135,7 @@ func CreateMerchantOrder(c *gin.Context) {
 				return err
 			}
 
-			merchantIDStr := strconv.FormatUint(merchantUser.ID, 10)
+			merchantIDStr := strconv.FormatInt(merchantUser.ID, 10)
 			if errSet := db.Redis.Set(c.Request.Context(), db.PrefixedKey(fmt.Sprintf(OrderMerchantIDCacheKeyFormat, encryptString)), merchantIDStr, remainingTTL).Err(); errSet != nil {
 				return fmt.Errorf("failed to set redis key: %w", errSet)
 			}
@@ -298,7 +298,7 @@ func RefundMerchantOrder(c *gin.Context) {
 
 // MerchantDistributeRequest 商户分发请求
 type MerchantDistributeRequest struct {
-	RecipientID       uint64          `json:"user_id" binding:"required"`
+	RecipientID       int64           `json:"user_id" binding:"required"`
 	RecipientUsername string          `json:"username" binding:"required"`
 	Amount            decimal.Decimal `json:"amount" binding:"required"`
 	MerchantOrderNo   *string         `json:"out_trade_no" binding:"omitempty,min=1,max=64"`

@@ -31,14 +31,14 @@ import (
 
 // listUsersRequest 用户列表查询请求
 type listUsersRequest struct {
-	Page     int     `form:"page" binding:"min=1"`
-	PageSize int     `form:"page_size" binding:"min=1,max=100"`
-	UserID   *uint64 `form:"user_id" binding:"omitempty,gt=0"`
-	Username string  `form:"username"`
+	Page     int    `form:"page" binding:"min=1"`
+	PageSize int    `form:"page_size" binding:"min=1,max=100"`
+	UserID   *int64 `form:"user_id"`
+	Username string `form:"username"`
 }
 
 type user struct {
-	ID               uint64           `json:"id"`
+	ID               int64            `json:"id,string"`
 	Username         string           `json:"username"`
 	Nickname         string           `json:"nickname"`
 	AvatarUrl        string           `json:"avatar_url"`
@@ -52,6 +52,8 @@ type user struct {
 	AvailableBalance decimal.Decimal  `json:"available_balance"`
 	IsActive         bool             `json:"is_active"`
 	IsAdmin          bool             `json:"is_admin"`
+	// PublicAccountIDs 该用户绑定的公共账号 ID 列表
+	PublicAccountIDs util.StringArray `json:"public_account_ids"`
 	LastLoginAt      time.Time        `json:"last_login_at"`
 	CreatedAt        time.Time        `json:"created_at"`
 	UpdatedAt        time.Time        `json:"updated_at"`
@@ -101,7 +103,9 @@ func ListUsers(c *gin.Context) {
 		Select("id, username, nickname, avatar_url, trust_level, pay_score, " +
 			"total_receive, total_payment, total_transfer, total_community, " +
 			"community_balance, available_balance, is_active, is_admin, " +
-			"last_login_at, created_at, updated_at").
+			"last_login_at, created_at, updated_at, " +
+			"COALESCE((SELECT array_to_json(array_agg(b.public_account_id::text)) " +
+			"FROM public_account_bindings b WHERE b.user_id = users.id), '[]') AS public_account_ids").
 		Order("id DESC").
 		Offset(offset).
 		Limit(req.PageSize).
@@ -138,8 +142,8 @@ func UpdateUserStatus(c *gin.Context) {
 	id := c.Param("id")
 
 	var targetUser struct {
-		ID      uint64 `gorm:"column:id"`
-		IsAdmin bool   `gorm:"column:is_admin"`
+		ID      int64 `gorm:"column:id"`
+		IsAdmin bool  `gorm:"column:is_admin"`
 	}
 	if err := db.DB(c.Request.Context()).
 		Table("users").
