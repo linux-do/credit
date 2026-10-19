@@ -134,8 +134,8 @@ func batchUpdateUserScores(ctx context.Context, userScores []model.LeaderboardUs
 		return nil
 	}
 
-	userIDs := make([]uint64, len(userScores))
-	scoreMap := make(map[uint64]int64, len(userScores))
+	userIDs := make([]int64, len(userScores))
+	scoreMap := make(map[int64]int64, len(userScores))
 	for i, u := range userScores {
 		userIDs[i] = u.ID
 		scoreMap[u.ID] = u.TotalScore
@@ -243,7 +243,7 @@ func batchUpdateUserScores(ctx context.Context, userScores []model.LeaderboardUs
 // HandleUpdateSingleUserGamificationScore 处理用户积分更新任务
 func HandleUpdateSingleUserGamificationScore(ctx context.Context, t *asynq.Task) error {
 	var payload struct {
-		UserID     uint64                  `json:"user_id"`
+		UserID     int64                   `json:"user_id"`
 		UserScores []model.LeaderboardUser `json:"user_scores"`
 	}
 	if err := json.Unmarshal(t.Payload(), &payload); err != nil {

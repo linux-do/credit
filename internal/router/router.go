@@ -29,6 +29,7 @@ import (
 
 	"github.com/linux-do/credit/internal/apps/admin"
 	admin_order "github.com/linux-do/credit/internal/apps/admin/order"
+	admin_public_account "github.com/linux-do/credit/internal/apps/admin/public_account"
 	admin_task "github.com/linux-do/credit/internal/apps/admin/task"
 	admin_user "github.com/linux-do/credit/internal/apps/admin/user"
 	publicconfig "github.com/linux-do/credit/internal/apps/config"
@@ -53,6 +54,7 @@ import (
 	"github.com/linux-do/credit/internal/apps/leaderboard"
 	"github.com/linux-do/credit/internal/apps/oauth"
 	"github.com/linux-do/credit/internal/apps/order"
+	"github.com/linux-do/credit/internal/apps/public_account"
 	"github.com/linux-do/credit/internal/apps/user"
 	"github.com/linux-do/credit/internal/config"
 	"github.com/linux-do/credit/internal/otel_trace"
@@ -143,6 +145,8 @@ func Serve() {
 			userRouter.Use(oauth.LoginRequired())
 			{
 				userRouter.PUT("/pay-key", user.UpdatePayKey)
+				userRouter.GET("/public-accounts", public_account.GetPublicAccounts)
+				userRouter.POST("/public-accounts/switch", public_account.SwitchPublicAccount)
 			}
 
 			// Dashboard
@@ -252,6 +256,11 @@ func Serve() {
 				// Users
 				adminRouter.GET("/users", admin_user.ListUsers)
 				adminRouter.PUT("/users/:id/status", admin_user.UpdateUserStatus)
+
+				// Public accounts
+				adminRouter.GET("/public-accounts", admin_public_account.ListPublicAccounts)
+				adminRouter.POST("/users/:id/bind-public", admin_public_account.BindPublicAccounts)
+				adminRouter.POST("/users/:id/switch", admin_public_account.SwitchAccount)
 
 				// Orders
 				adminRouter.POST("/orders", admin_order.ListOrders)

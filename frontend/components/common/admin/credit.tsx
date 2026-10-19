@@ -91,7 +91,6 @@ function PayConfigDetailPanel({
               <Input
                 type="number"
                 step="1"
-                min="0"
                 value={editData.min_score !== undefined ? editData.min_score.toString() : (config?.min_score?.toString() || '')}
                 placeholder={editData.min_score === undefined && !config?.min_score ? '必需' : ''}
                 onChange={(e) => {
@@ -106,9 +105,7 @@ function PayConfigDetailPanel({
                     return
                   }
 
-                  if (numValue >= 0) {
-                    onEditDataChange('min_score', numValue)
-                  }
+                  onEditDataChange('min_score', numValue)
                 }}
                 className="text-xs text-right h-4 w-16 px-0 rounded-none border-none shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-[12px]"
               />

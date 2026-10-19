@@ -418,6 +418,21 @@ definitions:
     - recipient_id
     - recipient_username
     type: object
+  public_account.bindPublicAccountsRequest:
+    properties:
+      public_user_ids:
+        items:
+          type: integer
+        type: array
+    type: object
+  public_account.switchPublicAccountRequest:
+    properties:
+      public_user_id:
+        example: "0"
+        type: string
+    required:
+    - public_user_id
+    type: object
   redenvelope.ClaimRequest:
     properties:
       id:
@@ -510,7 +525,8 @@ definitions:
       task_type:
         type: string
       user_id:
-        type: integer
+        example: "0"
+        type: string
     required:
     - task_type
     type: object
@@ -664,6 +680,27 @@ paths:
         name: request
         schema:
           $ref: '#/definitions/order.refundOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - admin
+  /api/v1/admin/public-accounts:
+    get:
+      parameters:
+      - in: query
+        minimum: 1
+        name: page
+        type: integer
+      - in: query
+        maximum: 100
+        minimum: 1
+        name: page_size
+        type: integer
       produces:
       - application/json
       responses:
@@ -905,6 +942,30 @@ paths:
             $ref: '#/definitions/util.ResponseAny'
       tags:
       - admin
+  /api/v1/admin/users/{id}/bind-public:
+    post:
+      parameters:
+      - description: 目标用户ID
+        format: int64
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 绑定请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/public_account.bindPublicAccountsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - admin
   /api/v1/admin/users/{id}/status:
     put:
       parameters:
@@ -919,6 +980,24 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/user.updateUserStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - admin
+  /api/v1/admin/users/{id}/switch:
+    post:
+      parameters:
+      - description: 目标账号ID
+        format: int64
+        in: path
+        name: id
+        required: true
+        type: integer
       produces:
       - application/json
       responses:
@@ -1672,6 +1751,35 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/user.UpdatePayKeyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - user
+  /api/v1/user/public-accounts:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - user
+  /api/v1/user/public-accounts/switch:
+    post:
+      parameters:
+      - description: 切换请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/public_account.switchPublicAccountRequest'
       produces:
       - application/json
       responses:

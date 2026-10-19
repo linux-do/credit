@@ -20,4 +20,5 @@ const (
 	InvalidState        = "非法登录请求"
 	IDTokenVerifyFailed = "ID Token 验证失败"
 	NonceMismatch       = "nonce 不匹配，可能存在重放攻击"
+	InvalidOAuthUserID  = "OAuth 用户 ID 非法"
 )
