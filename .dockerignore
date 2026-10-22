@@ -1,0 +1,4 @@
+# 后端镜像只需要 CI 产出的二进制与 swagger 文档，其余文件不进构建上下文
+*
+!credit-server-*
+!docs/**
