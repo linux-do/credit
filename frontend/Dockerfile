@@ -1,5 +1,7 @@
 # ---- base stage ----
-FROM node:22-alpine AS base
+# node 版本与 mise.toml / CI workflows 保持一致；Node 25+ 已移除 corepack，
+# 升级到更高版本时需把下面的 corepack 换成 npm i -g pnpm@10.10.0
+FROM node:24-alpine AS base
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
