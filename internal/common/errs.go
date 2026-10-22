@@ -29,6 +29,7 @@ const (
 	TestModeCannotProcessOrder    = "测试模式下无法处理订单"
 	TestModeOrderRemark           = "[测试模式] 此订单为测试订单，未实际扣款"
 	UnAuthorized                  = "未登录"
+	UserNotWhitelisted            = "用户不在白名单中"
 	RedEnvelopeDisabled           = "红包功能未启用"
 	RedEnvelopeAmountExceeded     = "红包金额超过单个红包最大限额"
 	RedEnvelopeDailyLimitExceeded = "今日发红包数量已达上限"

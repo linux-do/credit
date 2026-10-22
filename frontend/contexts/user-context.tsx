@@ -4,11 +4,13 @@ import { createContext, useContext, useState, useEffect, useRef, useCallback, Re
 
 import services from '@/lib/services'
 import { User, TrustLevel, PayLevel } from '@/lib/services/auth/types'
+import type { PublicAccountsResponse } from '@/lib/services/user/types'
 
 
 /** 用户状态接口 */
 interface UserState {
   user: User | null
+  publicAccounts: PublicAccountsResponse | null
   loading: boolean
   error: string | null
 }
@@ -17,9 +19,7 @@ interface UserState {
 interface UserContextValue extends UserState {
   refetch: () => Promise<void>
   updatePayKey: (payKey: string, currentPayKey?: string) => Promise<void>
-  getTrustLevelLabel: (trustLevel: TrustLevel) => string
-  getPayLevelLabel: (payLevel: PayLevel) => string
-  logout: () => Promise<void>
+  switchPublicAccount: (publicUserId: string) => Promise<void>
 }
 
 /** 信任等级映射 */
@@ -59,6 +59,7 @@ const UserContext = createContext<UserContextValue | undefined>(undefined)
 export function UserProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<UserState>({
     user: null,
+    publicAccounts: null,
     loading: true,
     error: null,
   })
@@ -81,14 +82,23 @@ export function UserProvider({ children }: { children: ReactNode }) {
       setState(prev => ({ ...prev, loading: true, error: null }))
       const user = await services.auth.getUserInfo()
 
+      // 公共账号绑定状态（失败不阻断用户信息展示）
+      let publicAccounts: PublicAccountsResponse | null = null
+      try {
+        publicAccounts = await services.user.getPublicAccounts()
+      } catch {
+        // 忽略绑定状态获取失败
+      }
+
       if (!isMountedRef.current) return
 
-      setState({ user, loading: false, error: null })
+      setState({ user, publicAccounts, loading: false, error: null })
     } catch (error) {
       if (!isMountedRef.current) return
 
       setState({
         user: null,
+        publicAccounts: null,
         loading: false,
         error: error instanceof Error ? error.message : '获取用户信息失败',
       })
@@ -106,6 +116,13 @@ export function UserProvider({ children }: { children: ReactNode }) {
     await fetchUser()
   }, [fetchUser])
 
+  /** 切换到已绑定的公共账号身份 */
+  const switchPublicAccount = useCallback(async (publicUserId: string) => {
+    await services.user.switchPublicAccount(publicUserId)
+    // 切换成功后重新加载页面，以公共账号身份重新加载数据
+    window.location.reload()
+  }, [])
+
   /** 用户登出 */
   const logout = useCallback(async () => {
     try {
@@ -113,7 +130,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
       if (!isMountedRef.current) return
 
-      setState({ user: null, loading: false, error: null })
+      setState({ user: null, publicAccounts: null, loading: false, error: null })
       window.location.href = '/login'
     } catch (error) {
       if (!isMountedRef.current) {
@@ -145,6 +162,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         ...state,
         refetch,
         updatePayKey,
+        switchPublicAccount,
         getTrustLevelLabel,
         getPayLevelLabel,
         logout,

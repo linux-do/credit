@@ -146,6 +146,7 @@ pnpm dev
 | Option | Description | Example |
 |--------|-------------|---------|
 | `app.addr` | Backend service listening address | `:8000` |
+| `app.user_whitelist` | Allowed LINUX DO usernames; omitted or empty means unrestricted | `["alice", "bob"]` |
 | `worker.port` | Worker probe port | `8001` |
 | `scheduler.port` | Scheduler probe port | `8002` |
 | `oauth2.client_id` | OAuth2 Client ID | `your_client_id` |
@@ -161,6 +162,8 @@ pnpm dev
 | `redis.host` | Redis server address | `127.0.0.1` |
 
 For detailed configuration instructions, please refer to the `config.example.yaml` file.
+
+Set a non-empty `app.user_whitelist` in `config.yaml` and restart the service to restrict endpoints protected by the `LoginRequired` middleware to the listed users, including existing sessions. Other logged-in users receive HTTP 403. Usernames must match exactly, including case and surrounding whitespace.
 
 ## 🔧 Development Guide
 

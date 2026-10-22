@@ -40,7 +40,7 @@ const (
 // RedEnvelope 红包
 type RedEnvelope struct {
 	ID                  uint64            `json:"id,string" gorm:"primaryKey"`
-	CreatorID           uint64            `json:"creator_id,string" gorm:"index;not null"`
+	CreatorID           int64             `json:"creator_id,string" gorm:"index;not null"`
 	CreatorUsername     string            `json:"creator_username" gorm:"-:migration;->"`
 	CreatorAvatarURL    string            `json:"creator_avatar_url" gorm:"-:migration;->"`
 	Type                RedEnvelopeType   `json:"type" gorm:"type:varchar(20);not null"`
@@ -61,7 +61,7 @@ type RedEnvelope struct {
 type RedEnvelopeClaim struct {
 	ID            uint64          `json:"id,string" gorm:"primaryKey"`
 	RedEnvelopeID uint64          `json:"red_envelope_id,string" gorm:"uniqueIndex:idx_red_envelope_user,priority:2;not null"`
-	UserID        uint64          `json:"user_id,string" gorm:"uniqueIndex:idx_red_envelope_user,priority:1;not null"`
+	UserID        int64           `json:"user_id,string" gorm:"uniqueIndex:idx_red_envelope_user,priority:1;not null"`
 	Username      string          `json:"username" gorm:"-:migration;->"`
 	AvatarURL     string          `json:"avatar_url" gorm:"-:migration;->"`
 	Amount        decimal.Decimal `json:"amount" gorm:"type:numeric(20,2);not null"`

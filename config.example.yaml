@@ -17,6 +17,7 @@ app:
   api_prefix: "/api"
   frontend_url: "http://localhost:3000"
   frontend_pay_url: "http://localhost:3000/paying"
+  user_whitelist: [] # 允许访问的 LINUX DO 用户名，必须完全一致（区分大小写）；未配置或为空时不限制，例如 ["alice", "bob"]
 
 # OAuth2/OIDC(优先)
 oauth2:

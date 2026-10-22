@@ -11,6 +11,7 @@ import type {
   DispatchTaskRequest,
   ListUsersRequest,
   ListUsersResponse,
+  ListPublicAccountsResponse,
   UpdateUserStatusRequest,
   ListAdminOrdersRequest,
   ListAdminOrdersResponse,
@@ -346,6 +347,15 @@ export class AdminService extends BaseService {
   }
 
   /**
+   * 获取公共账号列表（负数 ID）
+   * @returns 公共账号列表及总数
+   * @throws {ForbiddenError} 当无管理员权限时
+   */
+  static async listPublicAccounts(): Promise<ListPublicAccountsResponse> {
+    return this.get<ListPublicAccountsResponse>('/public-accounts', { page: 1, page_size: 100 });
+  }
+
+  /**
    * 更新用户状态
    * @param id - 用户 ID
    * @param request - 更新状态请求参数
@@ -371,6 +381,36 @@ export class AdminService extends BaseService {
     request: UpdateUserStatusRequest
   ): Promise<void> {
     return this.put<void>(`/users/${ id }/status`, request);
+  }
+
+  // ==================== 账号切换 ====================
+
+  /**
+   * 切换到公共账号身份（模拟登录）
+   * @param id - 目标公共账号 ID（负数）
+   * @returns void
+   * @throws {UnauthorizedError} 当未登录时
+   * @throws {ForbiddenError} 当无管理员权限时
+   * @throws {NotFoundError} 当目标公共账号不存在或不可用时
+   * 
+   * @remarks
+   * - 切换后 session 绑定用户被替换为目标账号，不影响目标账号自身的登录会话
+   * - 只能退出登录后重新登录恢复原账号
+   */
+  static async switchAccount(id: string): Promise<void> {
+    return this.post<void>(`/users/${ id }/switch`);
+  }
+
+  /**
+   * 设置用户的公共账号授权（全量同步，空数组即清空授权）
+   * @param id - 目标用户 ID
+   * @param publicUserIds - 公共账号 ID 列表（负数）
+   * @returns void
+   * @throws {ForbiddenError} 当无管理员权限时
+   * @throws {NotFoundError} 当公共账号不存在时
+   */
+  static async bindPublicAccounts(id: string, publicUserIds: string[]): Promise<void> {
+    return this.post<void>(`/users/${ id }/bind-public`, { public_user_ids: publicUserIds.map(Number) });
   }
 
   // ==================== 订单管理 ====================

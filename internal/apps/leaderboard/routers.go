@@ -35,7 +35,7 @@ type ListRequest struct {
 
 // LeaderboardEntry 排行榜条目（rank 由前端根据 offset + index + 1 计算）
 type LeaderboardEntry struct {
-	UserID           uint64          `json:"user_id"`
+	UserID           int64           `json:"user_id"`
 	Username         string          `json:"username"`
 	AvatarURL        string          `json:"avatar_url"`
 	AvailableBalance decimal.Decimal `json:"available_balance"`
@@ -58,7 +58,7 @@ type UserRankResponse struct {
 
 // UserRankInfo 用户排名信息
 type UserRankInfo struct {
-	UserID           uint64          `json:"user_id"`
+	UserID           int64           `json:"user_id"`
 	Rank             int             `json:"rank"`
 	AvailableBalance decimal.Decimal `json:"available_balance"`
 }
@@ -118,7 +118,7 @@ func GetMyRank(c *gin.Context) {
 // @Router /api/v1/leaderboard/users/{id} [get]
 func GetUserRankByID(c *gin.Context) {
 	userIDStr := c.Param("id")
-	userID, err := strconv.ParseUint(userIDStr, 10, 64)
+	userID, err := strconv.ParseInt(userIDStr, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, util.Err("invalid user id"))
 		return

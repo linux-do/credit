@@ -17,7 +17,7 @@ limitations under the License.
 package user
 
 const (
-	userNotFound     = "用户不存在"
 	cannotDisable    = "不能禁用管理员用户"
 	updateUserFailed = "更新用户状态失败"
+	userNotFound     = "用户不存在"
 )

@@ -26,8 +26,13 @@ import (
 type StringArray []string
 
 func (sa *StringArray) Scan(value interface{}) error {
-	bytesValue, ok := value.([]byte)
-	if !ok {
+	var bytesValue []byte
+	switch v := value.(type) {
+	case []byte:
+		bytesValue = v
+	case string:
+		bytesValue = []byte(v)
+	default:
 		return fmt.Errorf("invalid value: %v", value)
 	}
 	return json.Unmarshal(bytesValue, sa)

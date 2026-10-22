@@ -1,4 +1,5 @@
 import { BaseService } from '../core/base.service';
+import type { PublicAccountsResponse } from './types';
 
 /**
  * 用户服务
@@ -29,5 +30,27 @@ export class UserService extends BaseService {
       pay_key: payKey,
       ...(currentPayKey ? { current_pay_key: currentPayKey } : {}),
     });
+  }
+
+  /**
+   * 获取当前用户的公共账号绑定状态
+   * @returns 公共账号绑定状态
+   * @throws {UnauthorizedError} 当未登录时
+   */
+  static async getPublicAccounts(): Promise<PublicAccountsResponse> {
+    return this.get<PublicAccountsResponse>('/public-accounts');
+  }
+
+  /**
+   * 切换到已绑定的公共账号身份
+   * @param publicUserId - 目标公共账号 ID
+   * @returns void
+   * @throws {UnauthorizedError} 当未登录时
+   *
+   * @remarks
+   * - 切换后 session 身份变为公共账号，恢复原身份需退出登录后重新登录
+   */
+  static async switchPublicAccount(publicUserId: string): Promise<void> {
+    return this.post<void>('/public-accounts/switch', { public_user_id: publicUserId });
   }
 }

@@ -146,6 +146,7 @@ pnpm dev
 | 配置项 | 说明 | 示例 |
 |--------|------|------|
 | `app.addr` | 后端服务监听地址 | `:8000` |
+| `app.user_whitelist` | 允许访问的 LINUX DO 用户名；未配置或为空时不限制 | `["alice", "bob"]` |
 | `worker.port` | Worker 探针端口 | `8001` |
 | `scheduler.port` | Scheduler 探针端口 | `8002` |
 | `oauth2.client_id` | OAuth2 客户端 ID | `your_client_id` |
@@ -161,6 +162,8 @@ pnpm dev
 | `redis.host` | Redis 服务器地址 | `127.0.0.1` |
 
 详细配置说明请参考 `config.example.yaml` 文件。
+
+在 `config.yaml` 中设置非空的 `app.user_whitelist` 并重启服务后，使用 `LoginRequired` 中间件的接口仅允许白名单用户访问；其他已登录用户返回 HTTP 403。用户名必须完全一致，区分大小写，首尾空格也参与匹配。
 
 ## 🔧 开发指南
 

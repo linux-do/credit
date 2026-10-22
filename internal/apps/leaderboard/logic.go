@@ -56,7 +56,7 @@ func getList(ctx context.Context, req *ListRequest) (*ListResponse, error) {
 	return response, nil
 }
 
-func getUserRank(ctx context.Context, userID uint64) (*UserRankResponse, error) {
+func getUserRank(ctx context.Context, userID int64) (*UserRankResponse, error) {
 	// 检查缓存
 	cacheKey := fmt.Sprintf("%suser:%d", cacheKeyPrefix, userID)
 	if data, err := db.Redis.Get(ctx, db.PrefixedKey(cacheKey)).Bytes(); err == nil {
@@ -77,8 +77,8 @@ func getUserRank(ctx context.Context, userID uint64) (*UserRankResponse, error) 
 	// 即：余额更高，或余额相同但 id 更小
 	var rank int64
 	if err := db.DB(ctx).Model(&model.User{}).
-		Where("is_active = ? AND ((available_balance > ?) OR (available_balance = ? AND id < ?))",
-			true, user.AvailableBalance, user.AvailableBalance, userID).
+		Where("id > ? AND is_active = ? AND ((available_balance > ?) OR (available_balance = ? AND id < ?))",
+			0, true, user.AvailableBalance, user.AvailableBalance, userID).
 		Count(&rank).Error; err != nil {
 		return nil, err
 	}
