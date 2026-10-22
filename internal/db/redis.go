@@ -19,6 +19,7 @@ package db
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -148,10 +149,11 @@ func HGetJSON[T any](ctx context.Context, hashKey, fieldKey string, data *T) err
 
 // GetJSON 从Redis获取数据并反序列化为泛型类型
 // ctx: 上下文
+// client: Redis客户端或事务客户端
 // key: Redis key
 // data: 用于接收数据的指针（泛型）
-func GetJSON[T any](ctx context.Context, key string, data *T) error {
-	val, err := Redis.Get(ctx, PrefixedKey(key)).Bytes()
+func GetJSON[T any](ctx context.Context, client redis.Cmdable, key string, data *T) error {
+	val, err := client.Get(ctx, PrefixedKey(key)).Bytes()
 	if err != nil {
 		return err
 	}
@@ -165,18 +167,88 @@ func GetJSON[T any](ctx context.Context, key string, data *T) error {
 
 // SetJSON 将泛型数据序列化为JSON并设置到Redis
 // ctx: 上下文
+// client: Redis客户端或事务管道
 // key: Redis key
 // data: 要存储的数据（泛型）
 // expiration: 过期时间
-func SetJSON[T any](ctx context.Context, key string, data T, expiration time.Duration) error {
+func SetJSON[T any](ctx context.Context, client redis.Cmdable, key string, data T, expiration time.Duration) error {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return fmt.Errorf("failed to marshal data: %w", err)
 	}
 
-	if err := Redis.Set(ctx, PrefixedKey(key), jsonData, expiration).Err(); err != nil {
+	if err := client.Set(ctx, PrefixedKey(key), jsonData, expiration).Err(); err != nil {
 		return fmt.Errorf("failed to set redis key: %w", err)
 	}
 
 	return nil
+}
+
+// GetCounter 获取 Redis 中的整数计数。
+// key: Redis key，函数内部会自动添加配置的 key 前缀。
+// key 不存在时返回 0。
+func GetCounter(ctx context.Context, key string) (int64, error) {
+	count, err := Redis.Get(ctx, PrefixedKey(key)).Int64()
+	if errors.Is(err, redis.Nil) {
+		return 0, nil
+	}
+	return count, err
+}
+
+// GetKeyTTL 获取 Redis key 的剩余有效期。
+// key: Redis key，函数内部会自动添加配置的 key 前缀。
+// 返回值为正数时表示剩余有效期，redis -1 表示永不过期，redis -2 表示 key 不存在。
+func GetKeyTTL(ctx context.Context, key string) (time.Duration, error) {
+	return Redis.TTL(ctx, PrefixedKey(key)).Result()
+}
+
+// IncrementCounter 原子增加 Redis 中的整数计数并更新过期时间。
+// key: Redis key，函数内部会自动添加配置的 key 前缀。
+// expiration: 计数 key 的过期时间。
+// 返回值为自增后的计数。
+func IncrementCounter(ctx context.Context, key string, expiration time.Duration) (int64, error) {
+	var count *redis.IntCmd
+	_, err := Redis.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
+		count = pipe.Incr(ctx, PrefixedKey(key))
+		pipe.Expire(ctx, PrefixedKey(key), expiration)
+		return nil
+	})
+	if err != nil {
+		return 0, err
+	}
+	return count.Result()
+}
+
+// DeleteKey 删除 Redis key。
+// key: Redis key，函数内部会自动添加配置的 key 前缀。
+func DeleteKey(ctx context.Context, key string) error {
+	return Redis.Del(ctx, PrefixedKey(key)).Err()
+}
+
+// UpdateJSON 通过事务原子读取并更新Redis中的JSON数据
+// ctx: 上下文
+// key: Redis key
+// update: 更新回调，接收数据指针（key不存在时为零值），返回过期时间、是否写入和错误
+// expiration: 过期时间，0表示不过期，负数表示删除key
+// write: 是否写入，false表示保持原值和过期时间不变
+// err: 回调返回错误时取消更新，并发修改导致事务冲突时返回redis.TxFailedErr
+func UpdateJSON[T any](ctx context.Context, key string, update func(*T) (expiration time.Duration, write bool, err error)) error {
+	return Redis.Watch(ctx, func(tx *redis.Tx) error {
+		var data T
+		if err := GetJSON(ctx, tx, key, &data); err != nil && !errors.Is(err, redis.Nil) {
+			return err
+		}
+		expiration, write, err := update(&data)
+		if err != nil || !write {
+			return err
+		}
+		_, err = tx.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
+			if expiration < 0 {
+				pipe.Del(ctx, PrefixedKey(key))
+				return nil
+			}
+			return SetJSON(ctx, pipe, key, data, expiration)
+		})
+		return err
+	}, PrefixedKey(key))
 }
