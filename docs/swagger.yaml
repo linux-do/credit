@@ -532,8 +532,17 @@ definitions:
     type: object
   user.UpdatePayKeyRequest:
     properties:
-      pay_key:
+      current_pay_key:
+        description: CurrentPayKey 当前安全密码；已设置安全密码的用户修改时必须提供
+        example: "123456"
         maxLength: 6
+        minLength: 6
+        type: string
+      pay_key:
+        description: PayKey 新安全密码，必须为6位数字
+        example: "654321"
+        maxLength: 6
+        minLength: 6
         type: string
     required:
     - pay_key
@@ -586,6 +595,9 @@ definitions:
   util.ResponseAny:
     properties:
       data: {}
+      error_code:
+        example: ""
+        type: string
       error_msg:
         example: ""
         type: string
@@ -1756,6 +1768,18 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+        "500":
+          description: Internal Server Error
           schema:
             $ref: '#/definitions/util.ResponseAny'
       tags:
